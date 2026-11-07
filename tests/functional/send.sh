@@ -64,5 +64,19 @@ segsent="$(result "$(call "$send_token" send_email "{\"emailId\":$em_seg,\"segme
 jq -e '.sent == true and .sent_count >= 1' <<<"$segsent" >/dev/null && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_seg AND lead_id = $c_ok")" == 1 ]] \
   && pass "segment send with confirm reached the segment's contact" || { echo "$segsent" | head -c 700; fail "segment send"; }
 
+# A role that may see the segment and its own contacts, but not edit other people's contacts, cannot email the segment.
+srid="$(api -X POST "$BASE/api/roles/new" -d name='Sender (smoke)' -d isAdmin=0 \
+  -d 'rawPermissions[email:emails][]=viewother' -d 'rawPermissions[lead:lists][]=viewother' -d 'rawPermissions[lead:leads][]=viewown' -d 'rawPermissions[lead:leads][]=editown' | jq -r '.role.id')"
+api -X POST "$BASE/api/users/new" -d username=ai-sender -d firstName=AI -d lastName=Sender -d email=ai-sender@example.com \
+  -d "role=$srid" -d 'plainPassword[password]=Ai-S3nder-Passw0rd!' -d 'plainPassword[confirm]=Ai-S3nder-Passw0rd!' >/dev/null
+admin_jar="$JAR"; JAR="$WORK/sender-jar"
+login ai-sender 'Ai-S3nder-Passw0rd!'
+sender_token="$(access_token 'mcp:read mcp:send' mcp:send)"
+JAR="$admin_jar"
+em_seg2="$(mk_email 'Send segment email 2' list 1 "$seg")"
+restricted="$(call "$sender_token" send_email "{\"emailId\":$em_seg2,\"segmentIds\":[$seg],\"confirm\":true}")"
+grep -q 'role does not allow' <<<"$restricted" && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_seg2")" == 0 ]] \
+  && pass "segment send needs permission over other people's contacts (restricted role refused, nothing sent)" || { echo "$restricted" | head -c 700; fail "segment send ignored contact permissions"; }
+
 set_params '{"intellectit_mcp_allow_send": false, "intellectit_mcp_allow_segment_send": false}'
 mcp_init "$access"

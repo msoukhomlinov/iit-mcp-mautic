@@ -177,6 +177,8 @@ class SendTools
             if (!(bool) $this->parameters->get('intellectit_mcp_allow_segment_send', false)) {
                 $blockers[] = 'Sending to segments is switched off on this instance (intellectit_mcp_allow_segment_send).';
             }
+            // A segment holds other people's contacts too: same level as a direct send to them (view to preview, edit to send).
+            $this->auth->require($context, "lead:leads:{$leadAction}other");
             $assigned = [];
             foreach ($email->getLists() as $list) {
                 $assigned[(int) $list->getId()] = $list;
