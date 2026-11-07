@@ -52,18 +52,27 @@ class ProjectTools
             fn (Project $p): bool => '' === $search || false !== mb_stripos((string) $p->getName().' '.$p->getDescription(), $search)
         ));
         $types  = $this->loader->getEntityTypesWithViewPermissions();
+        // One COUNT per type for all listed projects instead of loading every item of every project.
+        $counts = [];
+        $ids    = array_map(fn (Project $p): int => (int) $p->getId(), $items);
+        foreach ([] === $ids ? [] : $types as $type => $config) {
+            $rows = $config->model->getRepository()->createQueryBuilder('e')
+                ->select('p.id AS project, COUNT(DISTINCT e.id) AS n')
+                ->join('e.projects', 'p')
+                ->where('p.id IN (:ids)')
+                ->setParameter('ids', $ids)
+                ->groupBy('p.id')
+                ->getQuery()
+                ->getArrayResult();
+            foreach ($rows as $row) {
+                if ((int) $row['n'] > 0) {
+                    $counts[(int) $row['project']][$type] = (int) $row['n'];
+                }
+            }
+        }
 
         return [
-            'projects'   => array_map(function (Project $p) use ($types): array {
-                $counts = [];
-                foreach ($this->loader->getProjectEntities($p, $types) as $type => $group) {
-                    if ($group['count'] > 0) {
-                        $counts[$type] = $group['count'];
-                    }
-                }
-
-                return $this->summary($p) + ['items' => (object) $counts];
-            }, $items),
+            'projects'   => array_map(fn (Project $p): array => $this->summary($p) + ['items' => (object) ($counts[(int) $p->getId()] ?? [])], $items),
             'item_types' => array_keys($types),
         ];
     }
