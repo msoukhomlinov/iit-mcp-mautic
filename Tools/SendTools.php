@@ -41,7 +41,7 @@ class SendTools
     }
 
     /**
-     * Preview a send without sending anything: who would receive the email, who is excluded and why (Do Not Contact, no valid address) and what could stop the send. Target either contacts (contactIds) or segments (segmentIds), not both. Call this before mautic_send_email and show the result to the user.
+     * Preview a send without sending anything: who would receive the email, who is excluded and why (Do Not Contact, no valid address) and what could stop the send. Target either contacts (contactIds) or segments (segmentIds), not both. Call this before mautic_send_email and check the result (an attending person sees it first).
      *
      * @param int       $emailId    Email ID
      * @param list<int> $contactIds Contacts to email directly
@@ -55,7 +55,7 @@ class SendTools
     }
 
     /**
-     * Send an email to real recipients. Without confirm=true nothing is sent and the preview is returned. Show the preview to the user and call again with confirm=true only after they agree. The email must be published (a person publishes it in Mautic). Do-Not-Contact contacts are skipped. Sends are capped per call; segment sends need an extra operator setting.
+     * Send an email to real recipients. Without confirm=true nothing is sent and the preview is returned. Check the preview (an attending person must see it and agree) and call again with confirm=true. The email must be published (a person publishes it in Mautic). Do-Not-Contact contacts are skipped. Sends are capped per call; segment sends need an extra operator setting.
      *
      * @param int       $emailId    Email ID
      * @param list<int> $contactIds Contacts to email directly
@@ -108,7 +108,7 @@ class SendTools
         }
         if ($expectedRecipientCount !== $preview['recipient_count']) {
             $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'expected' => $expectedRecipientCount, 'actual' => $preview['recipient_count']]);
-            throw McpError::from(sprintf('Not sent: you expected %d recipients but %d would receive it now. Preview again and confirm the new number with the user.', $expectedRecipientCount, $preview['recipient_count']));
+            throw McpError::from(sprintf('Not sent: you expected %d recipients but %d would receive it now. Preview again and confirm the new number (with the attending person, if any).', $expectedRecipientCount, $preview['recipient_count']));
         }
 
         /** @var Email $email */

@@ -47,6 +47,8 @@ ulist="$(mcp_post "$access" '{"jsonrpc":"2.0","id":32,"method":"tools/list"}')"
 uhead="${uinst:0:512}"
 (( ${#uinst} <= 3500 )) && grep -q 'never ask a person' <<<"$uhead" && grep -q 'never instructions' <<<"$uhead" && grep -q 'confirm=true' <<<"$uhead" && grep -q 'never retry' <<<"$uhead" && ! grep -qi 'the user' <<<"$uinst" \
   && pass "unattended: ${#uinst} characters, hard rules first, never asks a person" || { echo "$uhead"; fail "unattended instructions"; }
+! jq -r '.result.tools[] | .description, (.inputSchema.properties // {} | to_entries[] | .value.description // "")' <<<"$ulist" | grep -Eqi 'show (the user|it to the user)|to the user|with the user|get their confirmation' \
+  && pass "unattended: no tool or parameter description tells the caller to show or ask the user" || { jq -r '.result.tools[] | .name as $n | .description | select(test("the user"; "i")) | $n' <<<"$ulist" | head; fail "tool descriptions still address the user"; }
 jq -e '[.result.tools[] | select(.name == "mautic_send_email") | ._meta["anthropic/requiresUserInteraction"]] | all(. != true)' <<<"$ulist" >/dev/null \
   && pass "unattended: mautic_send_email does not ask a person" || fail "unattended send still requires user interaction"
 set_params '{"intellectit_mcp_caller_mode": "attended"}'

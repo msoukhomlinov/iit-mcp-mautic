@@ -400,7 +400,7 @@ class PointTools
     }
 
     /**
-     * Change a point trigger: name, threshold, group, events (replace the list; keep existing events by their key). A PUBLISHED trigger is live: contacts reaching the score get its events (emails, pushes), and with triggerExistingLeads new events run at once for contacts already at the score. That needs the scope mcp:campaigns:live: call with dryRun first and show the user live_effects.
+     * Change a point trigger: name, threshold, group, events (replace the list; keep existing events by their key). A PUBLISHED trigger is live: contacts reaching the score get its events (emails, pushes), and with triggerExistingLeads new events run at once for contacts already at the score. That needs the scope mcp:campaigns:live: call with dryRun first and check live_effects (an attending person sees them first).
      *
      * @param int                             $id                   Point trigger ID (from mautic_list_point_triggers)
      * @param string|null                     $name                 New name; omit to keep
@@ -469,7 +469,7 @@ class PointTools
             'outbound_events'         => array_values(array_filter(array_column(null !== $events ? $events : $before['events'], 'type'), fn ($t) => in_array($t, self::OUTBOUND_EVENTS, true))),
             'contacts_at_score'       => $this->contactsAtScore($trigger),
             'new_events_run_now_for'  => ($trigger->getTriggerExistingLeads() && [] !== $newTypes) ? $this->contactsAtScore($trigger) : 0,
-            'warning'                 => 'The trigger is published: contacts reaching the score get its events from now on'.($trigger->getTriggerExistingLeads() ? ', and new events run on save for contacts already at the score' : '').'. Confirm with the user before saving.',
+            'warning'                 => 'The trigger is published: contacts reaching the score get its events from now on'.($trigger->getTriggerExistingLeads() ? ', and new events run on save for contacts already at the score' : '').'. Check before saving (an attending person must agree).',
         ] + (null !== $block ? ['save_blocked_because' => $block] : []) : null;
 
         if ($dryRun) {

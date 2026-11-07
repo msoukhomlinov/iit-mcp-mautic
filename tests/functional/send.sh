@@ -63,6 +63,18 @@ set_params '{"intellectit_mcp_send_max_per_hour": 500}'
 jq -e '.can_send == false and .sent_last_hour >= 1 and (.blockers | join(" ") | test("Hourly limit"))' <<<"$hour" >/dev/null \
   && pass "hourly limit: sends already made in the last hour count against intellectit_mcp_send_max_per_hour" || { echo "$hour" | head -c 600; fail "hourly limit"; }
 
+# Operator override: with intellectit_mcp_send_ignore_dnc a direct send does reach a Do Not Contact contact, warns, and is audited.
+set_params '{"intellectit_mcp_send_ignore_dnc": true}'
+dncprev="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_dnc]}")")"
+dncsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1}")")"
+set_params '{"intellectit_mcp_send_ignore_dnc": false}'
+jq -e '.recipient_count == 1 and (.warnings | join(" ") | test("NOT excluded"))' <<<"$dncprev" >/dev/null && jq -e '.sent == true' <<<"$dncsent" >/dev/null \
+  && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_dnc")" == 1 ]] \
+  && [[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND action = 'send' AND details LIKE '%dnc_override%b:1%'")" -ge 1 ]] \
+  && pass "DNC override: the Do Not Contact contact is emailed, the preview warns, the audit row records the override" || { echo "$dncprev $dncsent" | head -c 900; fail "DNC override"; }
+back="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_dnc]}")")"
+jq -e '.recipient_count == 0 and .can_send == false' <<<"$back" >/dev/null && pass "with the override off again, the Do Not Contact contact is excluded" || fail "DNC exclusion did not come back"
+
 # Segments: a separate switch, only the email's own segments.
 seg="$(api -X POST "$BASE/api/segments/new" -d name='Send segment' -d isPublished=1 | jq -r '.list.id')"
 api -X POST "$BASE/api/segments/$seg/contact/$c_ok/add" >/dev/null
@@ -73,10 +85,18 @@ jq -e '.mode == "segments" and .can_send == false and (.blockers | join(" ") | t
 set_params '{"intellectit_mcp_allow_segment_send": true}'
 segprev="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em_seg,\"segmentIds\":[$seg]}")")"
 jq -e '.can_send == true and .pending_total >= 1' <<<"$segprev" >/dev/null && pass "segment preview: $(jq -r '.pending_total' <<<"$segprev") pending contact(s)" || { echo "$segprev" | head -c 600; fail "segment preview"; }
+# Large segment: one call sends at most the cap, the preview says so and counts only what would go out.
+c_seg2="$(mk_contact send-seg2@example.com)"
+api -X POST "$BASE/api/segments/$seg/contact/$c_seg2/add" >/dev/null
+set_params '{"intellectit_mcp_send_max_recipients": 1}'
+segcap="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em_seg,\"segmentIds\":[$seg]}")")"
+set_params '{"intellectit_mcp_send_max_recipients": 100}'
+jq -e '.pending_total >= 2 and .recipient_count == 1 and (.warnings | join(" ") | test("at most 1"))' <<<"$segcap" >/dev/null \
+  && pass "segment cap: $(jq -r '.pending_total' <<<"$segcap") pending, one call would send $(jq -r '.recipient_count' <<<"$segcap")" || { echo "$segcap" | head -c 700; fail "segment cap"; }
 [[ "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em_seg,\"segmentIds\":[999999]}" | jq -r '.result.isError')" == true ]] \
   && pass "a segment the email is not assigned to is refused" || fail "foreign segment accepted"
-segsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em_seg,\"segmentIds\":[$seg],\"confirm\":true,\"expectedRecipientCount\":1}")")"
-jq -e '.sent == true and .sent_count >= 1' <<<"$segsent" >/dev/null && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_seg AND lead_id = $c_ok")" == 1 ]] \
+segsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em_seg,\"segmentIds\":[$seg],\"confirm\":true,\"expectedRecipientCount\":2}")")"
+jq -e '.sent == true and .sent_count >= 2' <<<"$segsent" >/dev/null && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_seg AND lead_id = $c_ok")" == 1 ]] \
   && pass "segment send with confirm reached the segment's contact" || { echo "$segsent" | head -c 700; fail "segment send"; }
 
 # A role that may see the segment and its own contacts, but not edit other people's contacts, cannot email the segment.

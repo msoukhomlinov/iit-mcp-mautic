@@ -293,7 +293,7 @@ class ContactTools
     }
 
     /**
-     * Add contacts to a segment (up to 100 per call). They can enter running campaigns that use the segment and receive its published segment emails: call with dryRun first and show the user live_effects.
+     * Add contacts to a segment (up to 100 per call). They can enter running campaigns that use the segment and receive its published segment emails: call with dryRun first and check live_effects (an attending person sees them first).
      *
      * @param int       $segmentId  Segment ID
      * @param list<int> $contactIds Contact IDs
@@ -509,7 +509,7 @@ class ContactTools
     }
 
     /**
-     * Add contacts to a segment or remove them from it (up to 100 per call). Adding can make contacts enter running campaigns that use the segment and receive its published segment emails: use dryRun first and show the user live_effects. Removing: campaigns that use the segment only may remove the contacts; Do-Not-Contact is not changed.
+     * Add contacts to a segment or remove them from it (up to 100 per call). Adding can make contacts enter running campaigns that use the segment and receive its published segment emails: use dryRun first and check live_effects (an attending person sees them first). Removing: campaigns that use the segment only may remove the contacts; Do-Not-Contact is not changed.
      *
      * @param int       $segmentId  Segment ID
      * @param string    $action     "add" or "remove"

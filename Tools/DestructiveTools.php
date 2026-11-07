@@ -92,7 +92,7 @@ class DestructiveTools
         $preview = ['type' => $type, 'id' => $id, 'name' => $name, 'impact' => $impacts, 'blockers' => $blockers, 'can_delete' => [] === $blockers];
 
         if (!$confirm) {
-            return ['deleted' => false, 'message' => 'Nothing deleted. Show this preview to the user; to delete, call again with confirm=true and expectedName.'] + $preview;
+            return ['deleted' => false, 'message' => 'Nothing deleted. Check this preview (an attending person must see it); to delete, call again with confirm=true and expectedName.'] + $preview;
         }
         if ([] !== $blockers) {
             $this->auth->audit($type, $id, 'delete_blocked', ['blockers' => $blockers]);
@@ -146,7 +146,7 @@ class DestructiveTools
             'note'          => 'For fields that differ, Mautic keeps the value of the more recently modified contact. The loser is deleted.',
         ];
         if (!$confirm) {
-            return ['merged' => false, 'message' => 'Nothing merged. Show this preview to the user; to merge, call again with confirm=true and expectedLoserId.'] + $preview;
+            return ['merged' => false, 'message' => 'Nothing merged. Check this preview (an attending person must see it); to merge, call again with confirm=true and expectedLoserId.'] + $preview;
         }
         if ($expectedLoserId !== $loserId) {
             throw McpError::from(sprintf('Pass expectedLoserId %d (as the preview shows) to confirm this merge.', $loserId), McpError::CONFIRM_REQUIRED);
