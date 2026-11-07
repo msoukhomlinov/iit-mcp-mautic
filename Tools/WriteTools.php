@@ -321,7 +321,7 @@ class WriteTools
     }
 
     /**
-     * Set the complete flow of a campaign: actions, decisions, conditions, waits and yes/no branches. CAUTION for published (running) campaigns: saved changes are live; Mautic's scheduler executes added/changed steps for the contacts in the campaign and may send emails. Always dryRun first, show the user live_effects and get their confirmation. Works as a diff: steps keyed with an existing step ID (from mautic_get_campaign) are updated in place and keep their contact history, new keys add steps, existing steps left out are removed. Validated like Mautic's campaign builder. Published (running) campaigns: steps can be added and changed but not moved; removing steps needs allow_deletions after checking a dry_run. Example: send welcome email; if opened -> add points; if not opened within 3 days -> send reminder.
+     * Set the complete flow of a campaign: actions, decisions, conditions, waits and yes/no branches. CAUTION for published (running) campaigns: saved changes are live; Mautic's scheduler executes added/changed steps for the contacts in the campaign and may send emails. Always dryRun first, check live_effects (an attending person must see them and agree). Works as a diff: steps keyed with an existing step ID (from mautic_get_campaign) are updated in place and keep their contact history, new keys add steps, existing steps left out are removed. Validated like Mautic's campaign builder. Published (running) campaigns: steps can be added and changed but not moved; removing steps needs allow_deletions after checking a dry_run. Example: send welcome email; if opened -> add points; if not opened within 3 days -> send reminder.
      *
      * @param int                        $id             Campaign ID
      * @param list<array<string, mixed>> $steps          The complete flow, parents before children
@@ -337,7 +337,7 @@ class WriteTools
     }
 
     /**
-     * Change one step of a campaign (also a running one; then the change is live and may send emails via Mautic's scheduler, dryRun first and confirm with the user): its name, wait and/or properties. The step keeps its ID and contact history; omitted fields stay as they are. Contacts already scheduled on the step keep their time.
+     * Change one step of a campaign (also a running one; then the change is live and may send emails via Mautic's scheduler, dryRun first, and an attending person must agree): its name, wait and/or properties. The step keeps its ID and contact history; omitted fields stay as they are. Contacts already scheduled on the step keep their time.
      *
      * @param int                  $campaignId Campaign ID
      * @param string               $key        Step ID from mautic_get_campaign
@@ -377,7 +377,7 @@ class WriteTools
     }
 
     /**
-     * Add one step to a campaign (also a running one; then it is live and Mautic's scheduler executes it for contacts reaching it, e.g. sends the email; dryRun first and confirm with the user), e.g. a reminder on the "no" path of a decision or a follow-up after an email.
+     * Add one step to a campaign (also a running one; then it is live and Mautic's scheduler executes it for contacts reaching it, e.g. sends the email; dryRun first, and an attending person must agree), e.g. a reminder on the "no" path of a decision or a follow-up after an email.
      *
      * @param int                  $campaignId Campaign ID
      * @param array<string, mixed> $step       The new step (non-numeric key, type, parent, path, wait, properties)

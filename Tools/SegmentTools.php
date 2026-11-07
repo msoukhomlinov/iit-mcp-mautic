@@ -147,7 +147,7 @@ class SegmentTools
     }
 
     /**
-     * Change name, description or filters of a segment. New filters replace the old ones. If running campaigns or published segment emails use the segment, contacts that newly match enter them: call with dryRun first and show the user live_effects and the matching count.
+     * Change name, description or filters of a segment. New filters replace the old ones. If running campaigns or published segment emails use the segment, contacts that newly match enter them: call with dryRun first and check live_effects and the matching count (an attending person sees them first).
      *
      * @param int                               $id          ID of the segment to change
      * @param string|null                       $name        New name; omitted = unchanged
