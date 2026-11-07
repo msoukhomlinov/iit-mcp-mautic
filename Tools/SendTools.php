@@ -13,6 +13,7 @@ use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\DoNotContact;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
+use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -58,10 +59,11 @@ class SendTools
      * @param list<int> $contactIds Contacts to email directly
      * @param list<int> $segmentIds Segments of a segment email (must be segments the email is assigned to)
      * @param bool      $confirm    true = really send what the preview shows
+     * @param int|null  $expectedRecipientCount With confirm=true: the recipient_count the preview showed. The send is refused if the recipients now differ.
      *
      * @return array<string, mixed>
      */
-    public function sendEmail(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = [], bool $confirm = false): array
+    public function sendEmail(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = [], bool $confirm = false, #[Schema(minimum: 0)] ?int $expectedRecipientCount = null): array
     {
         $plan    = $this->plan($context, $emailId, $contactIds, $segmentIds, 'edit');
         $preview = $plan['preview'];
@@ -71,6 +73,14 @@ class SendTools
         if ([] !== $preview['blockers']) {
             $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'blockers' => $preview['blockers']]);
             throw new ToolCallException('Not sent: '.implode(' ', $preview['blockers']));
+        }
+
+        if (null === $expectedRecipientCount) {
+            throw new ToolCallException(sprintf('Pass expectedRecipientCount (the preview shows %d) to confirm this send.', $preview['recipient_count']));
+        }
+        if ($expectedRecipientCount !== $preview['recipient_count']) {
+            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'expected' => $expectedRecipientCount, 'actual' => $preview['recipient_count']]);
+            throw new ToolCallException(sprintf('Not sent: you expected %d recipients but %d would receive it now. Preview again and confirm the new number with the user.', $expectedRecipientCount, $preview['recipient_count']));
         }
 
         /** @var Email $email */

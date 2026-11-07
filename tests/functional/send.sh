@@ -37,7 +37,12 @@ draft="$(call "$send_token" send_email "{\"emailId\":$em_off,\"contactIds\":[$c_
 grep -q 'not published' <<<"$draft" && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_off")" == 0 ]] \
   && pass "an unpublished email is never sent, even with confirm" || { echo "$draft" | head -c 600; fail "unpublished email sent"; }
 
-sent="$(result "$(call "$send_token" send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true}")")"
+nocount="$(call "$send_token" send_email "{\"emailId\":$em,\"contactIds\":[$c_ok],\"confirm\":true}")"
+wrongcount="$(call "$send_token" send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":2}")"
+grep -q 'expectedRecipientCount' <<<"$nocount" && grep -q 'you expected 2 recipients but 1' <<<"$wrongcount" && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em")" == 0 ]] \
+  && pass "confirm needs expectedRecipientCount, and a count that differs from the preview is refused (nothing sent)" || { echo "$nocount $wrongcount" | head -c 800; fail "expectedRecipientCount not enforced"; }
+
+sent="$(result "$(call "$send_token" send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1}")")"
 jq -e '.sent == true and .sent_count == 1 and .failed_count == 0' <<<"$sent" >/dev/null \
   && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_ok")" == 1 && "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_dnc")" == 0 ]] \
   && pass "send_email confirm=true: the contact got it, the Do Not Contact contact did not" || { echo "$sent" | head -c 700; fail "confirmed send"; }
@@ -60,7 +65,7 @@ segprev="$(result "$(call "$send_token" preview_email_send "{\"emailId\":$em_seg
 jq -e '.can_send == true and .pending_total >= 1' <<<"$segprev" >/dev/null && pass "segment preview: $(jq -r '.pending_total' <<<"$segprev") pending contact(s)" || { echo "$segprev" | head -c 600; fail "segment preview"; }
 [[ "$(call "$send_token" preview_email_send "{\"emailId\":$em_seg,\"segmentIds\":[999999]}" | jq -r '.result.isError')" == true ]] \
   && pass "a segment the email is not assigned to is refused" || fail "foreign segment accepted"
-segsent="$(result "$(call "$send_token" send_email "{\"emailId\":$em_seg,\"segmentIds\":[$seg],\"confirm\":true}")")"
+segsent="$(result "$(call "$send_token" send_email "{\"emailId\":$em_seg,\"segmentIds\":[$seg],\"confirm\":true,\"expectedRecipientCount\":1}")")"
 jq -e '.sent == true and .sent_count >= 1' <<<"$segsent" >/dev/null && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_seg AND lead_id = $c_ok")" == 1 ]] \
   && pass "segment send with confirm reached the segment's contact" || { echo "$segsent" | head -c 700; fail "segment send"; }
 

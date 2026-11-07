@@ -144,7 +144,7 @@ class McpServerFactory
                 'Contacts, companies, segments (scope mcp:contacts:write): upsert_contacts / upsert_companies match on unique fields, up to 100 per call (aliases: list_contact_fields; create_contact_field adds missing ones). Segments are static (create_segment, add/remove_contacts_to/from_segment) or dynamic (filters: list_segment_filter_fields). Joining a segment can start running campaigns and segment emails: call with dryRun first, show live_effects and matching_contacts, save only after confirmation. Never change records the user did not ask for; Do-Not-Contact is never changed.',
                 'Lead scoring: point groups, point actions (list/describe_point_action_types) and triggers (list/describe_point_trigger_event_types). New ones are created unpublished; a person publishes them. Changing a PUBLISHED trigger is live and needs mcp:campaigns:live; adjust_contact_points can fire triggers at once. dryRun first, show live_effects / triggers. Stages are the contact lifecycle (list_stages): new stages are unpublished; set_contact_stage only moves into published stages and can make segments and campaigns pick the contact up (dryRun first). Projects group items by topic and change nothing else.',
                 'Running (published) campaigns: flows can be edited (set_campaign_steps, update/add/remove_campaign_step) only if the instance allows it and the token has mcp:campaigns:live. Changes are live and can send email: dryRun first, show live_effects (outbound steps, contacts, save_allowed), save only after confirmation. New campaigns and emails are created unpublished.',
-                'Sending needs the operator switch and scope mcp:send; segment sends need a further switch and only reach the email\'s own segments, capped per call. Return the "url" of created drafts so the user can review them.',
+                'Sending tools need the operator switch and scope mcp:send; confirm with expectedRecipientCount from the preview. Segment sends need a further switch, reach only the email\'s own segments and are capped per call. Campaign steps on running campaigns, segment joins and point triggers can also cause email (see live_effects). Return the "url" of created drafts so the user can review them.',
             ]))
             ->setLogger($this->logger)
             ->setSession(new Psr16SessionStore($cache, 'session-', 3600));
@@ -167,7 +167,7 @@ class McpServerFactory
             [[$this->read, 'listCampaignStepTypes'], 'list_campaign_step_types', 'Campaign step types', $ro],
             [[$this->read, 'describeCampaignStepType'], 'describe_campaign_step_type', 'Describe campaign step type', $ro],
             [[$this->contacts, 'listContactFields'], 'list_contact_fields', 'List contact fields', $ro],
-            [[$this->contacts, 'upsertContacts'], 'upsert_contacts', 'Create or update contacts', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->contacts, 'upsertContacts'], 'upsert_contacts', 'Create or update contacts', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true)],
             [[$this->segmentTools, 'createSegment'], 'create_segment', 'Create segment', $rw],
             [[$this->segmentTools, 'updateSegment'], 'update_segment', 'Update segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
             [[$this->segmentTools, 'listSegmentFilterFields'], 'list_segment_filter_fields', 'Segment filter fields', $ro],
@@ -201,7 +201,7 @@ class McpServerFactory
             [[$this->pointTools, 'updatePointTrigger'], 'update_point_trigger', 'Update point trigger', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
             [[$this->pointTools, 'adjustContactPoints'], 'adjust_contact_points', 'Change contact points', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true)],
             [[$this->write, 'sendTestEmail'], 'send_test_email', 'Send test email to yourself', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true)],
-            [[$this->contacts, 'addContactsToSegment'], 'add_contacts_to_segment', 'Add contacts to segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->contacts, 'addContactsToSegment'], 'add_contacts_to_segment', 'Add contacts to segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true)],
             [[$this->contacts, 'removeContactsFromSegment'], 'remove_contacts_from_segment', 'Remove contacts from segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
             [[$this->write, 'createEmailDraft'], 'create_email_draft', 'Create email draft', $rw],
             [[$this->write, 'updateEmailDraft'], 'update_email_draft', 'Update email draft', $rw],
