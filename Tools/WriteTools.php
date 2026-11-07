@@ -78,16 +78,17 @@ class WriteTools
     }
 
     /**
-     * Create an unpublished email draft. Write complete, email-safe HTML (tables, inline styles, max width 600px) and include an unsubscribe link in the footer, e.g. <a href="{unsubscribe_url}">Abmelden oder Themen wählen</a> (Mautic's {unsubscribe_text} renders an English text). Prefer mautic_create_email_from_layout. A human reviews and publishes it in Mautic.
+     * Create an unpublished email draft, from HTML or as a copy of an existing email (copyFromId). Write complete, email-safe HTML (tables, inline styles, max width 600px) and include an unsubscribe link in the footer, e.g. <a href="{unsubscribe_url}">Unsubscribe or manage preferences</a> (Mautic's {unsubscribe_text} renders an English text). Personalise with {contactfield=<alias>} (aliases: mautic_list_contact_fields). A copy keeps the original's theme and builder content, sender, language and topic; the segments are NOT copied (a copy never inherits an audience), pass segmentIds for them. A human reviews and publishes it in Mautic.
      *
      * @param string    $name       Internal name
      * @param string    $subject    Subject line
-     * @param string    $html       Full HTML document of the email
-     * @param string    $type       "segment" (newsletter sent to segments) or "template" (used by campaigns and forms)
+     * @param string    $html       Full HTML document of the email (required unless copyFromId is set; with copyFromId it replaces the copied content and the copy becomes a plain HTML email)
+     * @param string    $type       "segment" (newsletter sent to segments) or "template" (used by campaigns and forms); default: the original's type for a copy, otherwise "template"
      * @param list<int> $segmentIds Segment IDs for a segment email
      * @param string    $preheader  Preview text shown after the subject
-     * @param string    $language   Language code, e.g. "de" or "en"
-     * @param string    $topic      Topic of the email (name or ID from mautic_list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
+     * @param string    $language   Language code, e.g. "en" (default: the original's for a copy, otherwise the Mautic default locale)
+     * @param string    $topic      Topic of the email (name or ID from mautic_list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for (a copy keeps the original's topic when empty)
+     * @param int       $copyFromId ID of an email to copy (any status, also sent ones); you need view access to it
      *
      * @return array<string, mixed>
      */
@@ -95,34 +96,60 @@ class WriteTools
         RequestContext $context,
         #[Schema(minLength: 1, maxLength: 191)] string $name,
         #[Schema(minLength: 1, maxLength: 191)] string $subject,
-        #[Schema(minLength: 1)] string $html,
-        #[Schema(enum: ['segment', 'template'])] string $type = 'template',
+        string $html = '',
+        #[Schema(enum: ['segment', 'template'])] ?string $type = null,
         array $segmentIds = [],
         string $preheader = '',
         string $language = '',
         string $topic = '',
+        #[Schema(minimum: 0)] int $copyFromId = 0,
     ): array {
         $this->auth->require($context, 'email:emails:create');
+        if ($copyFromId <= 0 && '' === trim($html)) {
+            throw McpError::from('Provide html, or copyFromId to copy an existing email.');
+        }
 
-        $email = new Email();
+        if ($copyFromId > 0) {
+            $source = $this->emails->getEntity($copyFromId);
+            if (!$source instanceof Email || !$source->getId()) {
+                throw McpError::from(sprintf('Email %d not found.', $copyFromId));
+            }
+            $this->auth->requireEntityAccess($context, $source, 'email:emails', 'view');
+            $sourceType = $source->getEmailType() ?: 'template';
+            $email      = clone $source;
+            foreach ($email->getLists()->toArray() as $segment) {
+                $email->removeList($segment);
+            }
+            $email->setEmailType(null !== $type ? ('segment' === $type ? 'list' : 'template') : $sourceType);
+            if ('' !== $language) {
+                $email->setLanguage($language);
+            }
+            if ('' !== $preheader) {
+                $email->setPreheaderText($preheader);
+            }
+        } else {
+            $email = new Email();
+            $email->setEmailType('segment' === $type ? 'list' : 'template');
+            $email->setPreheaderText('' !== $preheader ? $preheader : null);
+            $email->setLanguage('' !== $language ? $language : (string) $this->parameters->get('locale', 'en'));
+        }
         $email->setName($name);
         $email->setSubject($subject);
-        $email->setCustomHtml($html);
-        $email->setTemplate('mautic_code_mode');
-        $email->setEmailType('segment' === $type ? 'list' : 'template');
-        $email->setPreheaderText('' !== $preheader ? $preheader : null);
-        $email->setLanguage('' !== $language ? $language : (string) $this->parameters->get('locale', 'en'));
-        $email->setDescription('Draft created via MCP. Review before publishing.');
+        if ('' !== trim($html)) {
+            $email->setCustomHtml($html);
+            $email->setTemplate('mautic_code_mode');
+        }
+        $email->setDescription($copyFromId > 0 ? sprintf('Copy of email %d created via MCP. Review before publishing.', $copyFromId) : 'Draft created via MCP. Review before publishing.');
         $email->setIsPublished(false);
-        $this->topics->apply($email, $topic);
+        $this->topics->apply($email, $copyFromId > 0 && '' === $topic ? null : $topic);
         foreach ($this->segmentEntities($context, $segmentIds) as $segment) {
             $email->addList($segment);
         }
 
         $this->emails->saveEntity($email);
-        $this->auth->audit('email', (int) $email->getId(), 'create', ['name' => $name]);
+        $this->auth->audit('email', (int) $email->getId(), 'create', ['name' => $name] + ($copyFromId > 0 ? ['copyFrom' => $copyFromId] : []));
 
-        return $this->emailResult($email, 'Draft created. It is unpublished: review it in Mautic and publish it there.');
+        return $this->emailResult($email, 'Draft created'.($copyFromId > 0 ? sprintf(' as a copy of email %d (segments not copied)', $copyFromId) : '').'. It is unpublished: review it in Mautic and publish it there.');
     }
 
     /**
@@ -154,7 +181,7 @@ class WriteTools
         }
         $this->auth->requireEntityAccess($context, $email, 'email:emails', 'edit');
         if ($email->isPublished() || $email->getSentCount(true) > 0) {
-            throw McpError::from('Only unpublished drafts that were never sent can be changed via MCP. Unpublish or clone the email in Mautic first.');
+            throw McpError::from(sprintf('Only unpublished drafts that were never sent can be changed via MCP. To change a published or sent email, copy it with mautic_create_email_draft (copyFromId=%d) and edit the copy.', $id));
         }
 
         $changed = [];
@@ -236,7 +263,7 @@ class WriteTools
     }
 
     /**
-     * Create an unpublished campaign draft with its segments as source. Build the steps (emails, waits, conditions) in Mautic's campaign builder.
+     * Create an unpublished campaign draft with its segments as source. Then add the flow with mautic_set_campaign_steps (or build it in Mautic's campaign builder).
      *
      * @param string    $name        Campaign name
      * @param list<int> $segmentIds  Segments whose contacts enter the campaign
@@ -268,7 +295,7 @@ class WriteTools
         $this->campaigns->saveEntity($campaign);
         $this->auth->audit('campaign', (int) $campaign->getId(), 'create', ['name' => $name]);
 
-        return $this->campaignResult($campaign, 'Campaign draft created (unpublished). Add the steps in the campaign builder.');
+        return $this->campaignResult($campaign, 'Campaign draft created (unpublished). Add the steps with mautic_set_campaign_steps or in the campaign builder.');
     }
 
     /**
@@ -464,7 +491,7 @@ class WriteTools
         // (scope mcp:campaigns:live). Dry runs are always fine.
         $liveBlock = null;
         if ($campaign->isPublished()) {
-            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', true)) {
+            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', false)) {
                 $liveBlock = 'Changes to running campaigns are disabled on this Mautic instance (intellectit_mcp_live_campaign_edits). Unpublish the campaign in Mautic to edit it, or ask an administrator.';
             } elseif (!$this->auth->hasScope($context, McpScopes::CAMPAIGNS_LIVE)) {
                 $liveBlock = 'This campaign is running. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect the client and tick "Change RUNNING campaigns" on the Mautic consent page, or unpublish the campaign in Mautic first.';

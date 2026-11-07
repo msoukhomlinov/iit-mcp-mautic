@@ -8,11 +8,13 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\LeadBundle\Entity\DoNotContact as DncEntity;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadField;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Field\Exception\AbortColumnCreateException;
 use Mautic\LeadBundle\Field\FieldsWithUniqueIdentifier;
+use Mautic\LeadBundle\Model\DoNotContact as DncModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
@@ -36,6 +38,7 @@ const CONTACT_SCHEMA = [
         'tags'   => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Tags to add; prefix "-" removes a tag, e.g. "-lead"'],
         'points' => ['type' => 'integer', 'description' => 'Set the points to this value (lead scoring)'],
         'stage'  => ['type' => 'string', 'description' => 'Move the contact to this stage (name or ID, must exist in Mautic)'],
+        'unsubscribe' => ['type' => 'boolean', 'description' => 'true = put the contact on the email Do Not Contact list (unsubscribed), e.g. after they asked by email. Add-only: it never removes or changes an existing Do Not Contact entry'],
     ],
 ];
 
@@ -67,6 +70,7 @@ class ContactTools
         private readonly Connection $connection,
         private readonly CoreParametersHelper $parameters,
         private readonly SegmentEffects $effects,
+        private readonly DncModel $dnc,
     ) {
     }
 
@@ -101,7 +105,7 @@ class ContactTools
     }
 
     /**
-     * Create or update contacts (up to 100 per call), matched by email and the other unique fields: existing contacts are updated, new ones created. Optionally add them all to segments. Do-Not-Contact status (unsubscribed, bounced) is never changed. Call with dryRun first when adding to segments: live_effects lists running campaigns and segment emails these contacts would get.
+     * Create or update contacts (up to 100 per call), matched by email and the other unique fields: existing contacts are updated, new ones created. Optionally add them all to segments. Do-Not-Contact status can only be added to (contact flag unsubscribe=true, for contacts who asked to be removed from emails); it is never removed or changed. Call with dryRun first when adding to segments: live_effects lists running campaigns and segment emails these contacts would get.
      *
      * @param list<array<string, mixed>> $contacts   Contacts: {email, fields, tags}
      * @param list<int>                  $segmentIds Add every contact to these segments
@@ -163,6 +167,13 @@ class ContactTools
                     $changed[] = 'stage';
                     $data['stage'] = $stage;
                 }
+                $dncAction = null;
+                if (true === ($row['unsubscribe'] ?? false)) {
+                    $dncAction = ($isNew || DncEntity::IS_CONTACTABLE === $this->dnc->isContactable($lead, 'email')) ? 'added' : 'already';
+                    if ('added' === $dncAction) {
+                        $changed[] = 'do_not_contact';
+                    }
+                }
                 $status = $isNew ? 'created' : ([] === $changed && [] === $tagChanges && [] === $joins ? 'unchanged' : 'updated');
                 if (!$dryRun && 'unchanged' !== $status) {
                     $this->leads->setFieldValues($lead, $data, false, false);
@@ -173,6 +184,9 @@ class ContactTools
                         $this->leads->modifyTags($lead, $addTags, $removeTags, false);
                     }
                     $this->leads->saveEntity($lead);
+                    if ('added' === $dncAction) {
+                        $this->dnc->addDncForContact((int) $lead->getId(), 'email', DncEntity::UNSUBSCRIBED, 'Unsubscribed on request (via MCP).');
+                    }
                     foreach ($joins as $segment) {
                         $this->segments->addLead($lead, $segment, true);
                     }
@@ -186,6 +200,7 @@ class ContactTools
                     'email'          => $data['email'] ?? $lead->getEmail(),
                     'changed_fields' => 'updated' === $status ? $changed : null,
                     'tags'           => $tagChanges ?: null,
+                    'do_not_contact' => $dncAction ? ('added' === $dncAction ? ($dryRun ? 'would be added' : 'added') : 'already on the list, unchanged') : null,
                     'joins_segments' => array_map(fn (LeadList $s): int => (int) $s->getId(), $joins) ?: null,
                 ], fn ($v): bool => null !== $v);
             } catch (ToolCallException $e) {

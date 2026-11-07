@@ -58,7 +58,8 @@ jq -e '.can_send == false and (.blockers | join(" ") | test("at most 1"))' <<<"$
   && pass "recipient cap: more contacts than intellectit_mcp_send_max_recipients is blocked" || { echo "$cap" | head -c 600; fail "cap"; }
 
 set_params '{"intellectit_mcp_send_max_per_hour": 1}'
-hour="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_ok]}")")"
+c_hour="$(mk_contact send-hour@example.com)"
+hour="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_hour]}")")"
 set_params '{"intellectit_mcp_send_max_per_hour": 500}'
 jq -e '.can_send == false and .sent_last_hour >= 1 and (.blockers | join(" ") | test("Hourly limit"))' <<<"$hour" >/dev/null \
   && pass "hourly limit: sends already made in the last hour count against intellectit_mcp_send_max_per_hour" || { echo "$hour" | head -c 600; fail "hourly limit"; }

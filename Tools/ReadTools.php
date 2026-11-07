@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
+use Doctrine\DBAL\Connection;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\EmailBundle\Model\EmailModel;
+use Mautic\LeadBundle\Entity\DoNotContact;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\LeadModel;
@@ -35,11 +37,12 @@ class ReadTools
         private readonly CoreParametersHelper $parameters,
         private readonly CampaignFlowBuilder $flow,
         private readonly EmailTopics $topics,
+        private readonly Connection $db,
     ) {
     }
 
     /**
-     * Search contacts by name, email, company or Mautic search syntax (e.g. "tag:customer", "segment:newsletter"). With includeFields every contact carries all filled profile fields (for exports to other systems).
+     * Search contacts by name, email, company or Mautic search syntax (e.g. "tag:customer", "segment:newsletter", "email_sent:<emailId>" for contacts who were sent an email, "email_read:<emailId>" for those who opened it). With includeFields every contact carries all filled profile fields (for exports to other systems).
      *
      * @param string $search        Search term or Mautic search expression
      * @param int    $limit         Maximum number of contacts
@@ -205,7 +208,7 @@ class ReadTools
     }
 
     /**
-     * Delivery statistics of an email: sent, read, read rate, clicks per link, pending recipients.
+     * Delivery statistics of an email, as lifetime totals across every use of it (segment sends and campaign steps; no date range): sent, read (unique contacts), read rate, unique clickers and click rate, bounced, unsubscribed, last sent, clicks per link, pending recipients. To list who received or opened it use mautic_search_contacts with "email_sent:<id>" or "email_read:<id>".
      *
      * @param int $id Email ID
      *
@@ -218,14 +221,24 @@ class ReadTools
         $read   = (int) $email->getReadCount(true);
         $clicks = array_map(fn (array $r): array => ['url' => $r['url'] ?? null, 'clicks' => (int) ($r['hits'] ?? 0), 'unique_clicks' => (int) ($r['unique_hits'] ?? 0)], $this->emails->getEmailClickStats($email->getId()));
 
+        $prefix   = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
+        $dnc      = $this->db->fetchAllKeyValue("SELECT reason, COUNT(*) FROM {$prefix}lead_donotcontact WHERE channel = 'email' AND channel_id = :id GROUP BY reason", ['id' => (int) $email->getId()]);
+        $clickers = (int) $this->db->fetchOne("SELECT COUNT(DISTINCT lead_id) FROM {$prefix}page_hits WHERE source = 'email' AND source_id = :id AND lead_id IS NOT NULL", ['id' => (int) $email->getId()]);
+        $lastSent = $this->db->fetchOne("SELECT MAX(date_sent) FROM {$prefix}email_stats WHERE email_id = :id", ['id' => (int) $email->getId()]);
+
         return [
-            'id'        => $email->getId(),
-            'name'      => $email->getName(),
-            'sent'      => $sent,
-            'read'      => $read,
-            'read_rate' => $sent > 0 ? round($read / $sent * 100, 1) : null,
-            'pending'   => 'list' === $email->getEmailType() ? (int) $this->emails->getPendingLeads($email, null, true) : null,
-            'links'     => $clicks,
+            'id'            => $email->getId(),
+            'name'          => $email->getName(),
+            'sent'          => $sent,
+            'last_sent'     => $lastSent ? (new \DateTimeImmutable((string) $lastSent, new \DateTimeZone('UTC')))->format('c') : null,
+            'read'          => $read,
+            'read_rate'     => $sent > 0 ? round($read / $sent * 100, 1) : null,
+            'clickers'      => $clickers,
+            'click_rate'    => $sent > 0 ? round($clickers / $sent * 100, 1) : null,
+            'bounced'       => (int) ($dnc[DoNotContact::BOUNCED] ?? 0),
+            'unsubscribed'  => (int) ($dnc[DoNotContact::UNSUBSCRIBED] ?? 0),
+            'pending'       => 'list' === $email->getEmailType() ? (int) $this->emails->getPendingLeads($email, null, true) : null,
+            'links'         => $clicks,
         ];
     }
 

@@ -55,6 +55,8 @@ source "$here/topics.sh"
 source "$here/insight.sh"
 # shellcheck source=tests/functional/send.sh
 source "$here/send.sh"
+# shellcheck source=tests/functional/review.sh
+source "$here/review.sh"
 # shellcheck source=tests/functional/destructive.sh
 source "$here/destructive.sh"
 # shellcheck source=tests/functional/surface.sh
