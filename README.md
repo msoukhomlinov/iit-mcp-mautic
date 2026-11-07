@@ -68,6 +68,23 @@ $parameters['intellectit_mcp_allow_write'] = true;
 
 Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still apply on top of this. Further tiers (delete, send, raw API) will follow the same pattern when those tools exist.
 
+## Sending email (opt-in)
+
+`preview_email_send` and `send_email` can email real recipients. They are **off by default** and are not even listed until an operator turns them on in `config/local.php`:
+
+```php
+$parameters['intellectit_mcp_allow_send'] = true;           // register the send tools
+$parameters['intellectit_mcp_allow_segment_send'] = false;  // also allow whole segments
+$parameters['intellectit_mcp_send_max_recipients'] = 100;   // cap per call
+$parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see below
+```
+
+- The token also needs the opt-in scope `mcp:send`.
+- `send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers).
+- Unpublished emails are never sent: a person publishes them in Mautic.
+- Target either contacts (`contactIds`) or segments (`segmentIds`, only the email's own segments, segment emails only).
+- Contacts on Do Not Contact and contacts without a valid address are skipped and named in the preview. `intellectit_mcp_send_ignore_dnc` overrides this for direct contact sends only (Mautic's segment sending always skips them). Do not enable it unless you are certain of your legal basis: emailing unsubscribed people can breach the Spam Act, GDPR and similar rules.
+
 ## Development
 
 - `bin/check.sh` checks the package (PHP lint, `composer validate`, version

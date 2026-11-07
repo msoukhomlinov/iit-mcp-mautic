@@ -26,6 +26,7 @@ use MauticPlugin\IntellectItMcpBundle\Tools\LayoutTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\PointTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ProjectTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\SegmentTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\SendTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\StageTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ReadTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\WriteTools;
@@ -51,6 +52,9 @@ class McpServerFactory
     /** Tools that need the mcp:contacts:write scope. */
     private const CONTACT_TOOLS = ['upsert_contacts', 'create_segment', 'update_segment', 'add_contacts_to_segment', 'remove_contacts_from_segment', 'create_contact_field', 'upsert_companies', 'add_contacts_to_company', 'remove_contacts_from_company', 'adjust_contact_points', 'set_contact_stage'];
 
+    /** Tools that need the opt-in scope mcp:send (and intellectit_mcp_allow_send). */
+    private const SEND_TOOLS = ['preview_email_send', 'send_email'];
+
     public function __construct(
         private readonly OAuthSettings $oauth,
         private readonly ReadTools $read,
@@ -63,6 +67,7 @@ class McpServerFactory
         private readonly StageTools $stageTools,
         private readonly ProjectTools $projectTools,
         private readonly InsightTools $insightTools,
+        private readonly SendTools $sendTools,
         private readonly Connection $connection,
         private readonly LoggerInterface $logger,
         private readonly CoreParametersHelper $parameters,
@@ -79,7 +84,7 @@ class McpServerFactory
         return new ProtectedResourceMetadata(
             resource: $this->oauth->resource(),
             authorizationServers: [$this->oauth->issuer()],
-            scopesSupported: [McpScopes::READ, McpScopes::WRITE, McpScopes::CONTACTS_WRITE, McpScopes::CAMPAIGNS_LIVE],
+            scopesSupported: [McpScopes::READ, McpScopes::WRITE, McpScopes::CONTACTS_WRITE, McpScopes::CAMPAIGNS_LIVE, McpScopes::SEND],
             resourceName: 'Mautic',
             resourceDocumentation: 'https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md',
         );
@@ -101,7 +106,7 @@ class McpServerFactory
         );
         $scopes = new ScopePolicy(
             default: [McpScopes::READ],
-            tools: array_fill_keys(self::WRITE_TOOLS, [McpScopes::WRITE]) + array_fill_keys(self::CONTACT_TOOLS, [McpScopes::CONTACTS_WRITE]),
+            tools: array_fill_keys(self::WRITE_TOOLS, [McpScopes::WRITE]) + array_fill_keys(self::CONTACT_TOOLS, [McpScopes::CONTACTS_WRITE]) + array_fill_keys(self::SEND_TOOLS, [McpScopes::SEND]),
         );
 
         return new StreamableHttpTransport(
@@ -141,7 +146,7 @@ class McpServerFactory
                 'Stages are the lifecycle of a contact (list_stages, ordered by weight). New stages are unpublished; set_contact_stage only moves contacts into published stages and can make dynamic segments (and their campaigns) pick the contact up: dryRun first, show live_effects.',
                 'Projects group items (emails, campaigns, segments, forms, point actions, stages, ...) by topic; assigning items to a project changes nothing else about them.',
                 'For exports to other systems, search_contacts / search_companies with includeFields return all fields; paginate with limit/offset. get_contact_activity shows a contact\'s history (opens, clicks, visits, forms, points).',
-                'Emails and new campaigns are created unpublished; publishing them and sending stay with a person in Mautic.',
+                'Emails and new campaigns are created unpublished; publishing them stays with a person in Mautic. Sending (only if the operator enabled it and the token has mcp:send): call preview_email_send, show the user the recipients, exclusions and warnings, and call send_email with confirm=true only after they agree. Unpublished emails are never sent; contacts on Do Not Contact are skipped.',
                 'Exception: flows of RUNNING (published) campaigns can be edited (set_campaign_steps, update/add/remove_campaign_step) if the instance allows it and the user granted the scope mcp:campaigns:live. Such changes are live: Mautic\'s scheduler executes them for the contacts in the campaign and can send emails. Always call with dryRun first, show the user live_effects (outbound steps, contacts in the campaign, save_allowed) and save only after they confirm.',
                 'Every call runs with the Mautic permissions of the signed-in user.',
                 'Return the "url" of created drafts to the user so they can review them.',
@@ -150,6 +155,7 @@ class McpServerFactory
             ->setSession(new Psr16SessionStore($cache, 'session-', 3600));
 
         $allowWrite = (bool) $this->parameters->get('intellectit_mcp_allow_write', false);
+        $allowSend  = (bool) $this->parameters->get('intellectit_mcp_allow_send', false);
         $gated      = array_merge(self::WRITE_TOOLS, self::CONTACT_TOOLS);
 
         // Operator ceiling: with writes off, write tools are not even listed (the token scopes still apply on top).
@@ -180,6 +186,8 @@ class McpServerFactory
             [[$this->insightTools, 'getSegmentSummary'], 'get_segment_summary', 'Segment summary', $ro],
             [[$this->insightTools, 'findDuplicateContacts'], 'find_duplicate_contacts', 'Find duplicate contacts', $ro],
             [[$this->insightTools, 'getCampaignHealth'], 'get_campaign_health', 'Campaign health check', $ro],
+            [[$this->sendTools, 'previewEmailSend'], 'preview_email_send', 'Preview an email send', new ToolAnnotations(readOnlyHint: true, openWorldHint: false)],
+            [[$this->sendTools, 'sendEmail'], 'send_email', 'Send an email to contacts or segments', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true)],
             [[$this->layoutTools, 'listEmailLayouts'], 'list_email_layouts', 'Brand email layouts', $ro],
             [[$this->layoutTools, 'createEmailFromLayout'], 'create_email_from_layout', 'Create email in the brand theme', $rw],
             [[$this->layoutTools, 'updateEmailLayout'], 'update_email_layout', 'Replace email content (brand theme)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
@@ -219,7 +227,7 @@ class McpServerFactory
             [[$this->projectTools, 'addToProject'], 'add_to_project', 'Add items to project', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
             [[$this->projectTools, 'removeFromProject'], 'remove_from_project', 'Remove items from project', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
         ] as [$handler, $name, $title, $annotations]) {
-            if ($allowWrite || !in_array($name, $gated, true)) {
+            if (in_array($name, self::SEND_TOOLS, true) ? $allowSend : ($allowWrite || !in_array($name, $gated, true))) {
                 $builder->addTool($handler, $name, $title, null, $annotations);
             }
         }
