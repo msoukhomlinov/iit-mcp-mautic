@@ -11,6 +11,8 @@ here="$(dirname "$0")"
 
 install_mautic
 configure_oauth
+# Writes are off by default (gating.sh covers that); the other tests need them.
+set_params '{"intellectit_mcp_allow_write": true}'
 start_server
 login >/dev/null
 
@@ -49,4 +51,6 @@ source "$here/points.sh"
 source "$here/stages.sh"
 # shellcheck source=tests/functional/topics.sh
 source "$here/topics.sh"
+# shellcheck source=tests/functional/gating.sh
+source "$here/gating.sh"
 echo "all MCP checks passed"

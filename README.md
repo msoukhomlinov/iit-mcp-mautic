@@ -57,6 +57,16 @@ client. OAuth 2.1 comes from
 Setup, tools and permission model: [docs/mcp.md](https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md).
 
 
+## Capability gating
+
+Write tools (everything that creates or changes data) are **off by default**: they are not listed in `tools/list` and cannot be called, whatever scopes a token holds. An operator enables them in `config/local.php`:
+
+```php
+$parameters['intellectit_mcp_allow_write'] = true;
+```
+
+Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still apply on top of this. Further tiers (delete, send, raw API) will follow the same pattern when those tools exist.
+
 ## Development
 
 - `bin/check.sh` checks the package (PHP lint, `composer validate`, version
