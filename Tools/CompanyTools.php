@@ -23,7 +23,7 @@ const COMPANY_SCHEMA = [
     'properties'           => [
         'fields' => [
             'type'                 => 'object',
-            'description'          => 'Company fields by alias (list_contact_fields with object "company"), e.g. {"companyname": "ACME GmbH", "companywebsite": "https://acme.example", "companycity": "Kiel", "companycountry": "Germany", "companyindustry": "Software"}. companyname is required for new companies.',
+            'description'          => 'Company fields by alias (mautic_list_contact_fields with object "company"), e.g. {"companyname": "ACME GmbH", "companywebsite": "https://acme.example", "companycity": "Kiel", "companycountry": "Germany", "companyindustry": "Software"}. companyname is required for new companies.',
             'additionalProperties' => ['type' => ['string', 'number', 'boolean', 'null']],
         ],
         'contactIds' => ['type' => 'array', 'items' => ['type' => 'integer'], 'maxItems' => 100, 'description' => 'Link these contacts to the company (it becomes their primary company)'],
@@ -118,7 +118,7 @@ class CompanyTools
                 }
                 $unknown = array_diff(array_keys($data), array_keys($known));
                 if ([] !== $unknown) {
-                    throw new ToolCallException(sprintf('Unknown company field(s): %s. See list_contact_fields with object "company".', implode(', ', $unknown)));
+                    throw new ToolCallException(sprintf('Unknown company field(s): %s. See mautic_list_contact_fields with object "company".', implode(', ', $unknown)));
                 }
                 [, $found] = IdentifyCompanyHelper::findCompany($data, $this->companies);
                 $company   = [] !== $found ? end($found) : new Company();

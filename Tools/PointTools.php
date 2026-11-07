@@ -37,10 +37,10 @@ const TRIGGER_EVENTS_SCHEMA = [
         'required'             => ['type'],
         'additionalProperties' => false,
         'properties'           => [
-            'key'        => ['type' => 'string', 'description' => 'ID of an existing event of this trigger (from list_point_triggers) to keep or change it; omit for new events'],
-            'type'       => ['type' => 'string', 'description' => 'Event type from list_point_trigger_event_types, e.g. "lead.changetags", "email.send_to_user"'],
+            'key'        => ['type' => 'string', 'description' => 'ID of an existing event of this trigger (from mautic_list_point_triggers) to keep or change it; omit for new events'],
+            'type'       => ['type' => 'string', 'description' => 'Event type from mautic_list_point_trigger_event_types, e.g. "lead.changetags", "email.send_to_user"'],
             'name'       => ['type' => 'string'],
-            'properties' => ['type' => ['object', 'array'], 'description' => 'Settings, see describe_point_trigger_event_type'],
+            'properties' => ['type' => ['object', 'array'], 'description' => 'Settings, see mautic_describe_point_trigger_event_type'],
         ],
     ],
 ];
@@ -168,7 +168,7 @@ class PointTools
     }
 
     /**
-     * Settings of a point action type (field names, required, choices), for create_point_action / update_point_action.
+     * Settings of a point action type (field names, required, choices), for mautic_create_point_action / mautic_update_point_action.
      *
      * @return array<string, mixed>
      */
@@ -201,7 +201,7 @@ class PointTools
     /**
      * Create an unpublished point action: contacts get `delta` points (negative to subtract) when the action happens, optionally in a point group. A person publishes it in Mautic.
      *
-     * @param array<string, mixed> $properties Settings of the type (describe_point_action_type)
+     * @param array<string, mixed> $properties Settings of the type (mautic_describe_point_action_type)
      * @param bool                 $repeatable Award the points every time, not only once per contact
      *
      * @return array<string, mixed>
@@ -211,7 +211,7 @@ class PointTools
         #[Schema(minLength: 1, maxLength: 191)] string $name,
         string $type,
         int $delta,
-        #[Schema(definition: ['type' => ['object', 'array'], 'description' => 'Settings of the type (an object), see describe_point_action_type'])] array $properties = [],
+        #[Schema(definition: ['type' => ['object', 'array'], 'description' => 'Settings of the type (an object), see mautic_describe_point_action_type'])] array $properties = [],
         ?int $groupId = null,
         bool $repeatable = false,
         string $description = '',
@@ -300,7 +300,7 @@ class PointTools
     }
 
     /**
-     * Settings of a trigger event type, for create_point_trigger / update_point_trigger.
+     * Settings of a trigger event type, for mautic_create_point_trigger / mautic_update_point_trigger.
      *
      * @return array<string, mixed>
      */
@@ -532,11 +532,11 @@ class PointTools
         if ($form->has('properties')) {
             $props              = array_key_exists('properties', $data) ? (array) $data['properties'] : (array) ($point->getProperties() ?? []);
             $data['properties'] = $this->tagNamesToIds($form->get('properties'), $props);
-            $this->requireFields($form->get('properties'), $data['properties'], sprintf('Point action (%s)', $point->getType()), 'describe_point_action_type');
+            $this->requireFields($form->get('properties'), $data['properties'], sprintf('Point action (%s)', $point->getType()), 'mautic_describe_point_action_type');
         }
         $form->submit($data, false);
         if (!$form->isValid()) {
-            throw new ToolCallException(sprintf('Point action (%s) is invalid: %s. See describe_point_action_type.', $point->getType(), $this->describer->errors($form)));
+            throw new ToolCallException(sprintf('Point action (%s) is invalid: %s. See mautic_describe_point_action_type.', $point->getType(), $this->describer->errors($form)));
         }
     }
 
@@ -550,7 +550,7 @@ class PointTools
     {
         $def = $this->points->getPointActions()['actions'][$type] ?? null;
         if (!is_array($def)) {
-            throw new ToolCallException(sprintf('Unknown point action type "%s". See list_point_action_types.', $type));
+            throw new ToolCallException(sprintf('Unknown point action type "%s". See mautic_list_point_action_types.', $type));
         }
 
         return $def;
@@ -561,7 +561,7 @@ class PointTools
     {
         $def = $this->triggers->getEvents()[$type] ?? null;
         if (!is_array($def)) {
-            throw new ToolCallException(sprintf('Unknown trigger event type "%s". See list_point_trigger_event_types.', $type));
+            throw new ToolCallException(sprintf('Unknown trigger event type "%s". See mautic_list_point_trigger_event_types.', $type));
         }
 
         return $def;
@@ -596,7 +596,7 @@ class PointTools
             $type = (string) ($e['type'] ?? '');
             $key  = isset($e['key']) ? (string) $e['key'] : '';
             if ('' !== $key && !isset($existing[$key])) {
-                throw new ToolCallException(sprintf('Event %d: this trigger has no event "%s" (see list_point_triggers).', $i + 1, $key));
+                throw new ToolCallException(sprintf('Event %d: this trigger has no event "%s" (see mautic_list_point_triggers).', $i + 1, $key));
             }
             $def  = $this->eventDef($type);
             $old  = '' !== $key ? $existing[$key] : null;
@@ -609,11 +609,11 @@ class PointTools
             }
             if ($form->has('properties')) {
                 $submit['properties'] = $this->tagNamesToIds($form->get('properties'), (array) $submit['properties']);
-                $this->requireFields($form->get('properties'), $submit['properties'], sprintf('Event %d (%s)', $i + 1, $type), 'describe_point_trigger_event_type');
+                $this->requireFields($form->get('properties'), $submit['properties'], sprintf('Event %d (%s)', $i + 1, $type), 'mautic_describe_point_trigger_event_type');
             }
             $form->submit($submit, false);
             if (!$form->isValid()) {
-                throw new ToolCallException(sprintf('Event %d (%s) is invalid: %s. See describe_point_trigger_event_type.', $i + 1, $type, $this->describer->errors($form)));
+                throw new ToolCallException(sprintf('Event %d (%s) is invalid: %s. See mautic_describe_point_trigger_event_type.', $i + 1, $type, $this->describer->errors($form)));
             }
             $data = (array) $form->getData();
             $id   = '' !== $key ? $key : 'new'.$i;
@@ -730,7 +730,7 @@ class PointTools
     {
         $group = $this->groups->getEntity($id);
         if (!$group instanceof Group || !$group->getId()) {
-            throw new ToolCallException(sprintf('Point group %d not found (see list_point_groups).', $id));
+            throw new ToolCallException(sprintf('Point group %d not found (see mautic_list_point_groups).', $id));
         }
 
         return $group;

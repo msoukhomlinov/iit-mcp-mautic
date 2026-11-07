@@ -27,8 +27,8 @@ const STEP_SCHEMA = [
                 'required'             => ['key'],
                 'additionalProperties' => false,
                 'properties'           => [
-                    'key'        => ['type' => 'string', 'description' => 'Existing steps: their ID as returned by get_campaign (keeps the step and its contact history). New steps: any non-numeric id, e.g. "reminder". Used by "parent" of later steps.'],
-                    'type'       => ['type' => 'string', 'description' => 'Step type from list_campaign_step_types, e.g. "email.send", "email.open", "lead.changetags". Required for new steps.'],
+                    'key'        => ['type' => 'string', 'description' => 'Existing steps: their ID as returned by mautic_get_campaign (keeps the step and its contact history). New steps: any non-numeric id, e.g. "reminder". Used by "parent" of later steps.'],
+                    'type'       => ['type' => 'string', 'description' => 'Step type from mautic_list_campaign_step_types, e.g. "email.send", "email.open", "lead.changetags". Required for new steps.'],
                     'name'       => ['type' => 'string', 'description' => 'Name shown in the builder (default: the type label)'],
                     'parent'     => ['type' => 'string', 'description' => 'Key of the step this one follows. Omit for steps that run when a contact enters the campaign. Parents must be listed before their children.'],
                     'path'       => ['type' => 'string', 'enum' => ['yes', 'no'], 'description' => 'Required after a decision or condition: which branch this step is on'],
@@ -42,7 +42,7 @@ const STEP_SCHEMA = [
                             'at'       => ['type' => 'string', 'description' => 'Fixed date-time (ISO 8601) instead of an interval'],
                         ],
                     ],
-                    'properties' => ['type' => ['object', 'array'], 'description' => 'Settings of the step type, see describe_campaign_step_type. For email.send: {"email": <template email id>, "email_type": "marketing"|"transactional"}'],
+                    'properties' => ['type' => ['object', 'array'], 'description' => 'Settings of the step type, see mautic_describe_campaign_step_type. For email.send: {"email": <template email id>, "email_type": "marketing"|"transactional"}'],
                 ],
             ];
 
@@ -78,7 +78,7 @@ class WriteTools
     }
 
     /**
-     * Create an unpublished email draft. Write complete, email-safe HTML (tables, inline styles, max width 600px) and include an unsubscribe link in the footer, e.g. <a href="{unsubscribe_url}">Abmelden oder Themen wählen</a> (Mautic's {unsubscribe_text} renders an English text). Prefer create_email_from_layout. A human reviews and publishes it in Mautic.
+     * Create an unpublished email draft. Write complete, email-safe HTML (tables, inline styles, max width 600px) and include an unsubscribe link in the footer, e.g. <a href="{unsubscribe_url}">Abmelden oder Themen wählen</a> (Mautic's {unsubscribe_text} renders an English text). Prefer mautic_create_email_from_layout. A human reviews and publishes it in Mautic.
      *
      * @param string    $name       Internal name
      * @param string    $subject    Subject line
@@ -87,7 +87,7 @@ class WriteTools
      * @param list<int> $segmentIds Segment IDs for a segment email
      * @param string    $preheader  Preview text shown after the subject
      * @param string    $language   Language code, e.g. "de" or "en"
-     * @param string    $topic      Topic of the email (name or ID from list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
+     * @param string    $topic      Topic of the email (name or ID from mautic_list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
      *
      * @return array<string, mixed>
      */
@@ -134,7 +134,7 @@ class WriteTools
      * @param string|null    $html       New full HTML document
      * @param list<int>|null $segmentIds Replace the segments (segment emails)
      * @param string|null    $preheader  New preview text
-     * @param string|null    $topic      New topic (name or ID, "" removes it), see list_email_topics
+     * @param string|null    $topic      New topic (name or ID, "" removes it), see mautic_list_email_topics
      *
      * @return array<string, mixed>
      */
@@ -321,7 +321,7 @@ class WriteTools
     }
 
     /**
-     * Set the complete flow of a campaign: actions, decisions, conditions, waits and yes/no branches. CAUTION for published (running) campaigns: saved changes are live; Mautic's scheduler executes added/changed steps for the contacts in the campaign and may send emails. Always dryRun first, show the user live_effects and get their confirmation. Works as a diff: steps keyed with an existing step ID (from get_campaign) are updated in place and keep their contact history, new keys add steps, existing steps left out are removed. Validated like Mautic's campaign builder. Published (running) campaigns: steps can be added and changed but not moved; removing steps needs allow_deletions after checking a dry_run. Example: send welcome email; if opened -> add points; if not opened within 3 days -> send reminder.
+     * Set the complete flow of a campaign: actions, decisions, conditions, waits and yes/no branches. CAUTION for published (running) campaigns: saved changes are live; Mautic's scheduler executes added/changed steps for the contacts in the campaign and may send emails. Always dryRun first, show the user live_effects and get their confirmation. Works as a diff: steps keyed with an existing step ID (from mautic_get_campaign) are updated in place and keep their contact history, new keys add steps, existing steps left out are removed. Validated like Mautic's campaign builder. Published (running) campaigns: steps can be added and changed but not moved; removing steps needs allow_deletions after checking a dry_run. Example: send welcome email; if opened -> add points; if not opened within 3 days -> send reminder.
      *
      * @param int                        $id             Campaign ID
      * @param list<array<string, mixed>> $steps          The complete flow, parents before children
@@ -340,7 +340,7 @@ class WriteTools
      * Change one step of a campaign (also a running one; then the change is live and may send emails via Mautic's scheduler, dryRun first and confirm with the user): its name, wait and/or properties. The step keeps its ID and contact history; omitted fields stay as they are. Contacts already scheduled on the step keep their time.
      *
      * @param int                  $campaignId Campaign ID
-     * @param string               $key        Step ID from get_campaign
+     * @param string               $key        Step ID from mautic_get_campaign
      * @param string|null          $name       New name
      * @param array<string, mixed> $wait       New wait {interval, unit} or {at}; {} = immediately; omit to keep
      * @param array<string, mixed> $properties Properties to change (others stay)
@@ -369,7 +369,7 @@ class WriteTools
             }
             unset($step);
             if (!$found) {
-                throw new ToolCallException(sprintf('Step "%s" not found in this campaign. Use the step IDs from get_campaign.', $key));
+                throw new ToolCallException(sprintf('Step "%s" not found in this campaign. Use the step IDs from mautic_get_campaign.', $key));
             }
 
             return $current;
@@ -398,7 +398,7 @@ class WriteTools
      * Remove one step (that has no following steps) from a campaign. On a running campaign, call it first with dryRun to see how many contacts are scheduled on the step, then with confirm=true; redirectTo moves those contacts to another step.
      *
      * @param int         $campaignId Campaign ID
-     * @param string      $key        Step ID from get_campaign
+     * @param string      $key        Step ID from mautic_get_campaign
      * @param string|null $redirectTo Step ID where contacts waiting on the removed step continue
      * @param bool        $dryRun     Only report the change
      * @param bool        $confirm    Required to remove a step from a published campaign
@@ -414,7 +414,7 @@ class WriteTools
             }
             $children = array_column(array_filter($current, fn (array $s): bool => ($s['parent'] ?? null) === $key), 'key');
             if ([] !== $children) {
-                throw new ToolCallException(sprintf('Step "%s" has following steps (%s). Remove those first, or restructure with set_campaign_steps.', $key, implode(', ', $children)));
+                throw new ToolCallException(sprintf('Step "%s" has following steps (%s). Remove those first, or restructure with mautic_set_campaign_steps.', $key, implode(', ', $children)));
             }
 
             return array_values(array_filter($current, fn (array $s): bool => $s['key'] !== $key));
@@ -455,7 +455,7 @@ class WriteTools
             }
             $this->auth->requireEntityAccess($context, $email, 'email:emails', 'view');
             if ('list' === $email->getEmailType()) {
-                throw new ToolCallException(sprintf('Step "%s": email %d is a segment email; campaigns can only send template emails (create_email_draft type "template").', $step['key'] ?? '?', $email->getId()));
+                throw new ToolCallException(sprintf('Step "%s": email %d is a segment email; campaigns can only send template emails (mautic_create_email_draft type "template").', $step['key'] ?? '?', $email->getId()));
             }
         }
 

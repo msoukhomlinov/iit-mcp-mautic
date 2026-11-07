@@ -11,15 +11,15 @@
 echo "MCP scenarios (realistic campaign flows)"
 sc_email() { # $1 name, $2 subject, [$3 language] -> id (template email, published by a person)
   local id
-  id="$(result "$(call "$access" create_email_draft "$(jq -nc --arg n "$1" --arg s "$2" --arg l "${3:-de}" \
+  id="$(result "$(call "$access" mautic_create_email_draft "$(jq -nc --arg n "$1" --arg s "$2" --arg l "${3:-de}" \
     '{name: $n, subject: $s, type: "template", language: $l,
       html: ("<html><body><h1>" + $s + "</h1><p><a href=\"https://kopexa.com/de\">kopexa.com</a></p>{unsubscribe_text}</body></html>")}')")" | jq -r '.id // empty')"
-  [[ "$id" =~ ^[0-9]+$ ]] || fail "create_email_draft $1"
+  [[ "$id" =~ ^[0-9]+$ ]] || fail "mautic_create_email_draft $1"
   api -X PATCH "$BASE/api/emails/$id/edit" -d isPublished=1 >/dev/null
   echo "$id"
 }
 sc_set() { # $1 campaign id, $2 steps JSON, [$3 extra args JSON] -> tool result text
-  result "$(call "$access" set_campaign_steps "$(jq -nc --argjson id "$1" --argjson s "$2" --argjson x "${3:-{\}}" '{id: $id, steps: $s} + $x')")"
+  result "$(call "$access" mautic_set_campaign_steps "$(jq -nc --argjson id "$1" --argjson s "$2" --argjson x "${3:-{\}}" '{id: $id, steps: $s} + $x')")"
 }
 sc_sql() { db "$1"; }
 
@@ -32,7 +32,7 @@ e_case="$(sc_email 'Trial 03 – Case Study' 'Wie ein Mittelständler NIS2 in 6 
 e_demo="$(sc_email 'Trial 04 – Demo' '15 Minuten: Ihre persönliche Kopexa-Demo')"
 e_remind="$(sc_email 'Trial 05 – Erinnerung' 'Schon reingeschaut? Ihr Trial wartet')"
 e_sales="$(sc_email 'Intern – Sales-ready Lead' 'Neuer Sales-ready Lead aus dem Trial')"
-camp_a="$(result "$(call "$access" create_campaign_draft "{\"name\":\"Trial-Onboarding (14 Tage)\",\"segmentIds\":[$seg_trial],\"description\":\"Aktivierung, Lead-Scoring, Übergabe an den Vertrieb, Reaktivierung.\"}")" | jq -r .id)"
+camp_a="$(result "$(call "$access" mautic_create_campaign_draft "{\"name\":\"Trial-Onboarding (14 Tage)\",\"segmentIds\":[$seg_trial],\"description\":\"Aktivierung, Lead-Scoring, Übergabe an den Vertrieb, Reaktivierung.\"}")" | jq -r .id)"
 flow_a="$(jq -nc --argjson w "$e_welcome" --argjson g "$e_guide" --argjson c "$e_case" --argjson d "$e_demo" \
   --argjson r "$e_remind" --argjson s "$e_sales" --argjson sales "$seg_sales" '[
   {key: "welcome",         type: "email.send",            name: "Willkommens-Mail",         properties: {email: $w, email_type: "marketing"}},
@@ -76,7 +76,7 @@ pixel="$(curl -s -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0 (Macintosh; Inte
 console messenger:consume email hit --time-limit=8 >/dev/null 2>&1 || true
 sc_console mautic:campaigns:trigger -i "$camp_a" >/dev/null
 tags="$(api "$BASE/api/contacts/$lead_a" | jq -c '[.contact.tags[].tag]')"
-live_a="$(result "$(call "$access" get_campaign "{\"id\":$camp_a}")")"
+live_a="$(result "$(call "$access" mautic_get_campaign "{\"id\":$camp_a}")")"
 [[ "$tags" == '["trial-aktiv"]' ]] && jq -e '[.steps[] | select(.name == "ISO-27001-Fahrplan") | .contacts.scheduled] == [1]' <<<"$live_a" >/dev/null \
   && pass "A: email opened -> yes branch: tagged trial-aktiv, roadmap email scheduled in 2 days" \
   || { echo "tags=$tags pixel=$pixel"; db "SELECT is_read, open_count, date_read FROM email_stats WHERE tracking_hash = '$hash'"; db "SELECT ip_address FROM ip_addresses"; jq -c '[.steps[] | {name, contacts}]' <<<"$live_a" | head -c 1500; fail "A: yes branch after the open"; }
@@ -88,7 +88,7 @@ e_de="$(sc_email 'Webinar NIS2 – Danke (DE)' 'Danke für Ihre Teilnahme: Folie
 e_en="$(sc_email 'Webinar NIS2 – Thanks (EN)' 'Thank you for joining: slides and recording' en)"
 e_fde="$(sc_email 'Webinar NIS2 – Nachfass (DE)' 'Ihre NIS2-Checkliste zum Webinar')"
 e_fen="$(sc_email 'Webinar NIS2 – Follow-up (EN)' 'Your NIS2 checklist from the webinar' en)"
-camp_b="$(result "$(call "$access" create_campaign_draft "{\"name\":\"Webinar-Follow-up NIS2\",\"segmentIds\":[$seg_web]}")" | jq -r .id)"
+camp_b="$(result "$(call "$access" mautic_create_campaign_draft "{\"name\":\"Webinar-Follow-up NIS2\",\"segmentIds\":[$seg_web]}")" | jq -r .id)"
 flow_b="$(jq -nc --argjson de "$e_de" --argjson en "$e_en" --argjson fde "$e_fde" --argjson fen "$e_fen" \
   --argjson mql "$stage_mql" --argjson s "$e_sales" '[
   {key: "is_de",       type: "lead.field_value",   name: "Land = Deutschland?",    properties: {field: "country", operator: "=", value: "Germany"}},

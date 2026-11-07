@@ -34,7 +34,7 @@ return [
         // data). Off by default: they are not listed and cannot be called, whatever
         // scopes the token holds. Turn on with intellectit_mcp_allow_write=true.
         'intellectit_mcp_allow_write' => false,
-        // Real email sending (preview_email_send, send_email). Off by default; the
+        // Real email sending (mautic_preview_email_send, mautic_send_email). Off by default; the
         // token additionally needs the opt-in scope mcp:send. Unpublished emails are never sent.
         'intellectit_mcp_allow_send' => false,
         // Sending to whole segments needs this on top of intellectit_mcp_allow_send.

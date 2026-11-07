@@ -17,7 +17,7 @@ use Mcp\Exception\ToolCallException;
  */
 class EmailTopics
 {
-    public const NO_TOPIC_WARNING = 'No topic: people who switched topics off in their email preferences still get this email. Set a topic (list_email_topics) unless it is a service email the person asked for (e.g. a download link), sent as transactional.';
+    public const NO_TOPIC_WARNING = 'No topic: people who switched topics off in their email preferences still get this email. Set a topic (mautic_list_email_topics) unless it is a service email the person asked for (e.g. a download link), sent as transactional.';
 
     public function __construct(private readonly CategoryModel $categories)
     {
