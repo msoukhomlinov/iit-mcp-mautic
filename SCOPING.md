@@ -62,6 +62,8 @@ Rule, reason, approver, date. "PENDING" means inherited from upstream and not ye
 - No `mautic_guide` tool or outcome skills; playbooks live in the instructions.
 - Audit has no per-call outcome or approver record beyond the audit-log row; previews are not audited.
 - No per-day send limit (per-call and per-hour only; the hourly count comes from the audit log).
+- The raw-API passthrough tool was considered and skipped by the owner (2026-11-07): the named tools cover the work and a passthrough widens the surface.
+- Contact merge, delete and the hourly send limit are built. Confirmed sends hold a database lock (`GET_LOCK`) so the hourly check and its audit row cannot interleave; a send that fails midway is counted at its planned size.
 - No `composer audit` step in CI: the package has no lock file; its dependencies resolve inside Mautic.
 - No mutation-check evidence for the tests.
 - No MCP Inspector or protocol-conformance run (the functional suite speaks JSON-RPC directly).

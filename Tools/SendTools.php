@@ -67,6 +67,28 @@ class SendTools
      */
     public function sendEmail(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = [], bool $confirm = false, #[Schema(minimum: 0)] ?int $expectedRecipientCount = null): array
     {
+        if (!$confirm) {
+            return $this->sendPlanned($context, $emailId, $contactIds, $segmentIds, false, $expectedRecipientCount);
+        }
+        // One confirmed send at a time: the hourly limit check and the audit row that counts it must not interleave.
+        if (1 !== (int) $this->db->fetchOne("SELECT GET_LOCK('intellectit_mcp_send', 10)")) {
+            throw McpError::from('Another send is in progress on this instance. Try again in a moment.', McpError::BLOCKED_BY_POLICY);
+        }
+        try {
+            return $this->sendPlanned($context, $emailId, $contactIds, $segmentIds, true, $expectedRecipientCount);
+        } finally {
+            $this->db->fetchOne("SELECT RELEASE_LOCK('intellectit_mcp_send')");
+        }
+    }
+
+    /**
+     * @param list<int> $contactIds
+     * @param list<int> $segmentIds
+     *
+     * @return array<string, mixed>
+     */
+    private function sendPlanned(RequestContext $context, int $emailId, array $contactIds, array $segmentIds, bool $confirm, ?int $expectedRecipientCount): array
+    {
         $plan    = $this->plan($context, $emailId, $contactIds, $segmentIds, 'edit');
         $preview = $plan['preview'];
         if (!$confirm) {
@@ -91,6 +113,24 @@ class SendTools
 
         /** @var Email $email */
         $email = $plan['email'];
+        try {
+            $result = $this->deliver($email, $plan, $preview);
+        } catch (\Throwable $e) {
+            // Mautic may have sent some before failing: count the planned recipients against the hourly limit.
+            $this->auth->audit('email', (int) $email->getId(), 'send', ['mode' => $preview['mode'], 'contactIds' => $contactIds, 'segmentIds' => $segmentIds, 'sent' => (int) $preview['recipient_count'], 'failed' => 0, 'error' => $e->getMessage()]);
+            throw $e;
+        }
+        return $result;
+    }
+
+    /**
+     * @param array<string, mixed> $plan
+     * @param array<string, mixed> $preview
+     *
+     * @return array<string, mixed>
+     */
+    private function deliver(Email $email, array $plan, array $preview): array
+    {
         if ('segments' === $preview['mode']) {
             [$sent, $failed] = $this->emails->sendEmailToLists($email, $plan['lists'], $plan['cap']);
             $result          = ['sent' => true, 'sent_count' => (int) $sent, 'failed_count' => (int) $failed];
