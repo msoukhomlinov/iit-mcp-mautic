@@ -34,7 +34,7 @@ Related tools are merged behind an `action` or `type` parameter (`mautic_change_
 2. Exclusions: Do Not Contact (unless `intellectit_mcp_send_ignore_dnc`), contacts without a valid address. Blockers: unpublished email, template email to segments, segment switch off, over the cap, no eligible recipients.
 3. `mautic_send_email` without `confirm=true` returns the preview. With it, the plan is rebuilt; the call must carry `expectedRecipientCount` equal to the rebuilt `recipient_count`, and if there are no blockers Mautic's own `EmailModel::sendEmail` / `sendEmailToLists` sends it. Mautic's segment sending applies the limit across the listed segments in total (read in its source); the cap is tested in contact mode only.
 4. `mautic_send_email` carries `_meta["anthropic/requiresUserInteraction"]`, so Claude Code prompts a person on every call. Server-side checks above do not depend on the client.
-5. Confirmed sends and sends blocked after `confirm=true` are audited (mode, ids, counts, cap, whether the DNC override was on). Previews and permission refusals are not.
+5. Confirmed sends and sends blocked after `confirm=true` are audited (mode, `targets_hash`, ids, counts, cap, whether the DNC override was on). Previews and `confirm=false` calls are audited as `send_preview` rows (mode, capped target ids, `targets_hash`, count, blockers) and do not count against the hourly limit; permission refusals are audited as `refusal` rows. The `targets_hash` links a send to its preview.
 
 ### Email outside the send tier
 

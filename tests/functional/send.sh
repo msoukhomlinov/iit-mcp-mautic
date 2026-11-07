@@ -62,7 +62,7 @@ jq -e '.sent == true and .sent_count == 1 and .failed_count == 0' <<<"$sent" >/d
   && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_ok")" == 1 && "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_dnc")" == 0 ]] \
   && pass "mautic_send_email confirm=true: the contact got it, the Do Not Contact contact did not" || { echo "$sent" | head -c 700; fail "confirmed send"; }
 
-[[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send'")" == 1 && "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send' AND details LIKE '%\"ref\"%' AND details LIKE '%\"contactIds\"%'")" == 1 ]] \
+[[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send'")" == 1 && "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send' AND details LIKE '%\"ref\"%' AND details LIKE '%\"contactIds\"%' AND details LIKE '%targets_hash%'")" == 1 ]] \
   && pass "one send is one audit row, with its recipients and a correlation ref" || fail "send audit row missing, duplicated or without ref"
 set_params '{"intellectit_mcp_send_max_recipients": 1}'
 cap="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc]}")")"
