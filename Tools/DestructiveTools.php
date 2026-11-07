@@ -44,7 +44,7 @@ class DestructiveTools
     }
 
     /**
-     * Permanently delete one contact, company, segment, email or campaign. Without confirm=true nothing is deleted and the preview shows the record and what depends on it. Emails and campaigns must be unpublished; a segment used by a campaign or email cannot be deleted. There is no undo.
+     * Permanently delete one contact, company, segment, email or campaign. Without confirm=true nothing is deleted and the preview shows the record and what depends on it. Emails and campaigns must be unpublished; a segment used by a campaign or email, or an email used by a campaign step, cannot be deleted. There is no undo.
      *
      * @param string      $type         What to delete: contact, company, segment, email or campaign
      * @param int         $id           ID of the record
@@ -67,7 +67,7 @@ class DestructiveTools
             'contact'  => [$this->leads, 'lead:leads', Lead::class, fn (int $i): array => $this->counts($i, ['email_stats' => ['lead_id', 'emails received'], 'campaign_leads' => ['lead_id', 'campaign memberships'], 'lead_lists_leads' => ['lead_id', 'segment memberships']])],
             'company'  => [$this->companies, 'lead:leads', Company::class, fn (int $i): array => $this->counts($i, ['companies_leads' => ['company_id', 'contacts in it']])],
             'segment'  => [$this->segments, 'lead:lists', LeadList::class, fn (int $i): array => $this->counts($i, ['lead_lists_leads' => ['leadlist_id', 'contacts in it'], 'campaign_leadlist_xref' => ['leadlist_id', 'campaigns using it'], 'email_list_xref' => ['leadlist_id', 'emails assigned to it']])],
-            'email'    => [$this->emails, 'email:emails', Email::class, fn (int $i): array => $this->counts($i, ['email_stats' => ['email_id', 'sends recorded']])],
+            'email'    => [$this->emails, 'email:emails', Email::class, fn (int $i): array => $this->counts($i, ['email_stats' => ['email_id', 'sends recorded'], 'campaign_events' => ["channel = 'email' AND deleted IS NULL AND channel_id", 'campaign steps using it']])],
             'campaign' => [$this->campaigns, 'campaign:campaigns', Campaign::class, fn (int $i): array => $this->counts($i, ['campaign_leads' => ['campaign_id', 'contacts in it'], 'campaign_events' => ['campaign_id', 'steps']])],
         };
         $entity = $model->getEntity($id);
@@ -88,6 +88,10 @@ class DestructiveTools
         }
         if ($entity instanceof LeadList && (($impacts['campaigns using it'] ?? 0) > 0 || ($impacts['emails assigned to it'] ?? 0) > 0)) {
             $blockers[] = 'The segment is used by a campaign or email. Remove it there first.';
+        }
+        if ($entity instanceof Email && ($impacts['campaign steps using it'] ?? 0) > 0) {
+            // Mautic deletes the email and leaves the campaign step pointing at nothing.
+            $blockers[] = 'The email is used by a campaign step. Remove it from the campaign first.';
         }
         $preview = ['type' => $type, 'id' => $id, 'name' => $name, 'impact' => $impacts, 'blockers' => $blockers, 'can_delete' => [] === $blockers];
 
