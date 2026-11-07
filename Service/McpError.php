@@ -31,7 +31,18 @@ final class McpError
         self::BLOCKED_BY_POLICY => '/not published|switched off|disabled on this|operator|published campaigns? |Only unpublished|via MCP|at most \d+|^Not (sent|deleted)|^This would delete|running/i',
     ];
 
+    /** Refusals with these codes are written to the audit log (see McpUserContext). */
+    private const AUDITED = [self::PERMISSION_DENIED, self::BLOCKED_BY_POLICY, self::CONFIRM_REQUIRED];
+
     private static ?string $correlationId = null;
+
+    /** @var (callable(string, string, string): void)|null receives code, message, ref */
+    private static $auditSink;
+
+    public static function auditTo(callable $sink): void
+    {
+        self::$auditSink = $sink;
+    }
 
     /** One ID per call: each MCP call is one PHP request. */
     public static function correlationId(): string
@@ -48,6 +59,14 @@ final class McpError
                     $code = $candidate;
                     break;
                 }
+            }
+        }
+
+        if (null !== self::$auditSink && in_array($code, self::AUDITED, true)) {
+            try {
+                (self::$auditSink)($code, $message, self::correlationId());
+            } catch (\Throwable) {
+                // a failing audit write must not hide the refusal itself
             }
         }
 

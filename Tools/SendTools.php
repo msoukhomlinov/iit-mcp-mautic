@@ -120,7 +120,17 @@ class SendTools
             $this->auth->audit('email', (int) $email->getId(), 'send', ['mode' => $preview['mode'], 'contactIds' => $contactIds, 'segmentIds' => $segmentIds, 'sent' => (int) $preview['recipient_count'], 'failed' => 0, 'error' => $e->getMessage()]);
             throw $e;
         }
-        return $result;
+        $this->auth->audit('email', (int) $email->getId(), 'send', [
+            'mode'         => $preview['mode'],
+            'contactIds'   => $contactIds,
+            'segmentIds'   => $segmentIds,
+            'sent'         => $result['sent_count'],
+            'failed'       => $result['failed_count'],
+            'cap'          => $preview['max_recipients_per_call'],
+            'dnc_override' => (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false),
+        ]);
+
+        return $result + ['email' => ['id' => $email->getId(), 'name' => $email->getName()]];
     }
 
     /**
@@ -150,17 +160,7 @@ class SendTools
                 $result['failures'] = array_slice(array_map('strval', $errors), 0, 10, true);
             }
         }
-        $this->auth->audit('email', (int) $email->getId(), 'send', [
-            'mode'       => $preview['mode'],
-            'contactIds' => $contactIds,
-            'segmentIds' => $segmentIds,
-            'sent'       => $result['sent_count'],
-            'failed'     => $result['failed_count'],
-            'cap'        => $preview['max_recipients_per_call'],
-            'dnc_override' => (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false),
-        ]);
-
-        return $result + ['email' => ['id' => $email->getId(), 'name' => $email->getName()]];
+        return $result;
     }
 
     /** Recipients sent through this plugin in the last hour, from the audit log (all users). */
