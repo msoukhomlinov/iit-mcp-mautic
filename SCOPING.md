@@ -36,7 +36,7 @@ OAuth 2.1 (authorization code with PKCE, dynamic client registration) from `kope
 
 ## Budget (measured by `tests/functional/surface.sh`, Mautic 7.2.2)
 
-- Instructions: 2,888 characters (limit 3,500); hard rules in the first 512 characters.
+- Instructions: 3,062 characters (limit 3,500); hard rules in the first 512 characters.
 - `tools/list` with every tier on: 66 tools, 51,397 (about 13k tokens) bytes, 99 parameters without a description.
 
 ## Exceptions
