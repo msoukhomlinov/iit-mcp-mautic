@@ -7,7 +7,6 @@ namespace MauticPlugin\IntellectItMcpBundle\Service;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\PathsHelper;
 use Mautic\CoreBundle\Twig\Helper\AssetsHelper;
-use Mcp\Exception\ToolCallException;
 
 /**
  * Email layouts of themes that ship a block library (mcp/blocks.json, e.g.
@@ -54,7 +53,7 @@ class EmailLayouts
     {
         $lib = $this->all()[$theme] ?? null;
         if (null === $lib) {
-            throw new ToolCallException(sprintf('Theme "%s" has no email layouts. Available: %s.', $theme, implode(', ', array_keys($this->all())) ?: 'none'));
+            throw McpError::from(sprintf('Theme "%s" has no email layouts. Available: %s.', $theme, implode(', ', array_keys($this->all())) ?: 'none'));
         }
 
         return $lib;
@@ -96,7 +95,7 @@ class EmailLayouts
     {
         $lib = $this->library($theme);
         if ([] === $layout) {
-            throw new ToolCallException('The layout needs at least one panel.');
+            throw McpError::from('The layout needs at least one panel.');
         }
         $mjml = '';
         $html = '';
@@ -104,11 +103,11 @@ class EmailLayouts
             $type = (string) ($panel['type'] ?? '');
             $def  = $lib['panels'][$type] ?? null;
             if (null === $def) {
-                throw new ToolCallException(sprintf('Panel %d: unknown type "%s"; use one of %s.', $i + 1, $type, implode(', ', array_keys($lib['panels']))));
+                throw McpError::from(sprintf('Panel %d: unknown type "%s"; use one of %s.', $i + 1, $type, implode(', ', array_keys($lib['panels']))));
             }
             $unknownAreas = array_diff(array_keys(array_diff_key($panel, ['type' => 1])), array_keys($def['areas']));
             if ([] !== $unknownAreas) {
-                throw new ToolCallException(sprintf('Panel %d (%s): unknown area(s) %s; it has %s.', $i + 1, $type, implode(', ', $unknownAreas), implode(', ', array_keys($def['areas']))));
+                throw McpError::from(sprintf('Panel %d (%s): unknown area(s) %s; it has %s.', $i + 1, $type, implode(', ', $unknownAreas), implode(', ', array_keys($def['areas']))));
             }
             if ($i > 0) {
                 $mjml .= $lib['mjml']['gap'];
@@ -122,7 +121,7 @@ class EmailLayouts
                     $etype = (string) ($item['type'] ?? '');
                     $e     = $elements[$etype] ?? null;
                     if (null === $e) {
-                        throw new ToolCallException(sprintf('Panel %d (%s), %s %d: unknown element "%s"; use one of %s.', $i + 1, $type, $area, $k + 1, $etype, implode(', ', array_keys($elements))));
+                        throw McpError::from(sprintf('Panel %d (%s), %s %d: unknown element "%s"; use one of %s.', $i + 1, $type, $area, $k + 1, $etype, implode(', ', array_keys($elements))));
                     }
                     $values = $this->values($e['slots'], $item, sprintf('Panel %d (%s), %s %d (%s)', $i + 1, $type, $area, $k + 1, $etype));
                     $mjml .= $this->fill($e['mjml'], $values);
@@ -160,13 +159,13 @@ class EmailLayouts
     {
         $unknown = array_diff(array_keys($item), ['type', ...array_keys($slots)]);
         if ([] !== $unknown) {
-            throw new ToolCallException(sprintf('%s: unknown field(s) %s; it takes %s.', $where, implode(', ', $unknown), implode(', ', array_keys($slots))));
+            throw McpError::from(sprintf('%s: unknown field(s) %s; it takes %s.', $where, implode(', ', $unknown), implode(', ', array_keys($slots))));
         }
         $out = [];
         foreach ($slots as $slot => $type) {
             $value = trim((string) ($item[$slot] ?? ''));
             if ('' === $value && 'alt' !== $slot) {
-                throw new ToolCallException(sprintf('%s: "%s" is required.', $where, $slot));
+                throw McpError::from(sprintf('%s: "%s" is required.', $where, $slot));
             }
             $out[$slot] = match ($type) {
                 'html'  => $this->sanitize($value),
@@ -193,7 +192,7 @@ class EmailLayouts
             ? $own || 1 === preg_match('#^https://[^\s"<>]+$#i', $value)
             : 1 === preg_match('#^(https://[^\s"<>]+|mailto:[^\s"<>]+|\{[a-z_]+(=[^}]*)?\})$#i', $value);
         if (!$ok) {
-            throw new ToolCallException(sprintf('%s: "%s" must be %s.', $where, $value, $image ? 'an https image URL (or an image of this Mautic)' : 'an https or mailto URL, or a Mautic token such as {doi_link}'));
+            throw McpError::from(sprintf('%s: "%s" must be %s.', $where, $value, $image ? 'an https image URL (or an image of this Mautic)' : 'an https or mailto URL, or a Mautic token such as {doi_link}'));
         }
 
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

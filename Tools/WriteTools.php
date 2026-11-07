@@ -15,7 +15,7 @@ use Mautic\LeadBundle\Helper\FakeContactHelper;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\CampaignFlowBuilder;
 use MauticPlugin\IntellectItMcpBundle\Service\McpScopes;
@@ -150,11 +150,11 @@ class WriteTools
     ): array {
         $email = $this->emails->getEntity($id);
         if (!$email instanceof Email || !$email->getId()) {
-            throw new ToolCallException(sprintf('Email %d not found.', $id));
+            throw McpError::from(sprintf('Email %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $email, 'email:emails', 'edit');
         if ($email->isPublished() || $email->getSentCount(true) > 0) {
-            throw new ToolCallException('Only unpublished drafts that were never sent can be changed via MCP. Unpublish or clone the email in Mautic first.');
+            throw McpError::from('Only unpublished drafts that were never sent can be changed via MCP. Unpublish or clone the email in Mautic first.');
         }
 
         $changed = [];
@@ -206,20 +206,20 @@ class WriteTools
     {
         $email = $this->emails->getEntity($id);
         if (!$email instanceof Email || !$email->getId()) {
-            throw new ToolCallException(sprintf('Email %d not found.', $id));
+            throw McpError::from(sprintf('Email %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $email, 'email:emails', 'view');
         $user    = $this->auth->user($context);
         $address = (string) $user->getEmail();
         if (false === filter_var($address, FILTER_VALIDATE_EMAIL)) {
-            throw new ToolCallException('Your Mautic user has no valid email address.');
+            throw McpError::from('Your Mautic user has no valid email address.');
         }
 
         $fields = null;
         if (null !== $previewContactId) {
             $lead = $this->leads->getEntity($previewContactId);
             if (!$lead instanceof Lead || !$lead->getId()) {
-                throw new ToolCallException(sprintf('Contact %d not found.', $previewContactId));
+                throw McpError::from(sprintf('Contact %d not found.', $previewContactId));
             }
             $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'view');
             $fields = $this->emails->enrichedContactWithCompanies($this->leads->getRepository()->getLead($previewContactId));
@@ -228,7 +228,7 @@ class WriteTools
 
         $errors = $this->emails->sendSampleEmailToUser($email, [['id' => '', 'firstname' => (string) $user->getFirstName(), 'lastname' => (string) $user->getLastName(), 'email' => $address]], $fields, [], [], false);
         if (is_array($errors) && [] !== $errors) {
-            throw new ToolCallException('Mautic could not send the test: '.implode('; ', array_map('strval', $errors)));
+            throw McpError::from('Mautic could not send the test: '.implode('; ', array_map('strval', $errors)));
         }
         $this->auth->audit('email', (int) $email->getId(), 'send_test', ['to' => 'self']);
 
@@ -252,7 +252,7 @@ class WriteTools
     ): array {
         $this->auth->require($context, 'campaign:campaigns:create');
         if ([] === $segmentIds) {
-            throw new ToolCallException('A campaign needs at least one segment as source.');
+            throw McpError::from('A campaign needs at least one segment as source.');
         }
 
         $campaign = new Campaign();
@@ -285,11 +285,11 @@ class WriteTools
     {
         $campaign = $this->campaigns->getEntity($id);
         if (!$campaign instanceof Campaign || !$campaign->getId()) {
-            throw new ToolCallException(sprintf('Campaign %d not found.', $id));
+            throw McpError::from(sprintf('Campaign %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $campaign, 'campaign:campaigns', 'edit');
         if ($campaign->isPublished()) {
-            throw new ToolCallException('Published campaigns cannot be changed via MCP. Unpublish it in Mautic first.');
+            throw McpError::from('Published campaigns cannot be changed via MCP. Unpublish it in Mautic first.');
         }
 
         $changed = [];
@@ -303,7 +303,7 @@ class WriteTools
         }
         if (null !== $segmentIds) {
             if ([] === $segmentIds) {
-                throw new ToolCallException('A campaign needs at least one segment as source.');
+                throw McpError::from('A campaign needs at least one segment as source.');
             }
             foreach ($campaign->getLists()->toArray() as $segment) {
                 $campaign->removeList($segment);
@@ -369,7 +369,7 @@ class WriteTools
             }
             unset($step);
             if (!$found) {
-                throw new ToolCallException(sprintf('Step "%s" not found in this campaign. Use the step IDs from mautic_get_campaign.', $key));
+                throw McpError::from(sprintf('Step "%s" not found in this campaign. Use the step IDs from mautic_get_campaign.', $key));
             }
 
             return $current;
@@ -388,7 +388,7 @@ class WriteTools
     public function addCampaignStep(RequestContext $context, int $campaignId, #[Schema(definition: STEP_SCHEMA + ['description' => 'The new step (non-numeric key, type, parent, path, wait, properties)'])] array $step, bool $dryRun = false): array
     {
         if (ctype_digit((string) ($step['key'] ?? ''))) {
-            throw new ToolCallException('A new step needs a non-numeric key, e.g. "reminder".');
+            throw McpError::from('A new step needs a non-numeric key, e.g. "reminder".');
         }
 
         return $this->applyFlow($context, $campaignId, fn (array $current): array => [...$current, $step], $dryRun, false, [], 'add_step');
@@ -410,11 +410,11 @@ class WriteTools
         return $this->applyFlow($context, $campaignId, function (array $current) use ($key): array {
             $keys = array_column($current, 'key');
             if (!in_array($key, $keys, true)) {
-                throw new ToolCallException(sprintf('Step "%s" not found in this campaign.', $key));
+                throw McpError::from(sprintf('Step "%s" not found in this campaign.', $key));
             }
             $children = array_column(array_filter($current, fn (array $s): bool => ($s['parent'] ?? null) === $key), 'key');
             if ([] !== $children) {
-                throw new ToolCallException(sprintf('Step "%s" has following steps (%s). Remove those first, or restructure with mautic_set_campaign_steps.', $key, implode(', ', $children)));
+                throw McpError::from(sprintf('Step "%s" has following steps (%s). Remove those first, or restructure with mautic_set_campaign_steps.', $key, implode(', ', $children)));
             }
 
             return array_values(array_filter($current, fn (array $s): bool => $s['key'] !== $key));
@@ -431,7 +431,7 @@ class WriteTools
     {
         $campaign = $this->campaigns->getEntity($id);
         if (!$campaign instanceof Campaign || !$campaign->getId()) {
-            throw new ToolCallException(sprintf('Campaign %d not found.', $id));
+            throw McpError::from(sprintf('Campaign %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $campaign, 'campaign:campaigns', 'edit');
 
@@ -451,11 +451,11 @@ class WriteTools
             }
             $email = $this->emails->getEntity((int) $emailId);
             if (!$email instanceof Email || !$email->getId()) {
-                throw new ToolCallException(sprintf('Step "%s": email %d not found.', $step['key'] ?? '?', (int) $emailId));
+                throw McpError::from(sprintf('Step "%s": email %d not found.', $step['key'] ?? '?', (int) $emailId));
             }
             $this->auth->requireEntityAccess($context, $email, 'email:emails', 'view');
             if ('list' === $email->getEmailType()) {
-                throw new ToolCallException(sprintf('Step "%s": email %d is a segment email; campaigns can only send template emails (mautic_create_email_draft type "template").', $step['key'] ?? '?', $email->getId()));
+                throw McpError::from(sprintf('Step "%s": email %d is a segment email; campaigns can only send template emails (mautic_create_email_draft type "template").', $step['key'] ?? '?', $email->getId()));
             }
         }
 
@@ -470,7 +470,7 @@ class WriteTools
                 $liveBlock = 'This campaign is running. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect the client and tick "Change RUNNING campaigns" on the Mautic consent page, or unpublish the campaign in Mautic first.';
             }
             if (null !== $liveBlock && !$dryRun) {
-                throw new ToolCallException($liveBlock);
+                throw McpError::from($liveBlock);
             }
         }
 
@@ -509,7 +509,7 @@ class WriteTools
         foreach (array_unique(array_map('intval', $ids)) as $id) {
             $segment = $this->segments->getEntity($id);
             if (!$segment instanceof LeadList || !$segment->getId()) {
-                throw new ToolCallException(sprintf('Segment %d not found.', $id));
+                throw McpError::from(sprintf('Segment %d not found.', $id));
             }
             $this->auth->requireEntityAccess($context, $segment, 'lead:lists', 'view');
             $segments[] = $segment;

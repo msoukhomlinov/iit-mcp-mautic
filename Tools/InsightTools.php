@@ -10,7 +10,7 @@ use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
@@ -43,7 +43,7 @@ class InsightTools
     {
         $segment = $this->segments->getEntity($id);
         if (!$segment instanceof LeadList || !$segment->getId()) {
-            throw new ToolCallException(sprintf('Segment %d not found.', $id));
+            throw McpError::from(sprintf('Segment %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $segment, 'lead:lists', 'view');
         $sampleSize = min(max(0, $sampleSize), 10); // the schema bound is only a hint to clients
@@ -93,7 +93,7 @@ class InsightTools
     {
         $this->auth->require($context, 'lead:leads:viewother');
         if (!in_array($field, self::DUPLICATE_COLUMNS, true)) {
-            throw new ToolCallException(sprintf('field must be one of: %s.', implode(', ', self::DUPLICATE_COLUMNS)));
+            throw McpError::from(sprintf('field must be one of: %s.', implode(', ', self::DUPLICATE_COLUMNS)));
         }
         $leads = $this->table('leads');
         $limit = min(max(1, $limit), 100);
@@ -127,7 +127,7 @@ class InsightTools
     {
         $campaign = $this->campaigns->getEntity($id);
         if (!$campaign instanceof Campaign || !$campaign->getId()) {
-            throw new ToolCallException(sprintf('Campaign %d not found.', $id));
+            throw McpError::from(sprintf('Campaign %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $campaign, 'campaign:campaigns', 'view');
 

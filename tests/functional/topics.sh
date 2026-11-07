@@ -19,5 +19,5 @@ nid="$(jq -r .id <<<"$without")"
   && [[ "$(tool "$access" mautic_get_email "{\"id\":$nid,\"includeHtml\":false}" | jq -r .topic)" == Produkt-Updates ]] \
   && [[ "$(tool "$access" mautic_update_email_draft "{\"id\":$nid,\"topic\":\"\"}" | jq -r .topic)" == null ]] \
   && pass "update sets and clears the topic; mautic_get_email shows it" || fail "update topic"
-[[ "$(tool "$access" mautic_create_email_draft '{"name":"x","subject":"x","html":"<p>x</p>","topic":"Gibtsnicht"}')" == "ERROR: Unknown topic"*"Produkt-Updates"* ]] \
+[[ "$(tool "$access" mautic_create_email_draft '{"name":"x","subject":"x","html":"<p>x</p>","topic":"Gibtsnicht"}')" == "ERROR: [INVALID_INPUT] Unknown topic"*"Produkt-Updates"* ]] \
   && pass "unknown topics are refused with the list of topics" || fail "unknown topic accepted"

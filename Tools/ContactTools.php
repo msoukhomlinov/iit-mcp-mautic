@@ -17,6 +17,7 @@ use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -118,7 +119,7 @@ class ContactTools
     ): array {
         $this->auth->user($context);
         if (count($contacts) > self::MAX_CONTACTS) {
-            throw new ToolCallException(sprintf('At most %d contacts per call; split the list.', self::MAX_CONTACTS));
+            throw McpError::from(sprintf('At most %d contacts per call; split the list.', self::MAX_CONTACTS));
         }
         $segments = $this->segmentEntities($context, $segmentIds);
         $known    = $this->fieldList();
@@ -131,7 +132,7 @@ class ContactTools
                 $data = $this->contactData($row, $known);
                 $key  = strtolower((string) ($data['email'] ?? ''));
                 if ('' !== $key && isset($seen[$key])) {
-                    throw new ToolCallException(sprintf('Duplicate of entry %d (same email).', $seen[$key]));
+                    throw McpError::from(sprintf('Duplicate of entry %d (same email).', $seen[$key]));
                 }
                 $seen[$key] = $i;
 
@@ -229,18 +230,18 @@ class ContactTools
         $object = 'company' === $object ? 'company' : 'lead';
         $alias  = strtolower(trim(preg_replace('/[^a-z0-9_]+/i', '_', '' !== $alias ? $alias : $label) ?? '', '_'));
         if ('' === $alias || ctype_digit($alias[0])) {
-            throw new ToolCallException('The alias must start with a letter and contain only letters, digits and underscores.');
+            throw McpError::from('The alias must start with a letter and contain only letters, digits and underscores.');
         }
         if (strlen($alias) > 25) {
-            throw new ToolCallException('The alias may have at most 25 characters (it becomes a database column).');
+            throw McpError::from('The alias may have at most 25 characters (it becomes a database column).');
         }
         if (!in_array($type, FIELD_TYPES, true)) {
-            throw new ToolCallException(sprintf('Unknown type "%s". Allowed: %s.', $type, implode(', ', FIELD_TYPES)));
+            throw McpError::from(sprintf('Unknown type "%s". Allowed: %s.', $type, implode(', ', FIELD_TYPES)));
         }
         $existing = $this->fields->getEntityByAlias($alias);
         if ($existing instanceof LeadField) {
             if ($existing->getObject() !== $object) {
-                throw new ToolCallException(sprintf('The alias "%s" is already used by a %s field.', $alias, 'company' === $existing->getObject() ? 'company' : 'contact'));
+                throw McpError::from(sprintf('The alias "%s" is already used by a %s field.', $alias, 'company' === $existing->getObject() ? 'company' : 'contact'));
             }
 
             return ['alias' => $alias, 'label' => $existing->getLabel(), 'type' => $existing->getType(), 'object' => 'company' === $object ? 'company' : 'contact', 'created' => false, 'message' => 'The field already exists; nothing changed.'];
@@ -262,11 +263,11 @@ class ContactTools
             default                 => [],
         };
         if (in_array($type, ['select', 'multiselect'], true) && [] === $options) {
-            throw new ToolCallException('select and multiselect fields need "options".');
+            throw McpError::from('select and multiselect fields need "options".');
         }
         $valid = $this->fields->setFieldProperties($field, $properties);
         if (true !== $valid) {
-            throw new ToolCallException('Invalid field properties: '.$valid);
+            throw McpError::from('Invalid field properties: '.$valid);
         }
 
         $queued = false;
@@ -329,7 +330,7 @@ class ContactTools
         [$segment] = $this->segmentEntities($context, [$segmentId]);
         $ids       = array_values(array_unique(array_map('intval', $contactIds)));
         if (count($ids) > self::MAX_CONTACTS) {
-            throw new ToolCallException(sprintf('At most %d contacts per call; split the list.', self::MAX_CONTACTS));
+            throw McpError::from(sprintf('At most %d contacts per call; split the list.', self::MAX_CONTACTS));
         }
 
         $members = $this->memberIds((int) $segment->getId(), $ids);
@@ -423,15 +424,15 @@ class ContactTools
         if (isset($data['email'])) {
             $data['email'] = trim((string) $data['email']);
             if (false === filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                throw new ToolCallException(sprintf('Invalid email address "%s".', $data['email']));
+                throw McpError::from(sprintf('Invalid email address "%s".', $data['email']));
             }
         }
         $unknown = array_diff(array_keys($data), array_keys($known));
         if ([] !== $unknown) {
-            throw new ToolCallException(sprintf('Unknown contact field(s): %s. See mautic_list_contact_fields.', implode(', ', $unknown)));
+            throw McpError::from(sprintf('Unknown contact field(s): %s. See mautic_list_contact_fields.', implode(', ', $unknown)));
         }
         if (in_array($data['email'] ?? '', ['', null], true) && [] === array_filter($data, fn ($v): bool => !in_array($v, [null, ''], true))) {
-            throw new ToolCallException('A contact needs an email address or other field values.');
+            throw McpError::from('A contact needs an email address or other field values.');
         }
 
         return $data;
@@ -493,7 +494,7 @@ class ContactTools
         foreach (array_unique(array_map('intval', $ids)) as $id) {
             $segment = $this->segments->getEntity($id);
             if (!$segment instanceof LeadList || !$segment->getId()) {
-                throw new ToolCallException(sprintf('Segment %d not found.', $id));
+                throw McpError::from(sprintf('Segment %d not found.', $id));
             }
             $this->auth->requireEntityAccess($context, $segment, 'lead:lists', 'view');
             $segments[] = $segment;

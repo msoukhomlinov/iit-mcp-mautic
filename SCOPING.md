@@ -36,7 +36,7 @@ OAuth 2.1 (authorization code with PKCE, dynamic client registration) from `kope
 
 ## Budget (measured by `tests/functional/surface.sh`, Mautic 7.2.2)
 
-- Instructions: 3,170 characters (limit 3,500); hard rules in the first 512 characters.
+- Instructions: 3,221 characters attended, 3,186 unattended (limit 3,500); hard rules in the first 512 characters.
 - `tools/list` per profile (measured by `surface.sh`): read-only 27 tools, 13,448 bytes (about 3.4k tokens); write 58 tools, 54,167 bytes (about 13.5k tokens); every tier on 60 tools, 56,250 bytes (about 14k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
 
 ## Exceptions
@@ -53,8 +53,8 @@ Rule, reason, approver, date. "PENDING" means inherited from upstream and not ye
 | 6 | Domain prefix on tool names for federation | Bare names (`mautic_get_contact`) inherited from upstream. Owner chose to prefix every tool with `mautic_` (breaking change for existing clients) | Max Soukhomlinov | 2026-11-07 | APPROVED, DONE |
 | 7 | Stateless operation | MCP sessions are stored in the Mautic database (`Psr16SessionStore`, one hour), inherited from upstream; replica-safe | Max Soukhomlinov | 2026-11-07 | APPROVED |
 | 8 | Running-campaign edits default to allowed (upstream) | Default changed to **off**: such edits can email contacts outside the send tier | Max Soukhomlinov | 2026-11-07 | APPROVED, DONE |
-| 9 | The server never asks a human (no-questions contract) | Owner decision: the server must work both attended and unattended. Today the instructions assume a person; design chosen: operator parameter `intellectit_mcp_caller_mode` (`attended` default, `unattended`); unattended sends no questions, refuses writes the operator has not allowed with a clear error, and sends still need preview, confirm and `expectedRecipientCount`. Not built yet | Max Soukhomlinov | 2026-11-07 | OPEN: design approved, to be built |
-| 10 | Error taxonomy codes and correlation IDs | Refusals are free-text messages today. Owner decided to build stable codes (PERMISSION_DENIED, NOT_FOUND, BLOCKED_BY_POLICY, CONFIRM_REQUIRED, INVALID_INPUT) as a refusal prefix, plus one correlation ID per call in errors and audit rows | Max Soukhomlinov (build) | 2026-11-07 | OPEN: to be built |
+| 9 | The server never asks a human (no-questions contract) | Owner decision: the server must work both attended and unattended. Today the instructions assume a person; Built: operator parameter `intellectit_mcp_caller_mode` (`attended` default, `unattended`). Unattended: instructions never ask a person, `requiresUserInteraction` is dropped from `mautic_send_email`, the preview tells the caller to check it against its task. Switches, scopes and roles still decide what is allowed (a refusal is a coded error), and sends still need preview, `confirm=true` and `expectedRecipientCount`. Limits: one mode per server, not per token; tool descriptions still say "show to the user" | Max Soukhomlinov | 2026-11-07 | APPROVED, DONE |
+| 10 | Error taxonomy codes and correlation IDs | Refusals are free-text messages today. Built: every refusal reads `[CODE] message (ref <id>)` with CODE one of PERMISSION_DENIED, NOT_FOUND, BLOCKED_BY_POLICY, CONFIRM_REQUIRED, UPSTREAM_ERROR, INVALID_INPUT. The code is chosen from the message text by `McpError`, so a new message may land on INVALID_INPUT until its pattern is added. The ref is also written to the audit rows of that call. Not done: no `isError` structured content or retry hint | Max Soukhomlinov | 2026-11-07 | APPROVED, DONE |
 
 ## Open gaps against the standard (not exceptions, planned or undecided)
 

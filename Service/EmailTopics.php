@@ -7,7 +7,6 @@ namespace MauticPlugin\IntellectItMcpBundle\Service;
 use Mautic\CategoryBundle\Entity\Category;
 use Mautic\CategoryBundle\Model\CategoryModel;
 use Mautic\EmailBundle\Entity\Email;
-use Mcp\Exception\ToolCallException;
 
 /**
  * Topics of emails: Mautic categories (bundle "global" or "email"). In the
@@ -49,7 +48,7 @@ class EmailTopics
         }
         $names = array_map(fn (array $t): string => sprintf('"%s"', $t['name']), $this->all());
 
-        throw new ToolCallException(sprintf('Unknown topic "%s". Topics: %s.', $wanted, [] !== $names ? implode(', ', $names) : 'none yet (they are set up in Mautic as categories)'));
+        throw McpError::from(sprintf('Unknown topic "%s". Topics: %s.', $wanted, [] !== $names ? implode(', ', $names) : 'none yet (they are set up in Mautic as categories)'));
     }
 
     /** Sets or clears ("" clears) the topic; null leaves it. Returns whether it changed. */

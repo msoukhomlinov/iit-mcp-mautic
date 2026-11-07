@@ -12,6 +12,7 @@ use Mautic\ProjectBundle\Model\ProjectModel;
 use Mautic\ProjectBundle\Security\Permissions\ProjectPermissions;
 use Mautic\ProjectBundle\Service\ProjectEntityLoaderService;
 use Mcp\Capability\Attribute\Schema;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -100,7 +101,7 @@ class ProjectTools
     {
         $this->auth->require($context, ProjectPermissions::CAN_CREATE);
         if ($this->projects->getRepository()->checkProjectNameExists($name)) {
-            throw new ToolCallException(sprintf('A project named "%s" already exists (see mautic_list_projects).', $name));
+            throw McpError::from(sprintf('A project named "%s" already exists (see mautic_list_projects).', $name));
         }
         $project = new Project();
         $project->setName($name);
@@ -126,7 +127,7 @@ class ProjectTools
         $project = $this->project($id);
         if (null !== $name && $name !== $project->getName()) {
             if ($this->projects->getRepository()->checkProjectNameExists($name, (int) $project->getId())) {
-                throw new ToolCallException(sprintf('A project named "%s" already exists.', $name));
+                throw McpError::from(sprintf('A project named "%s" already exists.', $name));
             }
             $project->setName($name);
         }
@@ -214,7 +215,7 @@ class ProjectTools
     {
         $types = $this->loader->getEntityTypesWithEditPermissions();
         if (!isset($types[$type])) {
-            throw new ToolCallException(sprintf('Unknown item type "%s" or your Mautic role may not edit it. Allowed: %s.', $type, implode(', ', array_keys($types))));
+            throw McpError::from(sprintf('Unknown item type "%s" or your Mautic role may not edit it. Allowed: %s.', $type, implode(', ', array_keys($types))));
         }
 
         return $types[$type];
@@ -224,7 +225,7 @@ class ProjectTools
     {
         $project = $this->projects->getEntity($id);
         if (!$project instanceof Project || !$project->getId()) {
-            throw new ToolCallException(sprintf('Project %d not found (see mautic_list_projects).', $id));
+            throw McpError::from(sprintf('Project %d not found (see mautic_list_projects).', $id));
         }
 
         return $project;

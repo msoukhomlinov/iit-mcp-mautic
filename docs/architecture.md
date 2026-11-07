@@ -51,3 +51,7 @@ Read-only SQL: segment summary, duplicate finder (column whitelist, needs `lead:
 ## Deviations from the IntellectIT MCP server standard
 
 See `SCOPING.md` section "Exceptions" (APPROVED and PENDING entries) and "Open gaps". Tool-surface size, tool-name prefix and stateful sessions are inherited from upstream and are pending the owner's decision.
+
+## Caller mode and errors
+
+`intellectit_mcp_caller_mode` (`attended` default, `unattended`) selects the instructions and whether `mautic_send_email` asks a person; policy is unchanged. Refusals are `[CODE] message (ref <id>)` from `Service/McpError.php`; the ref is also in the audit details of the same call. See SCOPING.md exceptions 9 and 10.

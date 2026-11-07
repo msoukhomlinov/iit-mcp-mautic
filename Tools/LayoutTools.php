@@ -11,7 +11,7 @@ use Mautic\EmailBundle\Model\EmailModel;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\GrapesJsBuilderBundle\Entity\GrapesJsBuilder;
 use MauticPlugin\IntellectItMcpBundle\Service\EmailLayouts;
@@ -138,11 +138,11 @@ class LayoutTools
     ): array {
         $email = $this->emails->getEntity($id);
         if (!$email instanceof Email || !$email->getId()) {
-            throw new ToolCallException(sprintf('Email %d not found.', $id));
+            throw McpError::from(sprintf('Email %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $email, 'email:emails', 'edit');
         if ($email->isPublished() || $email->getSentCount(true) > 0) {
-            throw new ToolCallException('Only unpublished drafts that were never sent can be changed via MCP. Unpublish or clone the email in Mautic first.');
+            throw McpError::from('Only unpublished drafts that were never sent can be changed via MCP. Unpublish or clone the email in Mautic first.');
         }
         $theme    = $this->theme('' !== $theme ? $theme : (isset($this->layouts->all()[(string) $email->getTemplate()]) ? (string) $email->getTemplate() : ''));
         $rendered = $this->layouts->render($theme, $panels);
@@ -168,7 +168,7 @@ class LayoutTools
         $all = array_keys($this->layouts->all());
         if ('' === $theme) {
             if ([] === $all) {
-                throw new ToolCallException('No theme with email layouts is installed.');
+                throw McpError::from('No theme with email layouts is installed.');
             }
 
             return $all[0];
@@ -203,7 +203,7 @@ class LayoutTools
         foreach (array_unique(array_map('intval', $ids)) as $id) {
             $segment = $this->segments->getEntity($id);
             if (!$segment instanceof LeadList || !$segment->getId()) {
-                throw new ToolCallException(sprintf('Segment %d not found.', $id));
+                throw McpError::from(sprintf('Segment %d not found.', $id));
             }
             $this->auth->requireEntityAccess($context, $segment, 'lead:lists', 'view');
             $out[] = $segment;

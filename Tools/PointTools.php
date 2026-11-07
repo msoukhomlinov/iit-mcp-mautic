@@ -21,7 +21,7 @@ use Mautic\PointBundle\Model\PointGroupModel;
 use Mautic\PointBundle\Model\PointModel;
 use Mautic\PointBundle\Model\TriggerModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\FormDescriber;
 use MauticPlugin\IntellectItMcpBundle\Service\McpScopes;
@@ -137,7 +137,7 @@ class PointTools
         $this->auth->require($context, 'point:groups:edit');
         $group = $this->groups->getEntity($id);
         if (!$group instanceof Group || !$group->getId()) {
-            throw new ToolCallException(sprintf('Point group %d not found.', $id));
+            throw McpError::from(sprintf('Point group %d not found.', $id));
         }
         if (null !== $name) {
             $group->setName($name);
@@ -277,7 +277,7 @@ class PointTools
         $this->auth->require($context, 'point:points:edit');
         $point = $this->points->getEntity($id);
         if (!$point instanceof Point || !$point->getId()) {
-            throw new ToolCallException(sprintf('Point action %d not found.', $id));
+            throw McpError::from(sprintf('Point action %d not found.', $id));
         }
         $data = array_filter([
             'name'        => $name,
@@ -288,7 +288,7 @@ class PointTools
             'properties'  => $properties,
         ], fn ($v) => null !== $v);
         if ([] === $data) {
-            throw new ToolCallException('Nothing to change.');
+            throw McpError::from('Nothing to change.');
         }
         $this->submitAction($point, $data);
         $this->points->saveEntity($point);
@@ -377,7 +377,7 @@ class PointTools
     ): array {
         $this->auth->require($context, 'point:triggers:create');
         if ([] === $events) {
-            throw new ToolCallException('A trigger needs at least one event.');
+            throw McpError::from('A trigger needs at least one event.');
         }
         $trigger = new Trigger();
         $trigger->setName($name);
@@ -427,7 +427,7 @@ class PointTools
         $this->auth->require($context, 'point:triggers:edit');
         $trigger = $this->triggers->getEntity($id);
         if (!$trigger instanceof Trigger || !$trigger->getId()) {
-            throw new ToolCallException(sprintf('Point trigger %d not found.', $id));
+            throw McpError::from(sprintf('Point trigger %d not found.', $id));
         }
 
         $block = null;
@@ -476,7 +476,7 @@ class PointTools
             return ['dry_run' => true, 'message' => 'Dry run, nothing saved.', 'before' => $before, 'after' => $this->describeTrigger($trigger, $events)] + (null !== $live ? ['live_effects' => $live] : []);
         }
         if (null !== $block) {
-            throw new ToolCallException($block);
+            throw McpError::from($block);
         }
 
         $this->triggers->saveEntity($trigger);
@@ -510,7 +510,7 @@ class PointTools
     ): array {
         $lead = $this->leads->getEntity($contactId);
         if (!$lead instanceof Lead || !$lead->getId()) {
-            throw new ToolCallException(sprintf('Contact %d not found.', $contactId));
+            throw McpError::from(sprintf('Contact %d not found.', $contactId));
         }
         $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'edit');
         $group = null !== $groupId ? $this->group($groupId) : null;
@@ -520,7 +520,7 @@ class PointTools
             'add'      => $old + $points,
             'subtract' => $old - $points,
             'set'      => $points,
-            default    => throw new ToolCallException('operator must be add, subtract or set.'),
+            default    => throw McpError::from('operator must be add, subtract or set.'),
         };
         $fires = $new > $old ? $this->triggersCrossed($lead, $group, $old, $new) : [];
 
@@ -574,7 +574,7 @@ class PointTools
         }
         $form->submit($data, false);
         if (!$form->isValid()) {
-            throw new ToolCallException(sprintf('Point action (%s) is invalid: %s. See mautic_point_action_types.', $point->getType(), $this->describer->errors($form)));
+            throw McpError::from(sprintf('Point action (%s) is invalid: %s. See mautic_point_action_types.', $point->getType(), $this->describer->errors($form)));
         }
     }
 
@@ -588,7 +588,7 @@ class PointTools
     {
         $def = $this->points->getPointActions()['actions'][$type] ?? null;
         if (!is_array($def)) {
-            throw new ToolCallException(sprintf('Unknown point action type "%s". See mautic_point_action_types.', $type));
+            throw McpError::from(sprintf('Unknown point action type "%s". See mautic_point_action_types.', $type));
         }
 
         return $def;
@@ -599,7 +599,7 @@ class PointTools
     {
         $def = $this->triggers->getEvents()[$type] ?? null;
         if (!is_array($def)) {
-            throw new ToolCallException(sprintf('Unknown trigger event type "%s". See mautic_point_trigger_event_types.', $type));
+            throw McpError::from(sprintf('Unknown trigger event type "%s". See mautic_point_trigger_event_types.', $type));
         }
 
         return $def;
@@ -634,7 +634,7 @@ class PointTools
             $type = (string) ($e['type'] ?? '');
             $key  = isset($e['key']) ? (string) $e['key'] : '';
             if ('' !== $key && !isset($existing[$key])) {
-                throw new ToolCallException(sprintf('Event %d: this trigger has no event "%s" (see mautic_list_point_triggers).', $i + 1, $key));
+                throw McpError::from(sprintf('Event %d: this trigger has no event "%s" (see mautic_list_point_triggers).', $i + 1, $key));
             }
             $def  = $this->eventDef($type);
             $old  = '' !== $key ? $existing[$key] : null;
@@ -643,7 +643,7 @@ class PointTools
             if ($form->has('properties')) {
                 $submit['properties'] = is_array($e['properties'] ?? null) ? $e['properties'] : ($old?->getProperties() ?? []);
             } elseif (!empty($e['properties'])) {
-                throw new ToolCallException(sprintf('Event %d (%s) has no settings.', $i + 1, $type));
+                throw McpError::from(sprintf('Event %d (%s) has no settings.', $i + 1, $type));
             }
             if ($form->has('properties')) {
                 $submit['properties'] = $this->tagNamesToIds($form->get('properties'), (array) $submit['properties']);
@@ -651,7 +651,7 @@ class PointTools
             }
             $form->submit($submit, false);
             if (!$form->isValid()) {
-                throw new ToolCallException(sprintf('Event %d (%s) is invalid: %s. See mautic_point_trigger_event_types.', $i + 1, $type, $this->describer->errors($form)));
+                throw McpError::from(sprintf('Event %d (%s) is invalid: %s. See mautic_point_trigger_event_types.', $i + 1, $type, $this->describer->errors($form)));
             }
             $data = (array) $form->getData();
             $id   = '' !== $key ? $key : 'new'.$i;
@@ -690,7 +690,7 @@ class PointTools
             }
         }
         if ([] !== $missing) {
-            throw new ToolCallException(sprintf('%s: required setting(s) missing: %s. See %s.', $where, implode(', ', $missing), $hint));
+            throw McpError::from(sprintf('%s: required setting(s) missing: %s. See %s.', $where, implode(', ', $missing), $hint));
         }
     }
 
@@ -768,7 +768,7 @@ class PointTools
     {
         $group = $this->groups->getEntity($id);
         if (!$group instanceof Group || !$group->getId()) {
-            throw new ToolCallException(sprintf('Point group %d not found (see mautic_list_point_groups).', $id));
+            throw McpError::from(sprintf('Point group %d not found (see mautic_list_point_groups).', $id));
         }
 
         return $group;
