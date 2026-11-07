@@ -12,11 +12,11 @@
         "claude",
         "chatgpt"
     ],
-    "homepage": "https://github.com/msoukhomlinov/mautic-mcp-bundle",
+    "homepage": "https://github.com/msoukhomlinov/iit-mcp-mautic",
     "support": {
-        "issues": "https://github.com/msoukhomlinov/mautic-mcp-bundle/issues",
-        "source": "https://github.com/msoukhomlinov/mautic-mcp-bundle",
-        "security": "https://github.com/msoukhomlinov/mautic-mcp-bundle/security/policy"
+        "issues": "https://github.com/msoukhomlinov/iit-mcp-mautic/issues",
+        "source": "https://github.com/msoukhomlinov/iit-mcp-mautic",
+        "security": "https://github.com/msoukhomlinov/iit-mcp-mautic/security/policy"
     },
     "authors": [
         {

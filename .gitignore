@@ -1,0 +1,11 @@
+.idea/
+.vscode/
+.DS_Store
+.env
+.env.*
+*.pem
+*.log
+.squad/
+.remember/
+vendor/
+composer.lock
