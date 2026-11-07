@@ -5,21 +5,55 @@
 Mautic 7 at `/mcp` (Streamable HTTP). It is built on the official
 [MCP PHP SDK](https://github.com/modelcontextprotocol/php-sdk).
 
-## Installation
+## Quick start
 
-Requires **Mautic 7.2+** (Composer-based installation) and **PHP 8.4+**:
+Needs **Mautic 7.2+** (Composer install) with **PHP 8.4+**, served over **https**, and cron running as for any Mautic.
 
 ```bash
+# 1. Install (the repository is private: give Composer a GitHub token with read access once)
+composer config --global github-oauth.github.com <token>
 composer config repositories.intellectit-mcp vcs https://github.com/msoukhomlinov/iit-mcp-mautic
 composer require intellectit/mautic-mcp-bundle:dev-main
 php bin/console mautic:plugins:reload
+
+# 2. Create the OAuth keys and allow your client's redirect host (claude.ai, claude.com,
+#    chatgpt.com and localhost are allowed by default), then rebuild the cache
+php bin/console mautic:mcp:setup
+php bin/console cache:clear
+
+# 3. Check everything
+php bin/console mautic:mcp:setup --check
 ```
 
-Requires `kopexa/mautic-oauth-bundle` (installed automatically by Composer) with a signing key configured, see its README.
+Then add `https://<your-mautic>/mcp` as a custom connector in Claude or ChatGPT and sign in with a Mautic user. Every call runs with that user's Mautic role. The server is **read-only** until you enable more (see Operator settings).
 
-Already included in the hardened Mautic image
-[`ghcr.io/kopexa-grc/mautic`](https://github.com/kopexa-grc/mautic-stack).
+Re-running `mautic:mcp:setup` keeps existing keys; `--force` replaces them and signs every client out. `--redirect-host=<host>` (repeatable) allows another client host. Setting the keys by hand or from the environment (`MAUTIC_OAUTH_PRIVATE_KEY`, `MAUTIC_OAUTH_ENCRYPTION_KEY`) also works, see [kopexa/mautic-oauth-bundle](https://github.com/kopexa-grc/mautic-oauth-bundle).
 
+A Mautic administrator can also ask the connected assistant to run `mautic_setup_status`: it reports the same checks (site URL, keys, redirect hosts, enabled tiers, cron) without showing secrets and changes nothing. Mautic's own "API enabled" setting is **not** needed (covered by `tests/functional/setup.sh`).
+
+### Mautic settings
+
+| What | Why |
+|---|---|
+| Site URL (Settings, Configuration) is the public **https** address | token audience and OAuth issuer derive from it; a wrong URL makes every token fail |
+| `/mcp`, `/.well-known/*` and `/oauth2/*` reach Mautic (reverse proxy) and the `Authorization` header is forwarded | clients cannot sign in or call the server otherwise |
+| Cron: `mautic:segments:update`, `mautic:campaigns:update`, `mautic:campaigns:trigger`, `mautic:emails:send`, `mautic:broadcasts:send` | campaigns built through this server are run by Mautic's scheduler, not by the server |
+| A Mautic role per connecting user (below) | the server never grants more than the user's role |
+
+**Roles.** Create a role for the people who connect and give it only what the tools need; scopes and operator tiers can only narrow it further. Read tools need View (own or others) on Contacts, Segments, Emails and Campaigns; Points, Stages and Projects tools need View on those. Write tools need Create/Edit on the same objects (contacts and companies, segments, emails, campaigns, points and triggers, stages; contact fields need Full on Custom Fields). `mautic_setup_status` needs an administrator.
+
+### Operator settings
+
+All off by default. Set them in `config/local.php` (details in the sections below):
+
+| Parameter | Default | Effect |
+|---|---|---|
+| `intellectit_mcp_allow_write` | `false` | register the write tools (drafts, contacts, segments, scoring, campaign flows) |
+| `intellectit_mcp_live_campaign_edits` | `false` | allow changes to running campaigns (also scope `mcp:campaigns:live`) |
+| `intellectit_mcp_allow_send` / `_allow_segment_send` | `false` | register email sending / allow whole segments (scope `mcp:send`) |
+| `intellectit_mcp_allow_destructive` | `false` | register delete and merge (scope `mcp:destructive`) |
+| `intellectit_mcp_caller_mode` | `attended` | `unattended` for cron or agent callers: no questions to a person |
+| `intellectit_mcp_send_max_recipients` / `_send_max_per_hour` | 100 / 500 | per-call and rolling hourly send caps |
 
 Claude, ChatGPT and other MCP clients can:
 
@@ -55,7 +89,7 @@ Every call runs with the Mautic permissions of the user who approved the
 client. OAuth 2.1 comes from
 [kopexa/mautic-oauth-bundle](https://github.com/kopexa-grc/mautic-oauth-bundle).
 
-Design and safety model: [SCOPING.md](SCOPING.md) and [docs/architecture.md](docs/architecture.md). The original Kopexa setup notes: [docs/mcp.md](https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md).
+Design and safety model: [SCOPING.md](SCOPING.md) and [docs/architecture.md](docs/architecture.md).
 
 
 > **Tool names:** every tool is prefixed `mautic_` (for example `mautic_get_contact`), unlike the upstream Kopexa bundle. Clients and prompts written for the upstream names must be updated.
@@ -68,7 +102,7 @@ Write tools (everything that creates or changes data) are **off by default**: th
 $parameters['intellectit_mcp_allow_write'] = true;
 ```
 
-Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still apply on top of this. The send tools are a separate tier (see below). Delete and raw-API tiers are not built yet.
+Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still apply on top of this. The send tools are a separate tier (see below). Delete and merge are a further tier (see Sending email, below); a raw-API tool is not built.
 
 ## Sending email (opt-in)
 
@@ -101,7 +135,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
   Mautic's cron, running campaigns and their locks, roles;
   `scenarios.sh`: two realistic campaigns incl. a tracked email open;
   `contacts.sh`, `crm.sh`, `points.sh`, `stages.sh`, `topics.sh`, then
-  `insight.sh`, `send.sh`, `surface.sh` (served tools, instructions) and `gating.sh`).
+  `insight.sh`, `send.sh`, `surface.sh` (served tools, instructions) and `gating.sh`). `setup.sh` (setup command and status tool, with Mautic's API setting off) and `inspector.sh` are run by hand.
 - [kopexa-grc/mautic-stack](https://github.com/kopexa-grc/mautic-stack)
   only tests the integration in its image: discovery behind the public
   URL, MCP sessions across replicas, the operator switch via environment,

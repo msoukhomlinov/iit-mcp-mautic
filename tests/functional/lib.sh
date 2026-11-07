@@ -82,12 +82,10 @@ api() { curl -s -u "admin:$ADMIN_PW" -H 'Accept: application/json' "$@"; }
 b64url() { base64 -w0 | tr '+/' '-_' | tr -d '='; }
 b64url_decode() { local s; s="$(tr '_-' '/+' <<<"$1")"; while (( ${#s} % 4 )); do s+='='; done; base64 -d <<<"$s"; }
 
-# OAuth 2.1 with kopexa/mautic-oauth-bundle: generate and configure keys.
-OAUTH_KEY="$WORK/oauth.pem"
+# OAuth 2.1 with kopexa/mautic-oauth-bundle: keys come from the real setup command.
 configure_oauth() {
-  openssl genrsa -out "$OAUTH_KEY" 2048 2>/dev/null
-  set_params "$(jq -n --rawfile k "$OAUTH_KEY" --arg e "$(openssl rand -hex 32)" \
-    '{kopexa_oauth_private_key: $k, kopexa_oauth_encryption_key: $e}')"
+  console mautic:mcp:setup >/dev/null
+  rm -rf "$MAUTIC_DIR"/var/cache/*
 }
 
 REDIRECT="http://127.0.0.1:33418/callback"
