@@ -91,7 +91,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 ## Development
 
 - `bin/check.sh` checks the package (PHP lint, `composer validate`, version
-  consistency). CI runs it on pull requests that change code, and on demand.
+  consistency). CI runs it only for release tags and on demand (Actions, ci, Run workflow).
 - `tests/functional/run.sh` installs the plugin into a real Mautic 7 and
   tests it over HTTP; CI runs it on PHP 8.4 and 8.5. The tool tests are
   split by topic (`core.sh`: drafts, scopes, campaign flows run by

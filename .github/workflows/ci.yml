@@ -1,11 +1,12 @@
 name: ci
 
-# Runs on pull requests that change code, and by hand. Not on every push:
-# main only receives merged PRs that already passed. A new push to the same
-# PR cancels the run in progress.
+# Runs only when a release is cut (a v* tag) and by hand (Actions, ci, Run
+# workflow), never on pushes or pull requests. Day to day the same checks run
+# locally (bin/check.sh, tests/functional/run.sh). Run it by hand before
+# merging a release PR; the tag run is the last gate on the release itself.
 on:
-  pull_request:
-    paths-ignore: ['**.md', 'NOTICE', 'LICENSE', '.gitignore']
+  push:
+    tags: ['v*']
   workflow_dispatch:
 
 concurrency:
@@ -37,9 +38,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      # Pull requests test the primary PHP only; a manual run adds 8.5.
       matrix:
-        php: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["8.4", "8.5"]') || fromJSON('["8.4"]') }}
+        php: ['8.4', '8.5']
     services:
       mariadb:
         image: mariadb:11.4
