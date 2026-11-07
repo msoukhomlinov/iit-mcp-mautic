@@ -20,6 +20,7 @@ use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
 const LAYOUT_SCHEMA = [
     'type'     => 'array',
+    'description' => 'Panels in order, each {"type": "<panel>", "<area>": [elements]} (see mautic_list_email_layouts)',
     'minItems' => 1,
     'maxItems' => 20,
     'items'    => [
@@ -64,10 +65,13 @@ class LayoutTools
     /**
      * Create an unpublished email in the brand theme from panels and elements (see mautic_list_email_layouts). Header with logo and footer with imprint, privacy and unsubscribe are added automatically. The email opens in Mautic's builder like any theme email; send yourself a test with mautic_send_test_email. Prefer this over mautic_create_email_draft.
      *
+     * @param string                     $name       Internal email name (1-191 characters)
+     * @param string                     $subject    Subject line (1-191 characters)
      * @param list<array<string, mixed>> $panels     Panels in order
      * @param string                     $type       "segment" (newsletter) or "template" (campaigns, forms, double opt-in)
      * @param list<int>                  $segmentIds Segments of a segment email
      * @param string                     $preheader  Preview text after the subject
+     * @param string                     $language   Language code, e.g. "de" (default: the Mautic default locale)
      * @param string                     $theme      Theme with layouts (default: the first, e.g. "kopexa")
      * @param string                     $topic      Topic of the email (name or ID from mautic_list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
      *
@@ -114,7 +118,11 @@ class LayoutTools
     /**
      * Replace the content of an unpublished, never-sent email with new panels (see mautic_list_email_layouts); optionally change the subject.
      *
-     * @param list<array<string, mixed>> $panels Panels in order
+     * @param int                        $id        ID of the unpublished, never-sent email
+     * @param list<array<string, mixed>> $panels    Panels in order, replacing all existing content
+     * @param string|null                $subject   New subject (omit to keep the current one)
+     * @param string|null                $preheader New preview text (omit to keep, "" clears it)
+     * @param string                     $theme     Theme with layouts (default: the email's current theme, else the first)
      * @param string|null                $topic  New topic (name or ID, "" removes it), see mautic_list_email_topics
      *
      * @return array<string, mixed>

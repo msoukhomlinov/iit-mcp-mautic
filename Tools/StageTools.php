@@ -56,6 +56,10 @@ class StageTools
     /**
      * Create a stage (unpublished). The weight orders the stages (higher = further along, e.g. Lead 10, MQL 20, SQL 30, Customer 40). A person publishes it in Mautic before contacts can be moved into it.
      *
+     * @param string $name        Unique stage name, up to 191 characters
+     * @param int    $weight      Sort order, must be unused by other stages (higher = further along)
+     * @param string $description Optional description
+     *
      * @return array<string, mixed>
      */
     public function createStage(
@@ -82,6 +86,11 @@ class StageTools
 
     /**
      * Rename a stage or change its weight or description. Published stages can be changed too; contacts keep their stage.
+     *
+     * @param int         $id          ID of the stage to change
+     * @param string|null $name        New unique name; omitted = unchanged
+     * @param int|null    $weight      New weight, must be unused by other stages; omitted = unchanged
+     * @param string|null $description New description; "" clears it; omitted = unchanged
      *
      * @return array<string, mixed>
      */
@@ -118,6 +127,10 @@ class StageTools
 
     /**
      * Move a contact into a stage (name or ID of a published stage), or remove the stage with stage = "". Mautic logs the change in the contact's history. Dynamic segments filtering on the stage pick the contact up (or drop it) with their next update, which can start campaigns and segment emails: dryRun lists them under live_effects.
+     *
+     * @param int    $contactId ID of the contact
+     * @param string $reason    Note recorded in the contact's stage history (max 191 chars)
+     * @param bool   $dryRun    Show the change and live_effects without saving
      *
      * @return array<string, mixed>
      */

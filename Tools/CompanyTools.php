@@ -51,6 +51,11 @@ class CompanyTools
     /**
      * Search companies by name or Mautic search syntax.
      *
+     * @param string $search        Company name or Mautic search syntax; empty lists all
+     * @param int    $limit         Max companies to return (1-100, default 20)
+     * @param int    $offset        Companies to skip, for paging (default 0)
+     * @param bool   $includeFields Include all company fields in each result (default false)
+     *
      * @return array<string, mixed>
      */
     public function searchCompanies(RequestContext $context, string $search = '', #[Schema(minimum: 1, maximum: 100)] int $limit = 20, #[Schema(minimum: 0)] int $offset = 0, bool $includeFields = false): array
@@ -72,6 +77,8 @@ class CompanyTools
 
     /**
      * Get one company with all fields and its contacts (up to 100).
+     *
+     * @param int $id Company ID
      *
      * @return array<string, mixed>
      */
@@ -102,7 +109,7 @@ class CompanyTools
      */
     public function upsertCompanies(
         RequestContext $context,
-        #[Schema(definition: ['type' => 'array', 'minItems' => 1, 'maxItems' => self::MAX, 'items' => COMPANY_SCHEMA])] array $companies,
+        #[Schema(definition: ['type' => 'array', 'minItems' => 1, 'maxItems' => self::MAX, 'description' => 'Companies to create or update, each {fields, contactIds}', 'items' => COMPANY_SCHEMA])] array $companies,
         bool $overwrite = true,
         bool $dryRun = false,
     ): array {
@@ -286,5 +293,21 @@ class CompanyTools
         }
 
         return $out;
+    }
+
+    /**
+     * Link contacts to a company or unlink them from it (up to 100 per call).
+     *
+     * @param int       $companyId  Company ID
+     * @param string    $action     "add" or "remove"
+     * @param list<int> $contactIds Contact IDs
+     *
+     * @return array<string, mixed>
+     */
+    public function changeCompanyContacts(RequestContext $context, int $companyId, #[Schema(enum: ['add', 'remove'])] string $action, #[Schema(minItems: 1, maxItems: self::MAX)] array $contactIds): array
+    {
+        return 'add' === $action
+            ? $this->addContactsToCompany($context, $companyId, $contactIds)
+            : $this->removeContactsFromCompany($context, $companyId, $contactIds);
     }
 }

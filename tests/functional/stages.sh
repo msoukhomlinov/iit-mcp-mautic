@@ -30,13 +30,13 @@ moved="$(result "$(call "$contacts_token" mautic_set_contact_stage "{\"contactId
 
 pr="$(result "$(call "$access" mautic_create_project '{"name":"Lead scoring","description":"Smoke"}')")"
 prid="$(jq -r .id <<<"$pr")"
-add="$(result "$(call "$access" mautic_add_to_project "{\"projectId\":$prid,\"type\":\"stage\",\"ids\":[$stid]}")")"
-add2="$(result "$(call "$access" mautic_add_to_project "{\"projectId\":$prid,\"type\":\"pointtrigger\",\"ids\":[$tid,999999]}")")"
+add="$(result "$(call "$access" mautic_change_project_items "{\"action\":\"add\",\"projectId\":$prid,\"type\":\"stage\",\"ids\":[$stid]}")")"
+add2="$(result "$(call "$access" mautic_change_project_items "{\"action\":\"add\",\"projectId\":$prid,\"type\":\"pointtrigger\",\"ids\":[$tid,999999]}")")"
 got="$(result "$(call "$read_token" mautic_get_project "{\"id\":$prid}")")"
 jq -e '(.added | length) == 1' <<<"$add" >/dev/null && jq -e '(.added | length) == 1 and .skipped[0].reason == "not found"' <<<"$add2" >/dev/null \
   && jq -e --argjson s "$stid" --argjson t "$tid" '.items.stage[0].id == $s and .items.pointtrigger[0].id == $t' <<<"$got" >/dev/null \
   && pass "projects: create, add stage and point trigger, mautic_get_project lists them" || { echo "$add $add2 $got" | head -c 1200; fail "projects"; }
-rm_="$(result "$(call "$access" mautic_remove_from_project "{\"projectId\":$prid,\"type\":\"stage\",\"ids\":[$stid]}")")"
-bad="$(result "$(call "$access" mautic_add_to_project "{\"projectId\":$prid,\"type\":\"contact\",\"ids\":[$lead]}")")"
+rm_="$(result "$(call "$access" mautic_change_project_items "{\"action\":\"remove\",\"projectId\":$prid,\"type\":\"stage\",\"ids\":[$stid]}")")"
+bad="$(result "$(call "$access" mautic_change_project_items "{\"action\":\"add\",\"projectId\":$prid,\"type\":\"contact\",\"ids\":[$lead]}")")"
 [[ "$(result "$(call "$read_token" mautic_list_projects '{}')" | jq --argjson p "$prid" '[.projects[] | select(.id == $p) | .items.stage // 0][0]')" == 0 ]] && grep -q 'Unknown item type "contact"' <<<"$bad" \
-  && pass "mautic_remove_from_project; unknown item types refused" || { echo "$rm_ $bad" | head -c 800; fail "mautic_remove_from_project"; }
+  && pass "mautic_change_project_items; unknown item types refused" || { echo "$rm_ $bad" | head -c 800; fail "mautic_change_project_items"; }

@@ -111,7 +111,7 @@ class ContactTools
      */
     public function upsertContacts(
         RequestContext $context,
-        #[Schema(definition: ['type' => 'array', 'minItems' => 1, 'maxItems' => self::MAX_CONTACTS, 'items' => CONTACT_SCHEMA])] array $contacts,
+        #[Schema(definition: ['type' => 'array', 'description' => 'Contacts to create or update (1-100): {email, fields, tags}', 'minItems' => 1, 'maxItems' => self::MAX_CONTACTS, 'items' => CONTACT_SCHEMA])] array $contacts,
         array $segmentIds = [],
         bool $overwrite = true,
         bool $dryRun = false,
@@ -505,5 +505,22 @@ class ContactTools
     private function adminUrl(string $path): string
     {
         return rtrim((string) $this->parameters->get('site_url'), '/').$path;
+    }
+
+    /**
+     * Add contacts to a segment or remove them from it (up to 100 per call). Adding can make contacts enter running campaigns that use the segment and receive its published segment emails: use dryRun first and show the user live_effects. Removing: campaigns that use the segment only may remove the contacts; Do-Not-Contact is not changed.
+     *
+     * @param int       $segmentId  Segment ID
+     * @param string    $action     "add" or "remove"
+     * @param list<int> $contactIds Contact IDs
+     * @param bool      $dryRun     Report what would happen, save nothing
+     *
+     * @return array<string, mixed>
+     */
+    public function changeSegmentContacts(RequestContext $context, int $segmentId, #[Schema(enum: ['add', 'remove'])] string $action, #[Schema(minItems: 1, maxItems: self::MAX_CONTACTS)] array $contactIds, bool $dryRun = false): array
+    {
+        return 'add' === $action
+            ? $this->addContactsToSegment($context, $segmentId, $contactIds, $dryRun)
+            : $this->removeContactsFromSegment($context, $segmentId, $contactIds, $dryRun);
     }
 }

@@ -26,7 +26,7 @@ Sessions are stored in the Mautic database (`<prefix>intellectit_mcp_sessions`),
 | Send | `intellectit_mcp_allow_send` (false) | `mautic_preview_email_send`, `mautic_send_email` | `mcp:send` (opt-in) |
 | Segment send | `intellectit_mcp_allow_segment_send` (false) | segment mode of the send tools | `mcp:send` |
 
-`McpServerFactory::server()` filters the registration list by these switches. A tool that is not registered does not appear in `tools/list` and answers "Tool not found".
+Related tools are merged behind an `action` or `type` parameter (`mautic_change_segment_contacts`, `mautic_change_company_contacts`, `mautic_change_project_items`, `mautic_campaign_step_types`, `mautic_point_action_types`, `mautic_point_trigger_event_types`); each is a thin dispatcher over the original methods. `McpServerFactory::server()` filters the registration list by these switches. A tool that is not registered does not appear in `tools/list` and answers "Tool not found".
 
 ## Sending (`Tools/SendTools.php`)
 

@@ -87,6 +87,7 @@ class ReadTools
      * @param list<string> $types  Only these event types (see "types" in the result), e.g. ["email.read", "page.hit", "form.submitted"]
      * @param string       $search Search in the event labels
      * @param int          $page   Page (25 events each by default)
+     * @param int          $limit  Events per page (1-100, default 25)
      *
      * @return array<string, mixed>
      */
@@ -126,6 +127,8 @@ class ReadTools
      * List contact segments with their size.
      *
      * @param string $search Filter by name
+     * @param int    $limit  Segments to return (1-100, default 50)
+     * @param int    $offset Segments to skip, for paging (default 0)
      *
      * @return array<string, mixed>
      */
@@ -151,6 +154,8 @@ class ReadTools
      * List emails (newest first) with type, status and basic statistics.
      *
      * @param string $search Filter by name or subject
+     * @param int    $limit  Emails to return (1-100, default 20)
+     * @param int    $offset Emails to skip, for paging (default 0)
      *
      * @return array<string, mixed>
      */
@@ -228,6 +233,8 @@ class ReadTools
      * List campaigns with status and segments.
      *
      * @param string $search Filter by name
+     * @param int    $limit  Campaigns to return (1-100, default 20)
+     * @param int    $offset Campaigns to skip, for paging (default 0)
      *
      * @return array<string, mixed>
      */
@@ -393,5 +400,17 @@ class ReadTools
     private function adminUrl(string $path): string
     {
         return rtrim((string) $this->parameters->get('site_url'), '/').$path;
+    }
+
+    /**
+     * Campaign step types: without a type, list those available (actions such as send email or change points, decisions such as opened email or clicked link, conditions such as field value or segment membership, including types from installed plugins); with a type, describe it: its properties (names, kinds, required, choices), which steps may follow and whether it has yes/no paths. Describe a type before using it in mautic_set_campaign_steps.
+     *
+     * @param string $type Leave empty to list all types, or a type such as "email.send", "email.open", "lead.changetags" to describe it
+     *
+     * @return array<string, mixed>
+     */
+    public function campaignStepTypes(RequestContext $context, string $type = ''): array
+    {
+        return '' === $type ? $this->listCampaignStepTypes($context) : $this->describeCampaignStepType($context, $type);
     }
 }

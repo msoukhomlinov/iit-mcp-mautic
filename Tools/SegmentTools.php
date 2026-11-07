@@ -105,9 +105,13 @@ class SegmentTools
     }
 
     /**
-     * Create a segment. Without filters it is a static list (fill it with mautic_upsert_contacts or mautic_add_contacts_to_segment). With filters it is dynamic: Mautic's segment job adds and removes contacts as they match. dryRun validates the filters and counts the matching contacts.
+     * Create a segment. Without filters it is a static list (fill it with mautic_upsert_contacts or mautic_change_segment_contacts). With filters it is dynamic: Mautic's segment job adds and removes contacts as they match. dryRun validates the filters and counts the matching contacts.
      *
-     * @param list<array<string, mixed>> $filters Filters, see mautic_list_segment_filter_fields
+     * @param string                     $name        Segment name, up to 191 characters
+     * @param string                     $description Internal description (default "Created via MCP.")
+     * @param string                     $publicName  Name shown to contacts in preference centers (default: name)
+     * @param list<array<string, mixed>> $filters     Filters, see mautic_list_segment_filter_fields; empty = static segment
+     * @param bool                       $dryRun      Validate and count matching contacts without saving
      *
      * @return array<string, mixed>
      */
@@ -116,7 +120,7 @@ class SegmentTools
         #[Schema(minLength: 1, maxLength: 191)] string $name,
         string $description = '',
         string $publicName = '',
-        #[Schema(definition: FILTERS_SCHEMA)] array $filters = [],
+        #[Schema(definition: FILTERS_SCHEMA + ['description' => 'Segment filters (max 50); empty list creates a static segment'])] array $filters = [],
         bool $dryRun = false,
     ): array {
         $this->auth->require($context, 'lead:lists:create');
@@ -138,14 +142,18 @@ class SegmentTools
         $this->auth->audit('segment', (int) $segment->getId(), 'create', ['name' => $name, 'filters' => count($filters)]);
 
         return $this->result($segment, [] === $filters
-            ? 'Static segment created. Add contacts with mautic_upsert_contacts or mautic_add_contacts_to_segment.'
+            ? 'Static segment created. Add contacts with mautic_upsert_contacts or mautic_change_segment_contacts.'
             : 'Dynamic segment created. Mautic fills it with its next segment run (cron), about '.$matching.' contact(s) match now.') + ['matching_contacts' => $matching];
     }
 
     /**
      * Change name, description or filters of a segment. New filters replace the old ones. If running campaigns or published segment emails use the segment, contacts that newly match enter them: call with dryRun first and show the user live_effects and the matching count.
      *
-     * @param list<array<string, mixed>>|null $filters Replace the filters ([] = static segment)
+     * @param int                               $id          ID of the segment to change
+     * @param string|null                       $name        New name; omitted = unchanged
+     * @param string|null                       $description New description; omitted = unchanged
+     * @param list<array<string, mixed>>|null $filters     Replace the filters ([] = static segment); omitted = unchanged
+     * @param bool                              $dryRun      Preview matching count and live effects without saving
      *
      * @return array<string, mixed>
      */
@@ -154,7 +162,7 @@ class SegmentTools
         int $id,
         ?string $name = null,
         ?string $description = null,
-        #[Schema(definition: ['anyOf' => [FILTERS_SCHEMA, ['type' => 'null']]])] ?array $filters = null,
+        #[Schema(definition: ['description' => 'Replaces all existing filters; [] makes it static; omitted or null leaves filters unchanged', 'anyOf' => [FILTERS_SCHEMA, ['type' => 'null']]])] ?array $filters = null,
         bool $dryRun = false,
     ): array {
         $segment = $this->segments->getEntity($id);

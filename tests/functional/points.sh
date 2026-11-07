@@ -11,8 +11,8 @@ gid="$(jq -r .id <<<"$grp")"
 [[ "$gid" =~ ^[0-9]+$ ]] && [[ "$(result "$(call "$read_token" mautic_list_point_groups '{}')" | jq --argjson g "$gid" '[.groups[] | select(.id == $g)] | length')" == 1 ]] \
   && pass "mautic_create_point_group / mautic_list_point_groups" || { echo "$grp" | head -c 600; fail "point group"; }
 
-types="$(result "$(call "$read_token" mautic_list_point_action_types '{}')")"
-desc="$(result "$(call "$read_token" mautic_describe_point_action_type '{"type":"url.hit"}')")"
+types="$(result "$(call "$read_token" mautic_point_action_types '{}')")"
+desc="$(result "$(call "$read_token" mautic_point_action_types '{"type":"url.hit"}')")"
 jq -e '[.types[].type] | index("url.hit") and index("form.submit")' <<<"$types" >/dev/null \
   && jq -e '[.properties[] | select(.name == "page_url" and .required)] | length == 1' <<<"$desc" >/dev/null \
   && pass "point action types come live from Mautic, with their settings" || { echo "$types $desc" | head -c 1000; fail "point action types"; }
@@ -25,7 +25,7 @@ paid="$(jq -r .id <<<"$pa")"
 [[ "$(result "$(call "$access" mautic_update_point_action "{\"id\":$paid,\"delta\":25}")" | jq -r .delta)" == 25 ]] \
   && pass "mautic_update_point_action" || fail "mautic_update_point_action"
 
-ev="$(result "$(call "$read_token" mautic_list_point_trigger_event_types '{}')")"
+ev="$(result "$(call "$read_token" mautic_point_trigger_event_types '{}')")"
 jq -e '([.types[] | select(.type == "email.send_to_user") | .outbound] == [true]) and ([.types[] | select(.type == "lead.changetags") | .outbound] == [false])' <<<"$ev" >/dev/null \
   && pass "trigger event types, outbound ones marked" || { echo "$ev" | head -c 800; fail "trigger event types"; }
 tr="$(result "$(call "$access" mautic_create_point_trigger "{\"name\":\"Sales-ready\",\"points\":50,\"groupId\":$gid,\"events\":[{\"type\":\"lead.changetags\",\"name\":\"Tag sales-ready\",\"properties\":{\"add_tags\":[\"sales-ready\"]}}]}")")"

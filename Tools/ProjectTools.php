@@ -38,6 +38,8 @@ class ProjectTools
     /**
      * List projects with the number of items per type.
      *
+     * @param string $search Case-insensitive text matched in project name and description; empty lists all
+     *
      * @return array<string, mixed>
      */
     public function listProjects(RequestContext $context, string $search = ''): array
@@ -68,6 +70,8 @@ class ProjectTools
     /**
      * Get a project with all its items (type, id, name), grouped by type.
      *
+     * @param int $id Project ID
+     *
      * @return array<string, mixed>
      */
     public function getProject(RequestContext $context, int $id): array
@@ -86,6 +90,9 @@ class ProjectTools
 
     /**
      * Create a project to group campaigns, emails, segments, forms, ... by topic.
+     *
+     * @param string $name        Project name, 1-191 characters, must be unique
+     * @param string $description Optional free-text description; empty for none
      *
      * @return array<string, mixed>
      */
@@ -106,6 +113,10 @@ class ProjectTools
 
     /**
      * Rename a project or change its description.
+     *
+     * @param int         $id          Project ID
+     * @param string|null $name        New name (1-191 characters, must be unique); omit to keep
+     * @param string|null $description New description; omit to keep, empty string clears it
      *
      * @return array<string, mixed>
      */
@@ -240,5 +251,22 @@ class ProjectTools
     private function url(string $path): string
     {
         return rtrim((string) $this->parameters->get('site_url'), '/').$path;
+    }
+
+    /**
+     * Add items to a project or remove them from it. Assigning items to a project changes nothing else about them.
+     *
+     * @param int       $projectId Project ID
+     * @param string    $action    "add" or "remove"
+     * @param string    $type      Item type, one of the item_types from mautic_list_projects (e.g. "email", "campaign", "segment")
+     * @param list<int> $ids       Item IDs
+     *
+     * @return array<string, mixed>
+     */
+    public function changeProjectItems(RequestContext $context, int $projectId, #[Schema(enum: ['add', 'remove'])] string $action, string $type, #[Schema(minItems: 1, maxItems: self::MAX_ITEMS)] array $ids): array
+    {
+        return 'add' === $action
+            ? $this->addToProject($context, $projectId, $type, $ids)
+            : $this->removeFromProject($context, $projectId, $type, $ids);
     }
 }

@@ -28,7 +28,7 @@ const STEP_SCHEMA = [
                 'additionalProperties' => false,
                 'properties'           => [
                     'key'        => ['type' => 'string', 'description' => 'Existing steps: their ID as returned by mautic_get_campaign (keeps the step and its contact history). New steps: any non-numeric id, e.g. "reminder". Used by "parent" of later steps.'],
-                    'type'       => ['type' => 'string', 'description' => 'Step type from mautic_list_campaign_step_types, e.g. "email.send", "email.open", "lead.changetags". Required for new steps.'],
+                    'type'       => ['type' => 'string', 'description' => 'Step type from mautic_campaign_step_types, e.g. "email.send", "email.open", "lead.changetags". Required for new steps.'],
                     'name'       => ['type' => 'string', 'description' => 'Name shown in the builder (default: the type label)'],
                     'parent'     => ['type' => 'string', 'description' => 'Key of the step this one follows. Omit for steps that run when a contact enters the campaign. Parents must be listed before their children.'],
                     'path'       => ['type' => 'string', 'enum' => ['yes', 'no'], 'description' => 'Required after a decision or condition: which branch this step is on'],
@@ -42,7 +42,7 @@ const STEP_SCHEMA = [
                             'at'       => ['type' => 'string', 'description' => 'Fixed date-time (ISO 8601) instead of an interval'],
                         ],
                     ],
-                    'properties' => ['type' => ['object', 'array'], 'description' => 'Settings of the step type, see mautic_describe_campaign_step_type. For email.send: {"email": <template email id>, "email_type": "marketing"|"transactional"}'],
+                    'properties' => ['type' => ['object', 'array'], 'description' => 'Settings of the step type, see mautic_campaign_step_types. For email.send: {"email": <template email id>, "email_type": "marketing"|"transactional"}'],
                 ],
             ];
 
@@ -331,7 +331,7 @@ class WriteTools
      *
      * @return array<string, mixed>
      */
-    public function setCampaignSteps(RequestContext $context, int $id, #[Schema(definition: STEPS_SCHEMA)] array $steps, bool $dryRun = false, bool $allowDeletions = false, #[Schema(definition: ['type' => 'object', 'additionalProperties' => ['type' => 'string']])] array $redirects = []): array
+    public function setCampaignSteps(RequestContext $context, int $id, #[Schema(definition: STEPS_SCHEMA + ['description' => 'The complete flow, parents before children; omitted existing steps are removed'])] array $steps, bool $dryRun = false, bool $allowDeletions = false, #[Schema(definition: ['type' => 'object', 'description' => 'Removed step ID => step ID where its waiting contacts continue (running campaigns)', 'additionalProperties' => ['type' => 'string']])] array $redirects = []): array
     {
         return $this->applyFlow($context, $id, fn (): array => $steps, $dryRun, $allowDeletions, $redirects, 'set_steps');
     }
@@ -348,7 +348,7 @@ class WriteTools
      *
      * @return array<string, mixed>
      */
-    public function updateCampaignStep(RequestContext $context, int $campaignId, string $key, ?string $name = null, #[Schema(definition: ['type' => 'object', 'properties' => ['interval' => ['type' => 'integer', 'minimum' => 1], 'unit' => ['type' => 'string', 'enum' => ['i', 'h', 'd', 'm', 'y']], 'at' => ['type' => 'string']]])] ?array $wait = null, ?array $properties = null, bool $dryRun = false): array
+    public function updateCampaignStep(RequestContext $context, int $campaignId, string $key, ?string $name = null, #[Schema(definition: ['type' => 'object', 'description' => 'New wait {interval, unit} or {at}; {} = immediately; omit to keep the current one', 'properties' => ['interval' => ['type' => 'integer', 'minimum' => 1], 'unit' => ['type' => 'string', 'enum' => ['i', 'h', 'd', 'm', 'y']], 'at' => ['type' => 'string']]])] ?array $wait = null, ?array $properties = null, bool $dryRun = false): array
     {
         return $this->applyFlow($context, $campaignId, function (array $current) use ($key, $name, $wait, $properties): array {
             $found = false;
@@ -385,7 +385,7 @@ class WriteTools
      *
      * @return array<string, mixed>
      */
-    public function addCampaignStep(RequestContext $context, int $campaignId, #[Schema(definition: STEP_SCHEMA)] array $step, bool $dryRun = false): array
+    public function addCampaignStep(RequestContext $context, int $campaignId, #[Schema(definition: STEP_SCHEMA + ['description' => 'The new step (non-numeric key, type, parent, path, wait, properties)'])] array $step, bool $dryRun = false): array
     {
         if (ctype_digit((string) ($step['key'] ?? ''))) {
             throw new ToolCallException('A new step needs a non-numeric key, e.g. "reminder".');

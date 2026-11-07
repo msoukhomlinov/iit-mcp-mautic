@@ -49,8 +49,8 @@ ada_id="$(jq -r .id <<<"$ada")"
 members() { result "$(call "$read_token" mautic_search_contacts "{\"search\":\"segment:$talias\",\"includeFields\":true}")"; }
 jq -e '.total == 2 and ([.contacts[] | select(.email == "ada@example.com") | .fields.position] == ["CTO"])' <<<"$(members)" >/dev/null \
   && pass "export: mautic_search_contacts segment:$talias with includeFields" || { members | head -c 800; fail "mautic_search_contacts includeFields"; }
-rm1="$(result "$(call "$contacts_token" mautic_remove_contacts_from_segment "{\"segmentId\":$tsid,\"contactIds\":[$ada_id]}")")"
-add1="$(result "$(call "$contacts_token" mautic_add_contacts_to_segment "{\"segmentId\":$sid,\"contactIds\":[$ada_id],\"dryRun\":true}")")"
+rm1="$(result "$(call "$contacts_token" mautic_change_segment_contacts "{\"action\":\"remove\",\"segmentId\":$tsid,\"contactIds\":[$ada_id]}")")"
+add1="$(result "$(call "$contacts_token" mautic_change_segment_contacts "{\"action\":\"add\",\"segmentId\":$sid,\"contactIds\":[$ada_id],\"dryRun\":true}")")"
 jq -e '.results[0].status == "removed"' <<<"$rm1" >/dev/null && [[ "$(members | jq .total)" == 1 ]] \
   && jq -e --argjson c "$campid" '.dry_run == true and .results[0].status == "added" and ([.live_effects.running_campaigns[].id] | index($c) != null)' <<<"$add1" >/dev/null \
-  && pass "mautic_remove_contacts_from_segment; mautic_add_contacts_to_segment dryRun warns about the running campaign" || { echo "$rm1 $add1" | head -c 1200; fail "segment membership"; }
+  && pass "mautic_change_segment_contacts; mautic_change_segment_contacts dryRun warns about the running campaign" || { echo "$rm1 $add1" | head -c 1200; fail "segment membership"; }

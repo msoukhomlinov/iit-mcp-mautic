@@ -36,11 +36,11 @@ camp="$(call "$access" mautic_create_campaign_draft "{\"name\":\"MCP smoke campa
 campid="$(result "$camp" | jq -r '.id // empty')"
 [[ "$campid" =~ ^[0-9]+$ ]] && jq -e --argjson id "$sid" '.segments[0].id == $id and .published == false' <<<"$(result "$(call "$access" mautic_get_campaign "{\"id\":$campid}")")" >/dev/null \
   && pass "mautic_create_campaign_draft + mautic_get_campaign (unpublished, segment source)" || { echo "$camp" | head -c 600; fail "campaign draft"; }
-types="$(result "$(call "$access" mautic_list_campaign_step_types '{}')")"
+types="$(result "$(call "$access" mautic_campaign_step_types '{}')")"
 jq -e '[.actions[].type] | index("email.send")' <<<"$types" >/dev/null && jq -e '[.decisions[].type] | index("email.open")' <<<"$types" >/dev/null \
-  && pass "mautic_list_campaign_step_types (actions, decisions, conditions)" || { echo "$types" | head -c 600; fail "step types"; }
-desc="$(result "$(call "$access" mautic_describe_campaign_step_type '{"type":"email.send"}')")"
-jq -e '[.properties[].name] | index("email")' <<<"$desc" >/dev/null && pass "mautic_describe_campaign_step_type (properties from the step form)" || { echo "$desc" | head -c 800; fail "describe step type"; }
+  && pass "mautic_campaign_step_types (actions, decisions, conditions)" || { echo "$types" | head -c 600; fail "step types"; }
+desc="$(result "$(call "$access" mautic_campaign_step_types '{"type":"email.send"}')")"
+jq -e '[.properties[].name] | index("email")' <<<"$desc" >/dev/null && pass "mautic_campaign_step_types (properties from the step form)" || { echo "$desc" | head -c 800; fail "describe step type"; }
 # Welcome email -> opened? yes: +10 points / no (after 3 days): reminder.
 flow='[{"key":"welcome","type":"email.send","properties":{"email":'"$eid"',"email_type":"marketing"}},
        {"key":"opened","type":"email.open","parent":"welcome"},
