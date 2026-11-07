@@ -34,6 +34,7 @@ Claude, ChatGPT and other MCP clients can:
   Adding contacts to a segment can start running campaigns and segment
   emails for them; results and dry runs report it
 - read a contact's activity (opens, clicks, visits, forms, points)
+- summarise a segment (size, static or dynamic, filters, last rebuild, sample contacts), find duplicate contacts by email, phone or mobile, and check a campaign's health (contacts, scheduled and overdue steps, recent failures with reasons, warnings)
 - give emails their topic (Mautic categories): recipients switch topics off
   in their email preferences, Mautic then skips those emails for them;
   emails without a topic come with a warning

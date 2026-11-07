@@ -21,6 +21,7 @@ use Mcp\Server\Transport\Http\OAuth\ScopePolicy;
 use Mcp\Server\Transport\StreamableHttpTransport;
 use MauticPlugin\IntellectItMcpBundle\Tools\CompanyTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ContactTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\InsightTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\LayoutTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\PointTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ProjectTools;
@@ -61,6 +62,7 @@ class McpServerFactory
         private readonly PointTools $pointTools,
         private readonly StageTools $stageTools,
         private readonly ProjectTools $projectTools,
+        private readonly InsightTools $insightTools,
         private readonly Connection $connection,
         private readonly LoggerInterface $logger,
         private readonly CoreParametersHelper $parameters,
@@ -175,6 +177,9 @@ class McpServerFactory
             [[$this->companies, 'addContactsToCompany'], 'add_contacts_to_company', 'Link contacts to company', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
             [[$this->companies, 'removeContactsFromCompany'], 'remove_contacts_from_company', 'Unlink contacts from company', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
             [[$this->read, 'getContactActivity'], 'get_contact_activity', 'Contact activity', $ro],
+            [[$this->insightTools, 'getSegmentSummary'], 'get_segment_summary', 'Segment summary', $ro],
+            [[$this->insightTools, 'findDuplicateContacts'], 'find_duplicate_contacts', 'Find duplicate contacts', $ro],
+            [[$this->insightTools, 'getCampaignHealth'], 'get_campaign_health', 'Campaign health check', $ro],
             [[$this->layoutTools, 'listEmailLayouts'], 'list_email_layouts', 'Brand email layouts', $ro],
             [[$this->layoutTools, 'createEmailFromLayout'], 'create_email_from_layout', 'Create email in the brand theme', $rw],
             [[$this->layoutTools, 'updateEmailLayout'], 'update_email_layout', 'Replace email content (brand theme)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
