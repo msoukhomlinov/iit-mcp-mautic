@@ -176,3 +176,11 @@ db() {
     foreach ($pdo->query($argv[1])->fetchAll(PDO::FETCH_NUM) as $row) { echo implode("\t", array_map(fn ($v) => $v ?? "NULL", $row)), "\n"; }
   ' "$1"
 }
+
+# db_exec <sql>: runs a statement that returns no rows (INSERT/UPDATE/DELETE); prints the affected row count.
+db_exec() {
+  php -r '
+    $pdo = new PDO(sprintf("mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4", getenv("DB_HOST"), getenv("DB_PORT") ?: "3306", getenv("DB_NAME")), getenv("DB_USER"), getenv("DB_PASSWORD"), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    echo $pdo->exec($argv[1]), "\n";
+  ' "$1"
+}
