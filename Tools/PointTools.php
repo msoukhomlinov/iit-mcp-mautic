@@ -432,7 +432,7 @@ class PointTools
 
         $block = null;
         if ($trigger->isPublished()) {
-            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', true)) {
+            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', false)) {
                 $block = 'Changes to published (live) items are disabled on this Mautic instance (intellectit_mcp_live_campaign_edits). Unpublish the trigger in Mautic first.';
             } elseif (!$this->auth->hasScope($context, McpScopes::CAMPAIGNS_LIVE)) {
                 $block = 'This trigger is published. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect and tick it on the consent page, or unpublish the trigger in Mautic first.';

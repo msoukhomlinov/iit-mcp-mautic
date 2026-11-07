@@ -71,8 +71,8 @@ class LayoutTools
      * @param string                     $type       "segment" (newsletter) or "template" (campaigns, forms, double opt-in)
      * @param list<int>                  $segmentIds Segments of a segment email
      * @param string                     $preheader  Preview text after the subject
-     * @param string                     $language   Language code, e.g. "de" (default: the Mautic default locale)
-     * @param string                     $theme      Theme with layouts (default: the first, e.g. "kopexa")
+     * @param string                     $language   Language code, e.g. "en" (default: the Mautic default locale)
+     * @param string                     $theme      Theme with layouts (default: the first theme that has layouts, see mautic_list_email_layouts)
      * @param string                     $topic      Topic of the email (name or ID from mautic_list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
      *
      * @return array<string, mixed>

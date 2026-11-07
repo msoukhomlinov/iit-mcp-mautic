@@ -112,7 +112,7 @@ class InsightTools
                 'contacts'    => (int) $r['contacts'],
                 'contact_ids' => array_map('intval', explode(',', (string) $r['ids'])),
             ], $rows),
-            'hint'   => 'Review the contacts with mautic_get_contact, then merge them in Mautic (contact list, select, Merge). Groups are capped by limit.',
+            'hint'   => 'Review the contacts with mautic_get_contact, then merge them with mautic_merge_contacts if the destructive tier is on, otherwise in Mautic (contact list, select, Merge). Groups are capped by limit.',
         ];
     }
 

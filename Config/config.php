@@ -58,5 +58,8 @@ return [
         // because of them, outside the send tier. The token additionally needs the scope
         // mcp:campaigns:live, and the Write tier must be on.
         'intellectit_mcp_live_campaign_edits' => false,
+        // Tool groups to hide when the team does not use them, e.g. ['points', 'stages', 'projects', 'companies'].
+        // Hidden tools are not listed and the instructions stop mentioning them (smaller context for the assistant).
+        'intellectit_mcp_hidden_groups' => [],
     ],
 ];

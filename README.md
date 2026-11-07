@@ -53,13 +53,15 @@ All off by default. Set them in `config/local.php` (details in the sections belo
 | `intellectit_mcp_allow_destructive` | `false` | register delete and merge (scope `mcp:destructive`) |
 | `intellectit_mcp_caller_mode` | `attended` | `unattended` for cron or agent callers: no questions to a person |
 | `intellectit_mcp_send_max_recipients` / `_send_max_per_hour` | 100 / 500 | per-call and rolling hourly send caps |
+| `intellectit_mcp_hidden_groups` | `[]` | hide tool groups your team does not use: any of `points`, `stages`, `projects`, `companies` (smaller context for the assistant; the instructions stop mentioning them) |
 
 Claude, ChatGPT and other MCP clients can:
 
-- read contacts, segments, emails, campaigns and email statistics
+- read contacts, segments, emails, campaigns and email statistics (sent, opened, clicked, bounced, unsubscribed; lifetime totals per email); list who was sent or opened an email with the search terms `email_sent:<id>` and `email_read:<id>`
+- copy an existing email into a new unpublished draft (`copyFromId`: keeps theme, content, sender and topic, never the audience) and record an unsubscribe request (`unsubscribe: true` on a contact: adds to the email Do Not Contact list, never removes or changes an entry)
 - create **unpublished** emails and campaigns
 - create emails in the brand theme from panels and elements (themes with a
-  block library, e.g. Kopexa), editable in Mautic's builder, and send a
+  block library, e.g. Kopexa; these tools are listed only when such a theme is installed), editable in Mautic's builder, and send a
   test to oneself
 - create and update contacts and companies (matched by their unique
   fields, up to 100 per call), add custom fields, build static and dynamic
@@ -118,7 +120,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 ```
 
 - The token also needs the opt-in scope `mcp:send`.
-- `mautic_send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount`, the `recipient_count` the preview showed; a send whose recipients now differ is refused.
+- `mautic_send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount` (the `recipient_count` the preview showed) and `targetsHash` (the preview's `targets_hash`, which covers the email and the exact `contactIds`/`segmentIds`); a send whose recipients now differ, or whose selection differs from the previewed one, is refused.
 - Email can also go out indirectly, outside this tier: steps added to running campaigns (needs `intellectit_mcp_live_campaign_edits`, off by default, and scope `mcp:campaigns:live`), contacts entering running campaigns through segments, and published point triggers.
 - Unpublished emails are never sent: a person publishes them in Mautic.
 - Target either contacts (`contactIds`) or segments (`segmentIds`, only the email's own segments, segment emails only).

@@ -8,16 +8,19 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\LeadBundle\Entity\DoNotContact as DncEntity;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadField;
 use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Field\Exception\AbortColumnCreateException;
 use Mautic\LeadBundle\Field\FieldsWithUniqueIdentifier;
+use Mautic\LeadBundle\Model\DoNotContact as DncModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
 use MauticPlugin\IntellectItMcpBundle\Service\McpError;
+use MauticPlugin\IntellectItMcpBundle\Service\McpServerFactory;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -36,6 +39,7 @@ const CONTACT_SCHEMA = [
         'tags'   => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Tags to add; prefix "-" removes a tag, e.g. "-lead"'],
         'points' => ['type' => 'integer', 'description' => 'Set the points to this value (lead scoring)'],
         'stage'  => ['type' => 'string', 'description' => 'Move the contact to this stage (name or ID, must exist in Mautic)'],
+        'unsubscribe' => ['type' => 'boolean', 'description' => 'true = put the contact on the email Do Not Contact list (unsubscribed), e.g. after they asked by email. Add-only: it never removes or changes an existing Do Not Contact entry'],
     ],
 ];
 
@@ -49,7 +53,8 @@ const FIELD_TYPES = ['text', 'textarea', 'number', 'boolean', 'select', 'multise
  * Contacts that join a segment can enter campaigns that use the segment
  * and receive published segment emails; the results report these
  * live_effects, and dryRun shows them before anything is saved.
- * Do-Not-Contact (unsubscribed, bounced) is never changed.
+ * Do-Not-Contact is add-only: unsubscribe=true adds an email unsubscribe for a
+ * contact that can still be contacted; existing entries are never changed or removed.
  */
 class ContactTools
 {
@@ -67,6 +72,7 @@ class ContactTools
         private readonly Connection $connection,
         private readonly CoreParametersHelper $parameters,
         private readonly SegmentEffects $effects,
+        private readonly DncModel $dnc,
     ) {
     }
 
@@ -101,7 +107,7 @@ class ContactTools
     }
 
     /**
-     * Create or update contacts (up to 100 per call), matched by email and the other unique fields: existing contacts are updated, new ones created. Optionally add them all to segments. Do-Not-Contact status (unsubscribed, bounced) is never changed. Call with dryRun first when adding to segments: live_effects lists running campaigns and segment emails these contacts would get.
+     * Create or update contacts (up to 100 per call), matched by email and the other unique fields: existing contacts are updated, new ones created. Optionally add them all to segments. Do-Not-Contact status can only be added to (contact flag unsubscribe=true, for contacts who asked to be removed from emails); it is never removed or changed. Call with dryRun first when adding to segments: live_effects lists running campaigns and segment emails these contacts would get.
      *
      * @param list<array<string, mixed>> $contacts   Contacts: {email, fields, tags}
      * @param list<int>                  $segmentIds Add every contact to these segments
@@ -154,6 +160,11 @@ class ContactTools
                 $inSegments             = $isNew ? [] : $this->memberSegmentIds((int) $lead->getId(), array_map(fn (LeadList $s): int => (int) $s->getId(), $segments));
                 $joins                  = array_values(array_filter($segments, fn (LeadList $s): bool => !in_array((int) $s->getId(), $inSegments, true)));
 
+                foreach (['points' => 'points', 'stage' => 'stages'] as $field => $group) {
+                    if (isset($row[$field]) && '' !== (string) $row[$field] && in_array($group, McpServerFactory::parseHiddenGroups($this->parameters->get('intellectit_mcp_hidden_groups', [])), true)) {
+                        throw McpError::from(sprintf('Row %d: "%s" is switched off on this instance (hidden group "%s").', $i, $field, $group), McpError::BLOCKED_BY_POLICY);
+                    }
+                }
                 $points = isset($row['points']) ? (int) $row['points'] : null;
                 $stage  = isset($row['stage']) && '' !== (string) $row['stage'] ? (string) $row['stage'] : null;
                 if (null !== $points && ($isNew || (int) $lead->getPoints() !== $points)) {
@@ -162,6 +173,16 @@ class ContactTools
                 if (null !== $stage && ($isNew || !in_array($stage, [(string) $lead->getStage()?->getName(), (string) $lead->getStage()?->getId()], true))) {
                     $changed[] = 'stage';
                     $data['stage'] = $stage;
+                }
+                $dncAction = null;
+                if (array_key_exists('unsubscribe', $row) && !is_bool($row['unsubscribe'])) {
+                    throw McpError::from(sprintf('Row %d: unsubscribe must be true or false.', $i));
+                }
+                if (true === ($row['unsubscribe'] ?? false)) {
+                    $dncAction = ($isNew || DncEntity::IS_CONTACTABLE === $this->dnc->isContactable($lead, 'email')) ? 'added' : 'already';
+                    if ('added' === $dncAction) {
+                        $changed[] = 'do_not_contact';
+                    }
                 }
                 $status = $isNew ? 'created' : ([] === $changed && [] === $tagChanges && [] === $joins ? 'unchanged' : 'updated');
                 if (!$dryRun && 'unchanged' !== $status) {
@@ -173,6 +194,9 @@ class ContactTools
                         $this->leads->modifyTags($lead, $addTags, $removeTags, false);
                     }
                     $this->leads->saveEntity($lead);
+                    if ('added' === $dncAction) {
+                        $this->dnc->addDncForContact((int) $lead->getId(), 'email', DncEntity::UNSUBSCRIBED, 'Unsubscribed on request (via MCP).');
+                    }
                     foreach ($joins as $segment) {
                         $this->segments->addLead($lead, $segment, true);
                     }
@@ -186,6 +210,7 @@ class ContactTools
                     'email'          => $data['email'] ?? $lead->getEmail(),
                     'changed_fields' => 'updated' === $status ? $changed : null,
                     'tags'           => $tagChanges ?: null,
+                    'do_not_contact' => $dncAction ? ('added' === $dncAction ? ($dryRun ? 'would be added' : 'added') : 'already on the list, unchanged') : null,
                     'joins_segments' => array_map(fn (LeadList $s): int => (int) $s->getId(), $joins) ?: null,
                 ], fn ($v): bool => null !== $v);
             } catch (ToolCallException $e) {

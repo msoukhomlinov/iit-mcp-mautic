@@ -55,27 +55,28 @@ class SendTools
     }
 
     /**
-     * Send an email to real recipients. Without confirm=true nothing is sent and the preview is returned. Check the preview (an attending person must see it and agree) and call again with confirm=true. The email must be published (a person publishes it in Mautic). Do-Not-Contact contacts are skipped. Sends are capped per call; segment sends need an extra operator setting.
+     * Send an email to real recipients. Without confirm=true nothing is sent and the preview is returned. Check the preview (an attending person must see it and agree) and call again with confirm=true, expectedRecipientCount the preview's targets_hash and EXACTLY the same contactIds/segmentIds. The email must be published (a person publishes it in Mautic). Do-Not-Contact contacts and contacts who already got this email are skipped. Sends are capped per call; segment sends need an extra operator setting.
      *
      * @param int       $emailId    Email ID
      * @param list<int> $contactIds Contacts to email directly
      * @param list<int> $segmentIds Segments of a segment email (must be segments the email is assigned to)
      * @param bool      $confirm    true = really send what the preview shows
      * @param int|null  $expectedRecipientCount With confirm=true: the recipient_count the preview showed. The send is refused if the recipients now differ.
+     * @param string    $targetsHash With confirm=true: the targets_hash the preview showed. The send is refused if the contactIds/segmentIds differ from the previewed ones.
      *
      * @return array<string, mixed>
      */
-    public function sendEmail(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = [], bool $confirm = false, #[Schema(minimum: 0)] ?int $expectedRecipientCount = null): array
+    public function sendEmail(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = [], bool $confirm = false, #[Schema(minimum: 0)] ?int $expectedRecipientCount = null, string $targetsHash = ''): array
     {
         if (!$confirm) {
-            return $this->sendPlanned($context, $emailId, $contactIds, $segmentIds, false, $expectedRecipientCount);
+            return $this->sendPlanned($context, $emailId, $contactIds, $segmentIds, false, $expectedRecipientCount, $targetsHash);
         }
         // One confirmed send at a time: the hourly limit check and the audit row that counts it must not interleave.
         if (1 !== (int) $this->db->fetchOne("SELECT GET_LOCK('intellectit_mcp_send', 10)")) {
             throw McpError::from('Another send is in progress on this instance. Try again in a moment.', McpError::BLOCKED_BY_POLICY);
         }
         try {
-            return $this->sendPlanned($context, $emailId, $contactIds, $segmentIds, true, $expectedRecipientCount);
+            return $this->sendPlanned($context, $emailId, $contactIds, $segmentIds, true, $expectedRecipientCount, $targetsHash);
         } finally {
             $this->db->fetchOne("SELECT RELEASE_LOCK('intellectit_mcp_send')");
         }
@@ -87,13 +88,13 @@ class SendTools
      *
      * @return array<string, mixed>
      */
-    private function sendPlanned(RequestContext $context, int $emailId, array $contactIds, array $segmentIds, bool $confirm, ?int $expectedRecipientCount): array
+    private function sendPlanned(RequestContext $context, int $emailId, array $contactIds, array $segmentIds, bool $confirm, ?int $expectedRecipientCount, string $targetsHash): array
     {
         $plan    = $this->plan($context, $emailId, $contactIds, $segmentIds, 'edit');
         $preview = $plan['preview'];
         if (!$confirm) {
             $next = 'unattended' === $this->parameters->get('intellectit_mcp_caller_mode', 'attended')
-                ? 'Check this preview against your task, then call again with confirm=true and expectedRecipientCount.'
+                ? 'Check this preview against your task, then call again with confirm=true, expectedRecipientCount and targetsHash.'
                 : 'Show this preview to the user and call again with confirm=true after they agree.';
 
             return ['sent' => false, 'message' => 'Nothing sent. '.$next] + $preview;
@@ -103,6 +104,10 @@ class SendTools
             throw McpError::from('Not sent: '.implode(' ', $preview['blockers']));
         }
 
+        if ('' === $targetsHash || !hash_equals($preview['targets_hash'], $targetsHash)) {
+            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'reason' => 'targets_hash']);
+            throw McpError::from(sprintf('Not sent: targetsHash does not match these contactIds/segmentIds. Preview this exact selection and confirm with its targets_hash (%s).', $preview['targets_hash']));
+        }
         if (null === $expectedRecipientCount) {
             throw McpError::from(sprintf('Pass expectedRecipientCount (the preview shows %d) to confirm this send.', $preview['recipient_count']));
         }
@@ -163,6 +168,28 @@ class SendTools
         return $result;
     }
 
+    /**
+     * Contacts that already have a delivery record of this email.
+     *
+     * @param list<int> $contactIds
+     *
+     * @return array<int, true>
+     */
+    private function alreadySent(int $emailId, array $contactIds): array
+    {
+        if ([] === $contactIds) {
+            return [];
+        }
+        $prefix = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
+        $ids    = $this->db->fetchFirstColumn(
+            "SELECT DISTINCT lead_id FROM {$prefix}email_stats WHERE email_id = :email AND lead_id IN (:ids)",
+            ['email' => $emailId, 'ids' => $contactIds],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
+
+        return array_fill_keys(array_map('intval', $ids), true);
+    }
+
     /** Recipients sent through this plugin in the last hour, from the audit log (all users). */
     private function sentInLastHour(): int
     {
@@ -215,7 +242,8 @@ class SendTools
                 $blockers[] = sprintf('%d contacts given, at most %d per call.', count($contactIds), $cap);
             }
             $ignoreDnc = (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false);
-            $excluded  = ['do_not_contact' => [], 'no_valid_email' => []];
+            $excluded  = ['do_not_contact' => [], 'no_valid_email' => [], 'already_sent' => []];
+            $alreadySent = $this->alreadySent((int) $email->getId(), array_slice($contactIds, 0, $cap + 1));
             foreach (array_slice($contactIds, 0, $cap + 1) as $id) {
                 $lead = $this->leads->getEntity($id);
                 if (!$lead instanceof Lead || !$lead->getId()) {
@@ -230,6 +258,11 @@ class SendTools
                     $excluded['do_not_contact'][] = $id;
                     continue;
                 }
+                if (isset($alreadySent[$id])) {
+                    // Mautic would skip them (allowResends is off): list them instead of counting them as recipients.
+                    $excluded['already_sent'][] = $id;
+                    continue;
+                }
                 $fields       = array_merge($lead->getProfileFields(), ['id' => $id]); // profile fields carry id as a string
                 $fields['owner_id'] = $lead->getOwner()?->getId();
                 $recipients[] = $fields;
@@ -239,6 +272,7 @@ class SendTools
             }
             $preview += [
                 'mode'             => 'contacts',
+                'targets'          => ['contactIds' => $contactIds],
                 'recipient_count'  => count($recipients),
                 'recipients'       => array_map(static fn (array $r): array => ['id' => $r['id'], 'email' => $r['email'] ?? null], array_slice($recipients, 0, 10)),
                 'excluded'         => $excluded,
@@ -273,11 +307,13 @@ class SendTools
             }
             $preview += [
                 'mode'             => 'segments',
+                'targets'          => ['segmentIds' => $segmentIds],
                 'recipient_count'  => min($pending, $cap),
                 'pending_total'    => $pending,
                 'segments'         => $perList,
                 'note'             => 'Pending contacts exclude Do Not Contact and people who already got this email. A contact in several segments may be counted twice here but is emailed once.',
             ];
+            $warnings[] = 'Once a person publishes a segment email, Mautic\'s own broadcast (mautic:broadcasts:send, run by cron) can also send it to ALL its segments, outside the per-call and hourly caps of this tool.';
             if ($pending > $cap) {
                 $warnings[] = sprintf('%d contacts are pending but one call sends at most %d; repeat the call for the rest.', $pending, $cap);
             }
@@ -294,6 +330,8 @@ class SendTools
                 $blockers[] = sprintf('Hourly limit: %d already sent in the last hour, this send adds %d, the limit is %d (intellectit_mcp_send_max_per_hour). Try again later.', $already, $preview['recipient_count'], $perHour);
             }
         }
+
+        $preview['targets_hash'] = substr(hash('sha256', json_encode([$emailId, $preview['targets']])), 0, 16);
 
         return [
             'preview'    => $preview + ['warnings' => $warnings, 'blockers' => $blockers, 'can_send' => [] === $blockers],

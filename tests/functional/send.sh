@@ -24,6 +24,9 @@ em="$(mk_email 'Send test' template 1)"; em_off="$(mk_email 'Send draft' templat
 c_ok="$(mk_contact send-ok@example.com)"; c_dnc="$(mk_contact send-dnc@example.com)"; c_none="$(api -X POST "$BASE/api/contacts/new" -d firstname=NoMail | jq -r '.contact.id')"
 api -X POST "$BASE/api/contacts/$c_dnc/dnc/email/add" -d reason=3 >/dev/null
 
+# th <emailId> <"contactIds"|"segmentIds"> <csv ids>: the targets_hash a preview of exactly that selection returns.
+th() { result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$1,\"$2\":[$3]}")" | jq -r '.targets_hash'; }
+
 prev="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc,$c_none]}")")"
 jq -e --argjson ok "$c_ok" --argjson d "$c_dnc" --argjson n "$c_none" '.mode == "contacts" and .recipient_count == 1 and .recipients[0].id == $ok and .excluded.do_not_contact == [$d] and .excluded.no_valid_email == [$n] and .can_send == true' <<<"$prev" >/dev/null \
   && pass "mautic_preview_email_send: 1 recipient; DNC and no-address contacts excluded and named" || { echo "$prev" | head -c 900; fail "preview"; }
@@ -39,12 +42,17 @@ grep -q 'not published' <<<"$draft" && [[ "$(db "SELECT COUNT(*) FROM email_stat
 
 [[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'refusal' AND action = 'refused' AND details LIKE '%BLOCKED_BY_POLICY%'")" -ge 1 ]] \
   && pass "a policy refusal (unpublished email) is written to the audit log with its code" || fail "refusal not audited"
-nocount="$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok],\"confirm\":true}")"
-wrongcount="$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":2}")"
+h_ok="$(th $em contactIds $c_ok)"; h_two="$(th $em contactIds "$c_ok,$c_dnc")"
+nohash="$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok],\"confirm\":true,\"expectedRecipientCount\":1}")"
+swap="$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1,\"targetsHash\":\"$h_ok\"}")"
+grep -q 'targetsHash' <<<"$nohash" && grep -q 'targetsHash does not match' <<<"$swap" && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em")" == 0 ]] \
+  && pass "confirm needs targetsHash, and a hash from a different selection is refused (nothing sent)" || { echo "$nohash $swap" | head -c 800; fail "targetsHash not enforced"; }
+nocount="$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok],\"confirm\":true,\"targetsHash\":\"$h_ok\"}")"
+wrongcount="$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":2,\"targetsHash\":\"$h_two\"}")"
 grep -q 'expectedRecipientCount' <<<"$nocount" && grep -q 'you expected 2 recipients but 1' <<<"$wrongcount" && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em")" == 0 ]] \
   && pass "confirm needs expectedRecipientCount, and a count that differs from the preview is refused (nothing sent)" || { echo "$nocount $wrongcount" | head -c 800; fail "expectedRecipientCount not enforced"; }
 
-sent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1}")")"
+sent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok,$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1,\"targetsHash\":\"$h_two\"}")")"
 jq -e '.sent == true and .sent_count == 1 and .failed_count == 0' <<<"$sent" >/dev/null \
   && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_ok")" == 1 && "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_dnc")" == 0 ]] \
   && pass "mautic_send_email confirm=true: the contact got it, the Do Not Contact contact did not" || { echo "$sent" | head -c 700; fail "confirmed send"; }
@@ -58,7 +66,8 @@ jq -e '.can_send == false and (.blockers | join(" ") | test("at most 1"))' <<<"$
   && pass "recipient cap: more contacts than intellectit_mcp_send_max_recipients is blocked" || { echo "$cap" | head -c 600; fail "cap"; }
 
 set_params '{"intellectit_mcp_send_max_per_hour": 1}'
-hour="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_ok]}")")"
+c_hour="$(mk_contact send-hour@example.com)"
+hour="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_hour]}")")"
 set_params '{"intellectit_mcp_send_max_per_hour": 500}'
 jq -e '.can_send == false and .sent_last_hour >= 1 and (.blockers | join(" ") | test("Hourly limit"))' <<<"$hour" >/dev/null \
   && pass "hourly limit: sends already made in the last hour count against intellectit_mcp_send_max_per_hour" || { echo "$hour" | head -c 600; fail "hourly limit"; }
@@ -66,7 +75,7 @@ jq -e '.can_send == false and .sent_last_hour >= 1 and (.blockers | join(" ") | 
 # Operator override: with intellectit_mcp_send_ignore_dnc a direct send does reach a Do Not Contact contact, warns, and is audited.
 set_params '{"intellectit_mcp_send_ignore_dnc": true}'
 dncprev="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_dnc]}")")"
-dncsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1}")")"
+dncsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_dnc],\"confirm\":true,\"expectedRecipientCount\":1,\"targetsHash\":\"$(th $em contactIds $c_dnc)\"}")")"
 set_params '{"intellectit_mcp_send_ignore_dnc": false}'
 jq -e '.recipient_count == 1 and (.warnings | join(" ") | test("NOT excluded"))' <<<"$dncprev" >/dev/null && jq -e '.sent == true' <<<"$dncsent" >/dev/null \
   && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em AND lead_id = $c_dnc")" == 1 ]] \
@@ -95,7 +104,7 @@ jq -e '.pending_total >= 2 and .recipient_count == 1 and (.warnings | join(" ") 
   && pass "segment cap: $(jq -r '.pending_total' <<<"$segcap") pending, one call would send $(jq -r '.recipient_count' <<<"$segcap")" || { echo "$segcap" | head -c 700; fail "segment cap"; }
 [[ "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em_seg,\"segmentIds\":[999999]}" | jq -r '.result.isError')" == true ]] \
   && pass "a segment the email is not assigned to is refused" || fail "foreign segment accepted"
-segsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em_seg,\"segmentIds\":[$seg],\"confirm\":true,\"expectedRecipientCount\":2}")")"
+segsent="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em_seg,\"segmentIds\":[$seg],\"confirm\":true,\"expectedRecipientCount\":2,\"targetsHash\":\"$(th $em_seg segmentIds $seg)\"}")")"
 jq -e '.sent == true and .sent_count >= 2' <<<"$segsent" >/dev/null && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_seg AND lead_id = $c_ok")" == 1 ]] \
   && pass "segment send with confirm reached the segment's contact" || { echo "$segsent" | head -c 700; fail "segment send"; }
 
