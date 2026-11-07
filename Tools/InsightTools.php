@@ -46,6 +46,7 @@ class InsightTools
             throw new ToolCallException(sprintf('Segment %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $segment, 'lead:lists', 'view');
+        $sampleSize = min(max(0, $sampleSize), 10); // the schema bound is only a hint to clients
 
         $members = $this->table('lead_lists_leads');
         $count   = (int) $this->db->fetchOne("SELECT COUNT(*) FROM $members WHERE leadlist_id = :id AND manually_removed = 0", ['id' => $id]);
