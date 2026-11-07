@@ -23,6 +23,12 @@ class InsightTools
     /** Columns mautic_find_duplicate_contacts may group by (never taken from user input as SQL). */
     private const DUPLICATE_COLUMNS = ['email', 'phone', 'mobile'];
 
+    /** mautic_find_duplicate_contacts looks at the newest this many contacts only. */
+    private const DUPLICATE_SCAN_ROWS = 500000;
+
+    /** Statement time cap for mautic_find_duplicate_contacts, in milliseconds (MySQL only). */
+    private const DUPLICATE_TIME_MS = 10000;
+
     public function __construct(
         private readonly McpUserContext $auth,
         private readonly Connection $db,
@@ -99,11 +105,23 @@ class InsightTools
         $limit = min(max(1, $limit), 100);
         // GROUP_CONCAT cuts at 1,024 bytes on MySQL by default and would corrupt the last id silently.
         $this->db->executeStatement('SET SESSION group_concat_max_len = 1048576');
-        $rows  = $this->db->fetchAllAssociative(
-            "SELECT LOWER(TRIM($field)) AS value, COUNT(*) AS contacts, GROUP_CONCAT(id ORDER BY id) AS ids
-             FROM $leads WHERE $field IS NOT NULL AND TRIM($field) <> ''
-             GROUP BY LOWER(TRIM($field)) HAVING COUNT(*) > 1 ORDER BY contacts DESC, value LIMIT $limit",
-        );
+        // Budget: only the newest DUPLICATE_SCAN_ROWS contacts (walked on the primary key), and a
+        // statement time cap on MySQL (the optimizer hint is a comment that MariaDB ignores).
+        $rowBudget = self::DUPLICATE_SCAN_ROWS;
+        $timeMs    = self::DUPLICATE_TIME_MS;
+        try {
+            $rows = $this->db->fetchAllAssociative(
+                "SELECT /*+ MAX_EXECUTION_TIME($timeMs) */ LOWER(TRIM(v)) AS value, COUNT(*) AS contacts, GROUP_CONCAT(id ORDER BY id) AS ids
+                 FROM (SELECT id, $field AS v FROM $leads ORDER BY id DESC LIMIT $rowBudget) recent
+                 WHERE v IS NOT NULL AND TRIM(v) <> ''
+                 GROUP BY LOWER(TRIM(v)) HAVING COUNT(*) > 1 ORDER BY contacts DESC, value LIMIT $limit",
+            );
+        } catch (\Doctrine\DBAL\Exception $e) {
+            if (!str_contains($e->getMessage(), 'maximum statement execution time')) {
+                throw $e;
+            }
+            throw McpError::from(sprintf('Mautic did not finish the duplicate search within %d seconds; try again when the database is less busy.', intdiv($timeMs, 1000)));
+        }
 
         return [
             'field'  => $field,
@@ -112,7 +130,7 @@ class InsightTools
                 'contacts'    => (int) $r['contacts'],
                 'contact_ids' => array_map('intval', explode(',', (string) $r['ids'])),
             ], $rows),
-            'hint'   => 'Review the contacts with mautic_get_contact, then merge them with mautic_merge_contacts if the destructive tier is on, otherwise in Mautic (contact list, select, Merge). Groups are capped by limit.',
+            'hint'   => 'Review the contacts with mautic_get_contact, then merge them with mautic_merge_contacts if the destructive tier is on, otherwise in Mautic (contact list, select, Merge). Groups are capped by limit; only the newest 500,000 contacts are checked.',
         ];
     }
 
