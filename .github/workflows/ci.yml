@@ -1,10 +1,16 @@
 name: ci
 
+# Runs on pull requests that change code, and by hand. Not on every push:
+# main only receives merged PRs that already passed. A new push to the same
+# PR cancels the run in progress.
 on:
-  push:
-    branches: [main]
   pull_request:
+    paths-ignore: ['**.md', 'NOTICE', 'LICENSE', '.gitignore']
   workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -12,6 +18,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,10 +34,12 @@ jobs:
   functional:
     name: functional (PHP ${{ matrix.php }})
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     strategy:
       fail-fast: false
+      # Pull requests test the primary PHP only; a manual run adds 8.5.
       matrix:
-        php: ['8.4', '8.5']
+        php: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["8.4", "8.5"]') || fromJSON('["8.4"]') }}
     services:
       mariadb:
         image: mariadb:11.4

@@ -1,12 +1,12 @@
 name: release-please
 
-# Conventional commits on main -> release-please keeps a release PR open
-# (VERSION, CHANGELOG.md, plugin version). Merging it tags v<version> and
-# creates the GitHub release.
+# Run by hand when a release is wanted: it opens a release PR from the
+# conventional commits on main (VERSION, CHANGELOG.md, plugin version);
+# merging that PR tags v<version> and creates the GitHub release.
+# Needs Settings > Actions > General > "Allow GitHub Actions to create and
+# approve pull requests"; without it the run fails.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,6 +15,7 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     permissions:
       contents: write
       pull-requests: write
