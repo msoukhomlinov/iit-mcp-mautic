@@ -17,7 +17,7 @@ Recorded decisions for the IntellectIT Mautic MCP server, kept in the form the I
 | Read-only | none | on | 27 | reads, insights, projects, lists |
 | Write | `intellectit_mcp_allow_write` | **off** | 58 | creates and edits emails and campaigns (unpublished), segments (created published), contacts, companies, scoring, stages, projects; `mautic_send_test_email` (to the user only). Edits to running campaigns and published point triggers also need `intellectit_mcp_live_campaign_edits` (**off**) and scope `mcp:campaigns:live` |
 | Destructive | `intellectit_mcp_allow_destructive` | **off** | +2 | `mautic_delete_record` (contact, company, segment, email, campaign) and `mautic_merge_contacts`; scope `mcp:destructive` (opt-in); preview, then `confirm=true` with `expectedName` / `expectedLoserId`; emails and campaigns must be unpublished, segments in use cannot be deleted; audited |
-| Send | `intellectit_mcp_allow_send` | **off** | +2 (29 with Write off, 60 with everything on) | `mautic_preview_email_send`, `mautic_send_email`; scope `mcp:send` (opt-in); segments need `intellectit_mcp_allow_segment_send`; cap `intellectit_mcp_send_max_recipients` (100) |
+| Send | `intellectit_mcp_allow_send` | **off** | +2 (29 with Write off, 60 with everything on) | `mautic_preview_email_send`, `mautic_send_email`; scope `mcp:send` (opt-in); segments need `intellectit_mcp_allow_segment_send`; cap `intellectit_mcp_send_max_recipients` (100) per call and `intellectit_mcp_send_max_per_hour` (500, all users, 0 = off) |
 
 Counts and sizes are measured by `tests/functional/surface.sh` (see Budget).
 
@@ -61,7 +61,7 @@ Rule, reason, approver, date. "PENDING" means inherited from upstream and not ye
 
 - No `mautic_guide` tool or outcome skills; playbooks live in the instructions.
 - Audit has no per-call outcome or approver record beyond the audit-log row; previews are not audited.
-- No per-hour or per-day send limit, only a per-call cap.
-- No `composer audit` step in CI.
+- No per-day send limit (per-call and per-hour only; the hourly count comes from the audit log).
+- No `composer audit` step in CI: the package has no lock file; its dependencies resolve inside Mautic.
 - No mutation-check evidence for the tests.
 - No MCP Inspector or protocol-conformance run (the functional suite speaks JSON-RPC directly).

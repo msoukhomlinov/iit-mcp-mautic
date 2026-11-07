@@ -41,6 +41,8 @@ return [
         'intellectit_mcp_caller_mode' => 'attended',
         // Irreversible tools (delete a record, merge contacts) need this plus the opt-in scope mcp:destructive.
         'intellectit_mcp_allow_destructive' => false,
+        // Recipients per rolling hour across all users (from the audit log); 0 = no hourly limit.
+        'intellectit_mcp_send_max_per_hour' => 500,
         'intellectit_mcp_allow_send' => false,
         // Sending to whole segments needs this on top of intellectit_mcp_allow_send.
         'intellectit_mcp_allow_segment_send' => false,

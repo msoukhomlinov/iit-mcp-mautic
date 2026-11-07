@@ -55,6 +55,12 @@ set_params '{"intellectit_mcp_send_max_recipients": 100}'
 jq -e '.can_send == false and (.blockers | join(" ") | test("at most 1"))' <<<"$cap" >/dev/null \
   && pass "recipient cap: more contacts than intellectit_mcp_send_max_recipients is blocked" || { echo "$cap" | head -c 600; fail "cap"; }
 
+set_params '{"intellectit_mcp_send_max_per_hour": 1}'
+hour="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em,\"contactIds\":[$c_ok]}")")"
+set_params '{"intellectit_mcp_send_max_per_hour": 500}'
+jq -e '.can_send == false and .sent_last_hour >= 1 and (.blockers | join(" ") | test("Hourly limit"))' <<<"$hour" >/dev/null \
+  && pass "hourly limit: sends already made in the last hour count against intellectit_mcp_send_max_per_hour" || { echo "$hour" | head -c 600; fail "hourly limit"; }
+
 # Segments: a separate switch, only the email's own segments.
 seg="$(api -X POST "$BASE/api/segments/new" -d name='Send segment' -d isPublished=1 | jq -r '.list.id')"
 api -X POST "$BASE/api/segments/$seg/contact/$c_ok/add" >/dev/null
