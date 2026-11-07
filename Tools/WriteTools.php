@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -117,8 +118,11 @@ class WriteTools
             $this->auth->requireEntityAccess($context, $source, 'email:emails', 'view');
             $sourceType = $source->getEmailType() ?: 'template';
             $email      = clone $source;
-            foreach ($email->getLists()->toArray() as $segment) {
-                $email->removeList($segment);
+            // clone is shallow: the copy would share these collections with the source, so changing the copy's
+            // segments would change the source email's. Give it its own (no audience, same attachments).
+            $reflection = new \ReflectionClass(Email::class);
+            foreach (['lists' => [], 'excludedLists' => [], 'assetAttachments' => $source->getAssetAttachments()->toArray()] as $property => $items) {
+                $reflection->getProperty($property)->setValue($email, new ArrayCollection($items));
             }
             $email->setEmailType(null !== $type ? ('segment' === $type ? 'list' : 'template') : $sourceType);
             if ('' !== $language) {

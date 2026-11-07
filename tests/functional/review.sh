@@ -30,6 +30,16 @@ cid2="$(jq -r '.id' <<<"$copy")"
 got="$(result "$(call "$access" mautic_get_email "{\"id\":$cid2}")")"
 jq -e --arg t "$(jq -r '.topic' <<<"$src")" '.name == "Copy of source" and .subject == "Changed" and .published == false and .segments == [] and .topic == $t and .theme == "mautic_code_mode" and (.html | test("<p>Hi</p>"))' <<<"$got" >/dev/null \
   && pass "copyFromId: content, theme and topic are kept; new name and subject; unpublished; segments are not copied" || { echo "$got" | head -c 800; fail "copyFromId"; }
+# The copy must not touch the original: its segments and the segments of a second copy stay as they were.
+copy2="$(result "$(call "$access" mautic_create_email_draft "{\"name\":\"Copy two\",\"subject\":\"Two\",\"copyFromId\":$src_id,\"segmentIds\":[]}")")"
+orig="$(result "$(call "$access" mautic_get_email "{\"id\":$src_id}")")"
+jq -e --argjson s "$seg" '.segments == [{"id": $s, "name": "Send segment"}] and .name == "Copy source" and .subject == "Original"' <<<"$orig" >/dev/null \
+  && [[ "$(db "SELECT COUNT(*) FROM email_list_xref WHERE email_id = $src_id")" == 1 && "$(db "SELECT COUNT(*) FROM email_list_xref WHERE email_id = $(jq -r '.id' <<<"$copy2")")" == 0 ]] \
+  && pass "copying an email never changes the original: its segment is still assigned, the copies have none" || { echo "$orig" | head -c 600; fail "copy changed the original email"; }
+copy3="$(result "$(call "$access" mautic_create_email_draft "{\"name\":\"Copy three\",\"subject\":\"Three\",\"copyFromId\":$src_id,\"segmentIds\":[$seg]}")")"
+orig="$(result "$(call "$access" mautic_get_email "{\"id\":$src_id}")")"
+[[ "$(db "SELECT COUNT(*) FROM email_list_xref WHERE email_id = $src_id")" == 1 && "$(db "SELECT COUNT(*) FROM email_list_xref WHERE email_id = $(jq -r '.id' <<<"$copy3")")" == 1 ]] \
+  && pass "a copy with its own segmentIds gets them without touching the original's" || { echo "$orig" | head -c 600; fail "copy with segmentIds"; }
 [[ "$(call "$access" mautic_create_email_draft '{"name":"x","subject":"x"}' | jq -r '.result.isError')" == true ]] \
   && pass "an email draft without html and without copyFromId is refused" || fail "empty draft accepted"
 pub="$(call "$access" mautic_update_email_draft "{\"id\":$em,\"subject\":\"nope\"}")"
