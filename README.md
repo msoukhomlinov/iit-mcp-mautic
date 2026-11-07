@@ -10,8 +10,7 @@ Mautic 7 at `/mcp` (Streamable HTTP). It is built on the official
 Needs **Mautic 7.2+** (Composer install) with **PHP 8.4+**, served over **https**, and cron running as for any Mautic.
 
 ```bash
-# 1. Install (the repository is private: give Composer a GitHub token with read access once)
-composer config --global github-oauth.github.com <token>
+# 1. Install
 composer config repositories.intellectit-mcp vcs https://github.com/msoukhomlinov/iit-mcp-mautic
 composer require intellectit/mautic-mcp-bundle:dev-main
 php bin/console mautic:plugins:reload
