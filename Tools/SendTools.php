@@ -51,7 +51,33 @@ class SendTools
      */
     public function previewEmailSend(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = []): array
     {
-        return $this->plan($context, $emailId, $contactIds, $segmentIds, 'view')['preview'];
+        $preview = $this->plan($context, $emailId, $contactIds, $segmentIds, 'view')['preview'];
+        $this->auditPreview($emailId, $preview, 'preview');
+
+        return $preview;
+    }
+
+    /**
+     * Record that a send was previewed (who looked at what), so a later send can be traced to its preview. Not counted against the hourly limit.
+     *
+     * @param array<string, mixed> $preview
+     */
+    private function auditPreview(int $emailId, array $preview, string $via): void
+    {
+        // The id lists are capped (the input can be far larger than a send), and a failing audit write must not break a preview.
+        $targets = array_map(static fn (array $ids): array => array_slice($ids, 0, 100), $preview['targets']);
+        try {
+            $this->auth->audit('email', $emailId, 'send_preview', [
+                'mode'            => $preview['mode'],
+                'targets'         => $targets,
+                'targets_hash'    => $preview['targets_hash'],
+                'recipient_count' => $preview['recipient_count'],
+                'can_send'        => $preview['can_send'],
+                'blockers'        => $preview['blockers'],
+                'call'            => $via,
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     /**
@@ -93,6 +119,7 @@ class SendTools
         $plan    = $this->plan($context, $emailId, $contactIds, $segmentIds, 'edit');
         $preview = $plan['preview'];
         if (!$confirm) {
+            $this->auditPreview($emailId, $preview, 'send_without_confirm');
             $next = 'unattended' === $this->parameters->get('intellectit_mcp_caller_mode', 'attended')
                 ? 'Check this preview against your task, then call again with confirm=true, expectedRecipientCount and targetsHash.'
                 : 'Show this preview to the user and call again with confirm=true after they agree.';
@@ -100,19 +127,19 @@ class SendTools
             return ['sent' => false, 'message' => 'Nothing sent. '.$next] + $preview;
         }
         if ([] !== $preview['blockers']) {
-            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'blockers' => $preview['blockers']]);
+            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'targets_hash' => $preview['targets_hash'], 'blockers' => $preview['blockers']]);
             throw McpError::from('Not sent: '.implode(' ', $preview['blockers']));
         }
 
         if ('' === $targetsHash || !hash_equals($preview['targets_hash'], $targetsHash)) {
-            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'reason' => 'targets_hash']);
+            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'reason' => 'targets_hash', 'targets_hash' => $targetsHash]);
             throw McpError::from(sprintf('Not sent: targetsHash does not match these contactIds/segmentIds. Preview this exact selection and confirm with its targets_hash (%s).', $preview['targets_hash']));
         }
         if (null === $expectedRecipientCount) {
             throw McpError::from(sprintf('Pass expectedRecipientCount (the preview shows %d) to confirm this send.', $preview['recipient_count']));
         }
         if ($expectedRecipientCount !== $preview['recipient_count']) {
-            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'expected' => $expectedRecipientCount, 'actual' => $preview['recipient_count']]);
+            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'targets_hash' => $preview['targets_hash'], 'expected' => $expectedRecipientCount, 'actual' => $preview['recipient_count']]);
             throw McpError::from(sprintf('Not sent: you expected %d recipients but %d would receive it now. Preview again and confirm the new number (with the attending person, if any).', $expectedRecipientCount, $preview['recipient_count']));
         }
 
@@ -122,11 +149,12 @@ class SendTools
             $result = $this->deliver($email, $plan, $preview);
         } catch (\Throwable $e) {
             // Mautic may have sent some before failing: count the planned recipients against the hourly limit.
-            $this->auth->audit('email', (int) $email->getId(), 'send', ['mode' => $preview['mode'], 'contactIds' => $contactIds, 'segmentIds' => $segmentIds, 'sent' => (int) $preview['recipient_count'], 'failed' => 0, 'error' => $e->getMessage()]);
+            $this->auth->audit('email', (int) $email->getId(), 'send', ['mode' => $preview['mode'], 'targets_hash' => $preview['targets_hash'], 'contactIds' => $contactIds, 'segmentIds' => $segmentIds, 'sent' => (int) $preview['recipient_count'], 'failed' => 0, 'error' => $e->getMessage()]);
             throw $e;
         }
         $this->auth->audit('email', (int) $email->getId(), 'send', [
             'mode'         => $preview['mode'],
+            'targets_hash' => $preview['targets_hash'],
             'contactIds'   => $contactIds,
             'segmentIds'   => $segmentIds,
             'sent'         => $result['sent_count'],
