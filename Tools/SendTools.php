@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
+use Doctrine\DBAL\Connection;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\EmailBundle\Model\EmailModel;
@@ -35,6 +36,7 @@ class SendTools
         private readonly ListModel $segments,
         private readonly DoNotContact $dnc,
         private readonly CoreParametersHelper $parameters,
+        private readonly Connection $db,
     ) {
     }
 
@@ -119,6 +121,23 @@ class SendTools
         ]);
 
         return $result + ['email' => ['id' => $email->getId(), 'name' => $email->getName()]];
+    }
+
+    /** Recipients sent through this plugin in the last hour, from the audit log (all users). */
+    private function sentInLastHour(): int
+    {
+        $prefix = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
+        $rows   = $this->db->fetchFirstColumn(
+            "SELECT details FROM {$prefix}audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND action = 'send' AND date_added >= :since",
+            ['since' => date('Y-m-d H:i:s', time() - 3600)], // the audit log writes date_added in PHP's default timezone
+        );
+        $sum = 0;
+        foreach ($rows as $details) {
+            $decoded = @unserialize((string) $details, ['allowed_classes' => false]); // the audit log stores details serialized
+            $sum    += is_array($decoded) ? (int) ($decoded['sent'] ?? 0) : 0;
+        }
+
+        return $sum;
     }
 
     /**
@@ -224,6 +243,15 @@ class SendTools
             }
             if (0 === $pending && [] === $blockers) {
                 $blockers[] = 'No pending recipients.';
+            }
+        }
+
+        $perHour = max(0, (int) $this->parameters->get('intellectit_mcp_send_max_per_hour', 500));
+        if ($perHour > 0) {
+            $already = $this->sentInLastHour();
+            $preview += ['sent_last_hour' => $already, 'max_recipients_per_hour' => $perHour];
+            if ($already + (int) $preview['recipient_count'] > $perHour) {
+                $blockers[] = sprintf('Hourly limit: %d already sent in the last hour, this send adds %d, the limit is %d (intellectit_mcp_send_max_per_hour). Try again later.', $already, $preview['recipient_count'], $perHour);
             }
         }
 
