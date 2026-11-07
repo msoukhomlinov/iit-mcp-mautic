@@ -7,6 +7,7 @@ namespace MauticPlugin\IntellectItMcpBundle\Tools;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\DoNotContact as DncEntity;
 use Mautic\LeadBundle\Entity\Lead;
@@ -18,6 +19,7 @@ use Mautic\LeadBundle\Model\DoNotContact as DncModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
+use Mautic\StageBundle\Entity\Stage;
 use Mcp\Capability\Attribute\Schema;
 use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use MauticPlugin\IntellectItMcpBundle\Service\McpServerFactory;
@@ -73,6 +75,9 @@ class ContactTools
         private readonly CoreParametersHelper $parameters,
         private readonly SegmentEffects $effects,
         private readonly DncModel $dnc,
+        private readonly PointTools $pointTools,
+        private readonly StageTools $stageTools,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 
@@ -132,8 +137,15 @@ class ContactTools
 
         $results = [];
         $counts  = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'failed' => 0];
+        $stageEffects = null;
         $seen    = [];
         foreach (array_values($contacts) as $i => $row) {
+            if (!$this->em->isOpen()) {
+                // A failed flush closed the entity manager; later rows cannot be saved safely.
+                $counts['skipped'] = ($counts['skipped'] ?? 0) + 1;
+                $results[] = ['index' => $i, 'status' => 'skipped', 'email' => $row['email'] ?? null, 'error' => 'Not processed: the database session was closed by an earlier error. Retry this contact.'];
+                continue;
+            }
             try {
                 $data = $this->contactData($row, $known);
                 $key  = strtolower((string) ($data['email'] ?? ''));
@@ -167,12 +179,25 @@ class ContactTools
                 }
                 $points = isset($row['points']) ? (int) $row['points'] : null;
                 $stage  = isset($row['stage']) && '' !== (string) $row['stage'] ? (string) $row['stage'] : null;
-                if (null !== $points && ($isNew || (int) $lead->getPoints() !== $points)) {
-                    $changed[] = 'points';
+                if (!$isNew && !$overwrite) {
+                    // overwrite=false fills empty fields only: keep an existing score and stage.
+                    $points = 0 === (int) $lead->getPoints() ? $points : null;
+                    $stage  = null === $lead->getStage() ? $stage : null;
                 }
-                if (null !== $stage && ($isNew || !in_array($stage, [(string) $lead->getStage()?->getName(), (string) $lead->getStage()?->getId()], true))) {
-                    $changed[] = 'stage';
-                    $data['stage'] = $stage;
+                $oldPoints = (int) $lead->getPoints();
+                $fires     = [];
+                if (null !== $points && ($isNew || $oldPoints !== $points)) {
+                    $changed[] = 'points';
+                    $fires     = $points > $oldPoints ? $this->pointTools->triggersCrossed($lead, null, $oldPoints, $points) : [];
+                } else {
+                    $points = null;
+                }
+                $stageEntity = null !== $stage ? $this->stageTools->publishedStage($stage) : null; // also in dry runs
+                if (null !== $stageEntity && $lead->getStage()?->getId() !== $stageEntity->getId()) {
+                    $changed[]    = 'stage';
+                    $stageEffects ??= $this->stageTools->liveEffects();
+                } else {
+                    $stageEntity = null;
                 }
                 $dncAction = null;
                 if (array_key_exists('unsubscribe', $row) && !is_bool($row['unsubscribe'])) {
@@ -186,21 +211,34 @@ class ContactTools
                 }
                 $status = $isNew ? 'created' : ([] === $changed && [] === $tagChanges && [] === $joins ? 'unchanged' : 'updated');
                 if (!$dryRun && 'unchanged' !== $status) {
-                    $this->leads->setFieldValues($lead, $data, false, false);
-                    if (null !== $points) {
-                        $lead->setPoints($points);
+                    $this->connection->beginTransaction();
+                    try {
+                        $this->leads->setFieldValues($lead, $data, false, false);
+                        if (null !== $points) {
+                            $this->pointTools->applyPointsChange($lead, null, $oldPoints, $points, 'Set via MCP contact upsert');
+                        }
+                        if ($stageEntity instanceof Stage) {
+                            $this->leads->addToStage($lead, $stageEntity, 'Set via MCP contact upsert');
+                        }
+                        if ([] !== $addTags || [] !== $removeTags) {
+                            $this->leads->modifyTags($lead, $addTags, $removeTags, false);
+                        }
+                        $this->leads->saveEntity($lead);
+                        if ('added' === $dncAction) {
+                            $this->dnc->addDncForContact((int) $lead->getId(), 'email', DncEntity::UNSUBSCRIBED, 'Unsubscribed on request (via MCP).');
+                        }
+                        foreach ($joins as $segment) {
+                            $this->segments->addLead($lead, $segment, true);
+                        }
+                        $this->auth->audit('lead', (int) $lead->getId(), $isNew ? 'create' : 'update', ['fields' => $changed, 'tags' => $tagChanges, 'segments' => array_map(fn (LeadList $s): int => (int) $s->getId(), $joins)]);
+                        $this->connection->commit();
+                    } catch (\Throwable $e) {
+                        try {
+                            $this->connection->rollBack();
+                        } catch (\Throwable) {
+                        }
+                        throw $e;
                     }
-                    if ([] !== $addTags || [] !== $removeTags) {
-                        $this->leads->modifyTags($lead, $addTags, $removeTags, false);
-                    }
-                    $this->leads->saveEntity($lead);
-                    if ('added' === $dncAction) {
-                        $this->dnc->addDncForContact((int) $lead->getId(), 'email', DncEntity::UNSUBSCRIBED, 'Unsubscribed on request (via MCP).');
-                    }
-                    foreach ($joins as $segment) {
-                        $this->segments->addLead($lead, $segment, true);
-                    }
-                    $this->auth->audit('lead', (int) $lead->getId(), $isNew ? 'create' : 'update', ['fields' => $changed, 'tags' => $tagChanges, 'segments' => array_map(fn (LeadList $s): int => (int) $s->getId(), $joins)]);
                 }
                 ++$counts[$status];
                 $results[] = array_filter([
@@ -211,6 +249,9 @@ class ContactTools
                     'changed_fields' => 'updated' === $status ? $changed : null,
                     'tags'           => $tagChanges ?: null,
                     'do_not_contact' => $dncAction ? ('added' === $dncAction ? ($dryRun ? 'would be added' : 'added') : 'already on the list, unchanged') : null,
+                    'points'         => null !== $points ? ['before' => $oldPoints, 'after' => $points] : null,
+                    'triggers'       => $fires ?: null,
+                    'live_effects'   => $stageEntity instanceof Stage ? $stageEffects : null,
                     'joins_segments' => array_map(fn (LeadList $s): int => (int) $s->getId(), $joins) ?: null,
                 ], fn ($v): bool => null !== $v);
             } catch (ToolCallException $e) {
@@ -224,7 +265,7 @@ class ContactTools
 
         return [
             'dry_run' => $dryRun,
-            'message' => ($dryRun ? 'Dry run, nothing saved: ' : 'Saved: ').vsprintf('%d created, %d updated, %d unchanged, %d failed.', array_values($counts)),
+            'message' => ($dryRun ? 'Dry run, nothing saved: ' : 'Saved: ').vsprintf('%d created, %d updated, %d unchanged, %d failed.', array_slice(array_values($counts), 0, 4)).(isset($counts['skipped']) ? sprintf(' %d skipped (session closed by an error).', $counts['skipped']) : ''),
             'counts'  => $counts,
             'results' => $results,
         ] + ([] !== $segments ? ['live_effects' => $this->effects->forSegments($segments)] : []);

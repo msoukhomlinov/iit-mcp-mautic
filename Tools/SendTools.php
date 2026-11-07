@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\DBAL\Connection;
+use Psr\Log\LoggerInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\EmailBundle\Entity\Email;
 use Mautic\EmailBundle\Model\EmailModel;
@@ -37,6 +38,7 @@ class SendTools
         private readonly DoNotContact $dnc,
         private readonly CoreParametersHelper $parameters,
         private readonly Connection $db,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -149,21 +151,34 @@ class SendTools
             $result = $this->deliver($email, $plan, $preview);
         } catch (\Throwable $e) {
             // Mautic may have sent some before failing: count the planned recipients against the hourly limit.
-            $this->auth->audit('email', (int) $email->getId(), 'send', ['mode' => $preview['mode'], 'targets_hash' => $preview['targets_hash'], 'contactIds' => $contactIds, 'segmentIds' => $segmentIds, 'sent' => (int) $preview['recipient_count'], 'failed' => 0, 'error' => $e->getMessage()]);
+            try {
+                $this->auth->audit('email', (int) $email->getId(), 'send', ['mode' => $preview['mode'], 'targets_hash' => $preview['targets_hash'], 'contactIds' => $contactIds, 'segmentIds' => $segmentIds, 'sent' => (int) $preview['recipient_count'], 'failed' => 0, 'error' => $e->getMessage()]);
+            } catch (\Throwable $auditError) {
+                // the delivery error below matters more than a failed audit write; the hourly cap reads this audit row, so log it
+                $this->logger->error('MCP send audit write failed after a delivery error; the hourly cap does not count this send.', ['exception' => $auditError]);
+            }
             throw $e;
         }
-        $this->auth->audit('email', (int) $email->getId(), 'send', [
-            'mode'         => $preview['mode'],
-            'targets_hash' => $preview['targets_hash'],
-            'contactIds'   => $contactIds,
-            'segmentIds'   => $segmentIds,
-            'sent'         => $result['sent_count'],
-            'failed'       => $result['failed_count'],
-            'cap'          => $preview['max_recipients_per_call'],
-            'dnc_override' => (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false),
-        ]);
+        // The email is already out: a failed audit write must not turn this into an error (the client would retry).
+        $auditFailed = false;
+        try {
+            $this->auth->audit('email', (int) $email->getId(), 'send', [
+                'mode'         => $preview['mode'],
+                'targets_hash' => $preview['targets_hash'],
+                'contactIds'   => $contactIds,
+                'segmentIds'   => $segmentIds,
+                'sent'         => $result['sent_count'],
+                'failed'       => $result['failed_count'],
+                'cap'          => $preview['max_recipients_per_call'],
+                'dnc_override' => filter_var($this->parameters->get('intellectit_mcp_send_ignore_dnc', false), FILTER_VALIDATE_BOOLEAN),
+            ]);
+        } catch (\Throwable $auditError) {
+            // sentInLastHour reads this audit row: without it the hourly cap misses this send.
+            $auditFailed = true;
+            $this->logger->error('MCP send audit write failed; the hourly cap does not count this send.', ['exception' => $auditError]);
+        }
 
-        return $result + ['email' => ['id' => $email->getId(), 'name' => $email->getName()]];
+        return $result + ['email' => ['id' => $email->getId(), 'name' => $email->getName()]] + ($auditFailed ? ['audit' => 'failed'] : []);
     }
 
     /**
@@ -181,7 +196,7 @@ class SendTools
             $errors = $this->emails->sendEmail($email, $plan['recipients'], [
                 'source'        => ['mcp', 0],
                 'allowResends'  => false,
-                'ignoreDNC'     => (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false),
+                'ignoreDNC'     => filter_var($this->parameters->get('intellectit_mcp_send_ignore_dnc', false), FILTER_VALIDATE_BOOLEAN),
                 'return_errors' => true,
             ]);
             if (false === $errors) {
@@ -269,7 +284,7 @@ class SendTools
             if (count($contactIds) > $cap) {
                 $blockers[] = sprintf('%d contacts given, at most %d per call.', count($contactIds), $cap);
             }
-            $ignoreDnc = (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false);
+            $ignoreDnc = filter_var($this->parameters->get('intellectit_mcp_send_ignore_dnc', false), FILTER_VALIDATE_BOOLEAN);
             $excluded  = ['do_not_contact' => [], 'no_valid_email' => [], 'already_sent' => []];
             $alreadySent = $this->alreadySent((int) $email->getId(), array_slice($contactIds, 0, $cap + 1));
             foreach (array_slice($contactIds, 0, $cap + 1) as $id) {
@@ -312,7 +327,7 @@ class SendTools
             if ('list' !== $email->getEmailType()) {
                 $blockers[] = 'Only segment emails can be sent to segments; this is a template email. Send it to contacts, or use it in a campaign.';
             }
-            if (!(bool) $this->parameters->get('intellectit_mcp_allow_segment_send', false)) {
+            if (!filter_var($this->parameters->get('intellectit_mcp_allow_segment_send', false), FILTER_VALIDATE_BOOLEAN)) {
                 $blockers[] = 'Sending to segments is switched off on this instance (intellectit_mcp_allow_segment_send).';
             }
             // A segment holds other people's contacts too: same level as a direct send to them (view to preview, edit to send).

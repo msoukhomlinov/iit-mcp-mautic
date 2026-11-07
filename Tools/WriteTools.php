@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Connection;
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -75,6 +76,7 @@ class WriteTools
         private readonly LeadModel $leads,
         private readonly FakeContactHelper $fakeContact,
         private readonly EmailTopics $topics,
+        private readonly Connection $db,
     ) {
     }
 
@@ -203,6 +205,7 @@ class WriteTools
         }
         if (null !== $html) {
             $email->setCustomHtml($html);
+            $email->setPlainText('');
             $email->setTemplate('mautic_code_mode');
             $changed[] = 'html';
         }
@@ -464,6 +467,31 @@ class WriteTools
      */
     private function applyFlow(RequestContext $context, int $id, \Closure $build, bool $dryRun, bool $allowDeletions, array $redirects, string $action): array
     {
+        // Serialise edits per campaign: the lock is taken before the entity is read, so concurrent edits do not build on stale steps.
+        // GET_LOCK names are server-wide: include the database and table prefix so two Mautic instances on one server do not block each other.
+        $lock = 'intellectit_mcp_campaign_'.md5((string) $this->db->getDatabase().(defined('MAUTIC_TABLE_PREFIX') ? MAUTIC_TABLE_PREFIX : '')).'_'.$id;
+        if (1 !== (int) $this->db->fetchOne('SELECT GET_LOCK(?, 10)', [$lock])) {
+            throw McpError::from('Another edit of this campaign is in progress. Try again in a moment.', McpError::BLOCKED_BY_POLICY);
+        }
+        try {
+            return $this->applyFlowLocked($context, $id, $build, $dryRun, $allowDeletions, $redirects, $action);
+        } finally {
+            try {
+                $this->db->fetchOne('SELECT RELEASE_LOCK(?)', [$lock]);
+            } catch (\Throwable) {
+                // a failed release must not hide the original result or exception; the lock ends with the connection
+            }
+        }
+    }
+
+    /**
+     * @param \Closure(list<array<string, mixed>>): list<array<string, mixed>> $build
+     * @param array<string, string>                                          $redirects
+     *
+     * @return array<string, mixed>
+     */
+    private function applyFlowLocked(RequestContext $context, int $id, \Closure $build, bool $dryRun, bool $allowDeletions, array $redirects, string $action): array
+    {
         $campaign = $this->campaigns->getEntity($id);
         if (!$campaign instanceof Campaign || !$campaign->getId()) {
             throw McpError::from(sprintf('Campaign %d not found.', $id));
@@ -499,7 +527,7 @@ class WriteTools
         // (scope mcp:campaigns:live). Dry runs are always fine.
         $liveBlock = null;
         if ($campaign->isPublished()) {
-            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', false)) {
+            if (!filter_var($this->parameters->get('intellectit_mcp_live_campaign_edits', false), FILTER_VALIDATE_BOOLEAN)) {
                 $liveBlock = 'Changes to running campaigns are disabled on this Mautic instance (intellectit_mcp_live_campaign_edits). Unpublish the campaign in Mautic to edit it, or ask an administrator.';
             } elseif (!$this->auth->hasScope($context, McpScopes::CAMPAIGNS_LIVE)) {
                 $liveBlock = 'This campaign is running. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect the client and tick "Change RUNNING campaigns" on the Mautic consent page, or unpublish the campaign in Mautic first.';

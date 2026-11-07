@@ -131,7 +131,7 @@ class SegmentTools
             'description' => '' !== $description ? $description : 'Created via MCP.',
             'publicName'  => '' !== $publicName ? $publicName : $name,
             'isPublished' => true,
-            'filters'     => $this->mauticFilters($filters),
+            'filters'     => $this->mauticFilters($filters, $dryRun),
         ]);
         if ($dryRun) {
             return ['dry_run' => true, 'message' => 'Dry run, nothing saved: the filters are valid.', 'matching_contacts' => [] !== $filters ? $this->countUnsaved($segment) : null, 'filters' => $this->describe($segment)];
@@ -175,7 +175,7 @@ class SegmentTools
 
         $data = array_filter(['name' => $name, 'description' => $description], fn ($v): bool => null !== $v);
         if (null !== $filters) {
-            $data['filters'] = $this->mauticFilters($filters);
+            $data['filters'] = $this->mauticFilters($filters, $dryRun);
         }
         if ([] === $data) {
             throw McpError::from('Nothing to change.');
@@ -211,7 +211,7 @@ class SegmentTools
      *
      * @return list<array<string, mixed>>
      */
-    private function mauticFilters(array $filters): array
+    private function mauticFilters(array $filters, bool $dryRun = false): array
     {
         $choices = $this->segments->getChoiceFields();
         $out     = [];
@@ -236,7 +236,7 @@ class SegmentTools
             $type  = (string) ($def['properties']['type'] ?? 'text');
             $value = $f['value'] ?? null;
             if ('tags' === $type && null !== $value) {
-                $value = array_map(fn ($tag): string => (string) $this->tagId((string) $tag), (array) $value);
+                $value = array_map(fn ($tag): string => (string) $this->tagId($tag, $dryRun), (array) $value);
             } elseif (null !== $value && null !== ($labels = $this->choiceValues($def))) {
                 // Choice lists such as stage or owner store IDs; accept the labels too.
                 $map   = fn ($v): string => $labels[mb_strtolower((string) $v)] ?? (string) $v;
@@ -326,14 +326,30 @@ class SegmentTools
         }
     }
 
-    private function tagId(string $name): int
+    /**
+     * JSON integers are IDs; digit strings are tried as a tag name first, then as an existing ID.
+     * Dry runs never create tags: a missing one becomes -1 (matches nobody).
+     */
+    private function tagId(mixed $tag, bool $dryRun): int
     {
-        $tag = $this->leads->getTagRepository()->getTagByNameOrCreateNewOne($name);
-        if (!$tag->getId()) {
-            $this->leads->getTagRepository()->saveEntity($tag);
+        if (is_int($tag)) {
+            return $tag;
         }
+        $name  = trim((string) $tag);
+        $repo  = $this->leads->getTagRepository();
+        $found = $repo->getTagByNameOrCreateNewOne($name);
+        if ($found->getId()) {
+            return (int) $found->getId();
+        }
+        if (ctype_digit($name) && $this->em->find(Tag::class, (int) $name) instanceof Tag) {
+            return (int) $name;
+        }
+        if ($dryRun) {
+            return -1;
+        }
+        $repo->saveEntity($found);
 
-        return (int) $tag->getId();
+        return (int) $found->getId();
     }
 
     /** @return list<array<string, mixed>> */

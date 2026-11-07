@@ -104,15 +104,21 @@ class StageTools
         $stage = $this->stage($id);
         $this->auth->requireEntityAccess($context, $stage, 'stage:stages', 'edit');
         $before = $this->summary($stage);
-        if (null !== $name && $name !== $stage->getName()) {
+        $rename = null !== $name && $name !== $stage->getName();
+        $weigh  = null !== $weight && $weight !== (int) $stage->getWeight();
+        if ($rename) {
             $other = $this->stages->getRepository()->findOneBy(['name' => $name]);
             if ($other instanceof Stage && $other->getId() !== $stage->getId()) {
                 throw McpError::from(sprintf('A stage named "%s" already exists.', $name));
             }
+        }
+        if ($weigh) {
+            $this->requireFreeWeight($weight, (int) $stage->getId());
+        }
+        if ($rename) {
             $stage->setName($name);
         }
-        if (null !== $weight && $weight !== (int) $stage->getWeight()) {
-            $this->requireFreeWeight($weight, (int) $stage->getId());
+        if ($weigh) {
             $stage->setWeight($weight);
         }
         if (null !== $description) {
@@ -148,13 +154,7 @@ class StageTools
         $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'edit');
         $new = null;
         if ('' !== trim($stage)) {
-            $new = $this->stages->getRepository()->findByIdOrName(trim($stage));
-            if (!$new instanceof Stage) {
-                throw McpError::from(sprintf('Stage "%s" not found (see mautic_list_stages).', $stage));
-            }
-            if (!$new->isPublished()) {
-                throw McpError::from(sprintf('Stage "%s" is not published. A person publishes it in Mautic first.', $new->getName()));
-            }
+            $new = $this->publishedStage($stage);
         }
         $old    = $lead->getStage();
         $result = [
@@ -180,8 +180,22 @@ class StageTools
         return ['message' => sprintf('Stage %s -> %s.', $old?->getName() ?? 'none', $new?->getName() ?? 'none')] + $result;
     }
 
+    /** Resolve a stage by name or ID; it must exist and be published. Shared with contact upserts. */
+    public function publishedStage(string $nameOrId): Stage
+    {
+        $new = $this->stages->getRepository()->findByIdOrName(trim($nameOrId));
+        if (!$new instanceof Stage) {
+            throw McpError::from(sprintf('Stage "%s" not found (see mautic_list_stages).', $nameOrId));
+        }
+        if (!$new->isPublished()) {
+            throw McpError::from(sprintf('Stage "%s" is not published. A person publishes it in Mautic first.', $new->getName()));
+        }
+
+        return $new;
+    }
+
     /** @return array<string, mixed> */
-    private function liveEffects(): array
+    public function liveEffects(): array
     {
         $segments = [];
         foreach ($this->connection->fetchAllAssociative(sprintf('SELECT id, name, filters FROM %slead_lists WHERE is_published = 1', $this->prefix())) as $r) {

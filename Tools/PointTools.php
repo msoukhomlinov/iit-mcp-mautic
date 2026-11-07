@@ -10,6 +10,7 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\IpLookupHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
+use Mautic\LeadBundle\Entity\Tag;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\PointBundle\Entity\Group;
 use Mautic\PointBundle\Entity\GroupContactScore;
@@ -60,6 +61,9 @@ const TRIGGER_EVENTS_SCHEMA = [
  */
 class PointTools
 {
+    /** @var array<string, true> tag fields whose only values are tags that do not exist yet (validate-only passes) */
+    private array $pendingTags = [];
+
     /** Trigger events that reach the contact or other systems. */
     private const OUTBOUND_EVENTS = ['email.send', 'email.send_to_user', 'plugin.leadpush', 'campaign.changecampaign'];
 
@@ -432,7 +436,7 @@ class PointTools
 
         $block = null;
         if ($trigger->isPublished()) {
-            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', false)) {
+            if (!filter_var($this->parameters->get('intellectit_mcp_live_campaign_edits', false), FILTER_VALIDATE_BOOLEAN)) {
                 $block = 'Changes to published (live) items are disabled on this Mautic instance (intellectit_mcp_live_campaign_edits). Unpublish the trigger in Mautic first.';
             } elseif (!$this->auth->hasScope($context, McpScopes::CAMPAIGNS_LIVE)) {
                 $block = 'This trigger is published. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect and tick it on the consent page, or unpublish the trigger in Mautic first.';
@@ -537,6 +541,21 @@ class PointTools
             return ['message' => sprintf('Points unchanged (%d).', $old)] + $result;
         }
 
+        $this->applyPointsChange($lead, $group, $old, $new, $reason);
+        $this->leads->saveEntity($lead);
+        $this->auth->audit('lead', $contactId, 'points', ['operator' => $operator, 'points' => $points, 'group' => $group?->getId(), 'before' => $old, 'after' => $new]);
+
+        return ['message' => sprintf('Points %d -> %d.%s', $old, $new, [] !== $fires ? ' '.count($fires).' published trigger(s) fired.' : '')] + $result;
+    }
+
+    // --------------------------------------------------------------- helpers
+
+    /**
+     * Shared with contact upserts: moves the points from $old to $new with a
+     * PointsChangeLog entry. Does not save the contact.
+     */
+    public function applyPointsChange(Lead $lead, ?Group $group, int $old, int $new, string $reason): void
+    {
         // Lead::adjustPoints() has no "set"; apply every change as a delta.
         $delta          = abs($new - $old);
         $mauticOperator = $new > $old ? Lead::POINTS_ADD : Lead::POINTS_SUBTRACT;
@@ -555,26 +574,25 @@ class PointTools
         }
         $log->setDelta($new - $old);
         $lead->addPointsChangeLog($log);
-        $this->leads->saveEntity($lead);
-        $this->auth->audit('lead', $contactId, 'points', ['operator' => $operator, 'points' => $points, 'group' => $group?->getId(), 'before' => $old, 'after' => $new]);
-
-        return ['message' => sprintf('Points %d -> %d.%s', $old, $new, [] !== $fires ? ' '.count($fires).' published trigger(s) fired.' : '')] + $result;
     }
 
-    // --------------------------------------------------------------- helpers
 
     /** @param array<string, mixed> $data */
     private function submitAction(Point $point, array $data): void
     {
-        $form = $this->actionForm($point);
-        if ($form->has('properties')) {
-            $props              = array_key_exists('properties', $data) ? (array) $data['properties'] : (array) ($point->getProperties() ?? []);
-            $data['properties'] = $this->tagNamesToIds($form->get('properties'), $props);
-            $this->requireFields($form->get('properties'), $data['properties'], sprintf('Point action (%s)', $point->getType()), 'mautic_point_action_types');
-        }
-        $form->submit($data, false);
-        if (!$form->isValid()) {
-            throw McpError::from(sprintf('Point action (%s) is invalid: %s. See mautic_point_action_types.', $point->getType(), $this->describer->errors($form)));
+        // Validate first without creating tags, then submit for real, so an invalid action leaves no tag rows behind.
+        foreach ([true, false] as $validateOnly) {
+            $form = $this->actionForm($point);
+            $d    = $data;
+            if ($form->has('properties')) {
+                $props           = array_key_exists('properties', $d) ? (array) $d['properties'] : (array) ($point->getProperties() ?? []);
+                $d['properties'] = $this->tagNamesToIds($form->get('properties'), $props, $validateOnly);
+                $this->requireFields($form->get('properties'), $d['properties'], sprintf('Point action (%s)', $point->getType()), 'mautic_point_action_types');
+            }
+            $form->submit($d, false);
+            if (!$form->isValid()) {
+                throw McpError::from(sprintf('Point action (%s) is invalid: %s. See mautic_point_action_types.', $point->getType(), $this->describer->errors($form)));
+            }
         }
     }
 
@@ -646,7 +664,7 @@ class PointTools
                 throw McpError::from(sprintf('Event %d (%s) has no settings.', $i + 1, $type));
             }
             if ($form->has('properties')) {
-                $submit['properties'] = $this->tagNamesToIds($form->get('properties'), (array) $submit['properties']);
+                $submit['properties'] = $this->tagNamesToIds($form->get('properties'), (array) $submit['properties'], $validateOnly);
                 $this->requireFields($form->get('properties'), $submit['properties'], sprintf('Event %d (%s)', $i + 1, $type), 'mautic_point_trigger_event_types');
             }
             $form->submit($submit, false);
@@ -685,7 +703,7 @@ class PointTools
         $missing = [];
         foreach ($form as $name => $child) {
             $config = $child->getConfig();
-            if ($config->getOption('required') && 'hidden' !== $config->getType()->getBlockPrefix() && in_array($values[$name] ?? null, [null, '', []], true)) {
+            if (!isset($this->pendingTags[$name]) && $config->getOption('required') && 'hidden' !== $config->getType()->getBlockPrefix() && in_array($values[$name] ?? null, [null, '', []], true)) {
                 $missing[] = (string) $name;
             }
         }
@@ -701,20 +719,31 @@ class PointTools
      *
      * @return array<string, mixed>
      */
-    private function tagNamesToIds(\Symfony\Component\Form\FormInterface $form, array $values): array
+    private function tagNamesToIds(\Symfony\Component\Form\FormInterface $form, array $values, bool $validateOnly = false): array
     {
+        $this->pendingTags = [];
         foreach ($form as $name => $child) {
             if ('lead_tag' !== $child->getConfig()->getType()->getBlockPrefix()) {
                 continue;
             }
             // Mautic's listeners read every tag field; never leave one out.
             $values[$name] ??= [];
-            $ids = [];
+            $ids     = [];
+            $pending = false;
             foreach ((array) $values[$name] as $value) {
-                if (is_int($value) || ctype_digit((string) $value)) {
-                    $ids[] = (string) $value;
-                } elseif ('' !== trim((string) $value)) {
-                    $tag = $this->leads->getTagRepository()->getTagByNameOrCreateNewOne(trim((string) $value));
+                $name2 = trim((string) $value);
+                if (is_int($value)) {
+                    $ids[] = (string) $value; // JSON integers are IDs
+                } elseif ('' === $name2) {
+                    continue;
+                } elseif (($tag = $this->leads->getTagRepository()->findOneBy(['tag' => $name2])) instanceof Tag) {
+                    $ids[] = (string) $tag->getId(); // a digit string is a name first
+                } elseif (ctype_digit($name2) && $this->leads->getTagRepository()->find((int) $name2) instanceof Tag) {
+                    $ids[] = $name2;
+                } elseif ($validateOnly) {
+                    $pending = true; // dry run / blocked save: create nothing
+                } else {
+                    $tag = $this->leads->getTagRepository()->getTagByNameOrCreateNewOne($name2);
                     if (!$tag->getId()) {
                         $this->leads->getTagRepository()->saveEntity($tag);
                     }
@@ -722,6 +751,11 @@ class PointTools
                 }
             }
             $values[$name] = array_values(array_unique($ids));
+            if ($pending && [] === $values[$name]) {
+                // Only tags that do not exist yet: nothing to validate against, leave the field out.
+                unset($values[$name]);
+                $this->pendingTags[$name] = true;
+            }
         }
 
         return $values;
@@ -733,7 +767,7 @@ class PointTools
      *
      * @return list<array<string, mixed>>
      */
-    private function triggersCrossed(Lead $lead, ?Group $group, int $old, int $new): array
+    public function triggersCrossed(Lead $lead, ?Group $group, int $old, int $new): array
     {
         $p    = $this->prefix();
         $rows = $this->connection->fetchAllAssociative(
