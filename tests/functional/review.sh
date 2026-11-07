@@ -30,6 +30,11 @@ cid2="$(jq -r '.id' <<<"$copy")"
 got="$(result "$(call "$access" mautic_get_email "{\"id\":$cid2}")")"
 jq -e --arg t "$(jq -r '.topic' <<<"$src")" '.name == "Copy of source" and .subject == "Changed" and .published == false and .segments == [] and .topic == $t and .theme == "mautic_code_mode" and (.html | test("<p>Hi</p>"))' <<<"$got" >/dev/null \
   && pass "copyFromId: content, theme and topic are kept; new name and subject; unpublished; segments are not copied" || { echo "$got" | head -c 800; fail "copyFromId"; }
+# A copy carries no schedule window of the original.
+db "UPDATE emails SET publish_down = '2020-01-01 00:00:00', publish_up = '2019-01-01 00:00:00' WHERE id = $src_id"
+copy_d="$(result "$(call "$access" mautic_create_email_draft "{\"name\":\"Copy dates\",\"subject\":\"D\",\"copyFromId\":$src_id}")")"
+[[ "$(db "SELECT COALESCE(publish_up, 'null'), COALESCE(publish_down, 'null') FROM emails WHERE id = $(jq -r '.id' <<<"$copy_d")" | tr '\t' ' ')" == "null null" ]] \
+  && pass "a copy does not inherit the original's publish_up / publish_down" || fail "copy kept the schedule window"
 # The copy must not touch the original: its segments and the segments of a second copy stay as they were.
 copy2="$(result "$(call "$access" mautic_create_email_draft "{\"name\":\"Copy two\",\"subject\":\"Two\",\"copyFromId\":$src_id,\"segmentIds\":[]}")")"
 orig="$(result "$(call "$access" mautic_get_email "{\"id\":$src_id}")")"
@@ -58,6 +63,9 @@ jq -e '.counts.failed == 0 and .results[0].do_not_contact == "added" and .result
 keep="$(result "$(call "$contacts_token" mautic_upsert_contacts '{"contacts":[{"email":"send-dnc@example.com","unsubscribe":true}]}')")"
 jq -e '.results[0].do_not_contact | test("already")' <<<"$keep" >/dev/null && [[ "$(db "SELECT reason FROM lead_donotcontact WHERE lead_id = $c_dnc AND channel = 'email'")" == 3 ]] \
   && pass "an existing Do Not Contact entry is left exactly as it was (manual stays manual)" || { echo "$keep" | head -c 600; fail "existing DNC changed"; }
+strict="$(call "$contacts_token" mautic_upsert_contacts '{"contacts":[{"email":"rv-strict@example.com","unsubscribe":"true"}]}')"
+jq -e '.error.message // "" | test("Expected `boolean`")' <<<"$strict" >/dev/null && [[ "$(db "SELECT COUNT(*) FROM leads WHERE email = 'rv-strict@example.com'")" == 0 ]] \
+  && pass "a non-boolean unsubscribe is refused by the schema, not silently ignored" || { echo "$strict" | head -c 500; fail "non-boolean unsubscribe"; }
 call "$access" mautic_upsert_contacts '{"contacts":[{"email":"x@example.com","unsubscribe":true}]}' >/dev/null
 grep -q '^HTTP/1.1 403' "$WORK/mcp-headers" && grep -qi '^www-authenticate:.*insufficient_scope' "$WORK/mcp-headers" \
   && pass "unsubscribe still needs mcp:contacts:write" || fail "unsubscribe without contacts scope"
@@ -76,6 +84,9 @@ mcp_init "$access"; inst="$(jq -r '.result.instructions' "$WORK/init")"
 hidden_list="$(mcp_post "$access" '{"jsonrpc":"2.0","id":41,"method":"tools/list"}')"
 hidden="$(jq -r '[.result.tools[].name] | join(" ")' <<<"$hidden_list")"
 echo "  info  write profile with points, stages, projects and companies hidden: $(jq '.result.tools | length' <<<"$hidden_list") tools, $(printf '%s' "$hidden_list" | wc -c | tr -d ' ') bytes tools/list"
+hid_pts="$(call "$contacts_token" mautic_upsert_contacts '{"contacts":[{"email":"rv-hid@example.com","points":5}],"dryRun":true}')"
+jq -e '.result.content[0].text | fromjson | .counts.failed == 1 and (.results[0].error | test("switched off"))' <<<"$hid_pts" >/dev/null \
+  && pass "with points hidden, mautic_upsert_contacts refuses a points value too" || { echo "$hid_pts" | head -c 500; fail "hidden points still settable"; }
 set_params '{"intellectit_mcp_hidden_groups": []}'
 ! grep -Eq 'point|stage|project|compan' <<<"$hidden" && ! grep -Eq 'Scoring|Stages \(|Projects group|companies' <<<"$inst" && grep -q mautic_get_email_stats <<<"$hidden" \
   && pass "intellectit_mcp_hidden_groups hides $(wc -w <<<"$names" | tr -d ' ') -> $(wc -w <<<"$hidden" | tr -d ' ') tools and their instruction lines" || { echo "$hidden"; echo "$inst" | head -c 800; fail "hidden groups"; }

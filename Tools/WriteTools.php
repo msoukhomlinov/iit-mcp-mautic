@@ -124,6 +124,9 @@ class WriteTools
             foreach (['lists' => [], 'excludedLists' => [], 'assetAttachments' => $source->getAssetAttachments()->toArray()] as $property => $items) {
                 $reflection->getProperty($property)->setValue($email, new ArrayCollection($items));
             }
+            // A copy is a fresh draft: no inherited schedule window.
+            $email->setPublishUp(null);
+            $email->setPublishDown(null);
             $email->setEmailType(null !== $type ? ('segment' === $type ? 'list' : 'template') : $sourceType);
             if ('' !== $language) {
                 $email->setLanguage($language);
@@ -142,6 +145,7 @@ class WriteTools
         if ('' !== trim($html)) {
             $email->setCustomHtml($html);
             $email->setTemplate('mautic_code_mode');
+            $email->setPlainText(''); // the copied plain text belongs to the old content
         }
         $email->setDescription($copyFromId > 0 ? sprintf('Copy of email %d created via MCP. Review before publishing.', $copyFromId) : 'Draft created via MCP. Review before publishing.');
         $email->setIsPublished(false);

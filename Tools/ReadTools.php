@@ -222,9 +222,12 @@ class ReadTools
         $clicks = array_map(fn (array $r): array => ['url' => $r['url'] ?? null, 'clicks' => (int) ($r['hits'] ?? 0), 'unique_clicks' => (int) ($r['unique_hits'] ?? 0)], $this->emails->getEmailClickStats($email->getId()));
 
         $prefix   = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
-        $dnc      = $this->db->fetchAllKeyValue("SELECT reason, COUNT(*) FROM {$prefix}lead_donotcontact WHERE channel = 'email' AND channel_id = :id GROUP BY reason", ['id' => (int) $email->getId()]);
-        $clickers = (int) $this->db->fetchOne("SELECT COUNT(DISTINCT lead_id) FROM {$prefix}page_hits WHERE source = 'email' AND source_id = :id AND lead_id IS NOT NULL", ['id' => (int) $email->getId()]);
-        $lastSent = $this->db->fetchOne("SELECT MAX(date_sent) FROM {$prefix}email_stats WHERE email_id = :id", ['id' => (int) $email->getId()]);
+        // Same scope as sent/read above: the email and its A/B variants.
+        $ids      = array_map('intval', array_merge([$email->getId()], array_map(static fn (Email $v) => $v->getId(), $email->getVariantChildren()->toArray())));
+        $in       = ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER];
+        $dnc      = $this->db->fetchAllKeyValue("SELECT reason, COUNT(*) FROM {$prefix}lead_donotcontact WHERE channel = 'email' AND channel_id IN (:ids) GROUP BY reason", ['ids' => $ids], $in);
+        $clickers = (int) $this->db->fetchOne("SELECT COUNT(DISTINCT lead_id) FROM {$prefix}page_hits WHERE source = 'email' AND source_id IN (:ids) AND lead_id IS NOT NULL", ['ids' => $ids], $in);
+        $lastSent = $this->db->fetchOne("SELECT MAX(date_sent) FROM {$prefix}email_stats WHERE email_id IN (:ids)", ['ids' => $ids], $in);
 
         return [
             'id'            => $email->getId(),

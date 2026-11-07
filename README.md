@@ -120,7 +120,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 ```
 
 - The token also needs the opt-in scope `mcp:send`.
-- `mautic_send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount`, the `recipient_count` the preview showed; a send whose recipients now differ is refused.
+- `mautic_send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount` (the `recipient_count` the preview showed) and `targetsHash` (the preview's `targets_hash`, which covers the email and the exact `contactIds`/`segmentIds`); a send whose recipients now differ, or whose selection differs from the previewed one, is refused.
 - Email can also go out indirectly, outside this tier: steps added to running campaigns (needs `intellectit_mcp_live_campaign_edits`, off by default, and scope `mcp:campaigns:live`), contacts entering running campaigns through segments, and published point triggers.
 - Unpublished emails are never sent: a person publishes them in Mautic.
 - Target either contacts (`contactIds`) or segments (`segmentIds`, only the email's own segments, segment emails only).

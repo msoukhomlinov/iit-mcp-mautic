@@ -24,7 +24,7 @@ final class McpError
 
     /** First matching pattern wins; anything else is INVALID_INPUT. */
     private const RULES = [
-        self::CONFIRM_REQUIRED  => '/expectedRecipientCount|you expected \d+ recipients/',
+        self::CONFIRM_REQUIRED  => '/expectedRecipientCount|targetsHash|you expected \d+ recipients/',
         self::PERMISSION_DENIED => '/role does not allow|access token|needs the permission|Your Mautic user/i',
         self::UPSTREAM_ERROR    => '/^Mautic (did not|could not|rejected)/',
         self::NOT_FOUND         => '/ not found|there is no step|does not exist/i',

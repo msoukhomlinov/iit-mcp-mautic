@@ -20,6 +20,7 @@ use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
 use MauticPlugin\IntellectItMcpBundle\Service\McpError;
+use MauticPlugin\IntellectItMcpBundle\Service\McpServerFactory;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -52,7 +53,8 @@ const FIELD_TYPES = ['text', 'textarea', 'number', 'boolean', 'select', 'multise
  * Contacts that join a segment can enter campaigns that use the segment
  * and receive published segment emails; the results report these
  * live_effects, and dryRun shows them before anything is saved.
- * Do-Not-Contact (unsubscribed, bounced) is never changed.
+ * Do-Not-Contact is add-only: unsubscribe=true adds an email unsubscribe for a
+ * contact that can still be contacted; existing entries are never changed or removed.
  */
 class ContactTools
 {
@@ -158,6 +160,11 @@ class ContactTools
                 $inSegments             = $isNew ? [] : $this->memberSegmentIds((int) $lead->getId(), array_map(fn (LeadList $s): int => (int) $s->getId(), $segments));
                 $joins                  = array_values(array_filter($segments, fn (LeadList $s): bool => !in_array((int) $s->getId(), $inSegments, true)));
 
+                foreach (['points' => 'points', 'stage' => 'stages'] as $field => $group) {
+                    if (isset($row[$field]) && '' !== (string) $row[$field] && in_array($group, McpServerFactory::parseHiddenGroups($this->parameters->get('intellectit_mcp_hidden_groups', [])), true)) {
+                        throw McpError::from(sprintf('Row %d: "%s" is switched off on this instance (hidden group "%s").', $i, $field, $group), McpError::BLOCKED_BY_POLICY);
+                    }
+                }
                 $points = isset($row['points']) ? (int) $row['points'] : null;
                 $stage  = isset($row['stage']) && '' !== (string) $row['stage'] ? (string) $row['stage'] : null;
                 if (null !== $points && ($isNew || (int) $lead->getPoints() !== $points)) {
@@ -168,6 +175,9 @@ class ContactTools
                     $data['stage'] = $stage;
                 }
                 $dncAction = null;
+                if (array_key_exists('unsubscribe', $row) && !is_bool($row['unsubscribe'])) {
+                    throw McpError::from(sprintf('Row %d: unsubscribe must be true or false.', $i));
+                }
                 if (true === ($row['unsubscribe'] ?? false)) {
                     $dncAction = ($isNew || DncEntity::IS_CONTACTABLE === $this->dnc->isContactable($lead, 'email')) ? 'added' : 'already';
                     if ('added' === $dncAction) {

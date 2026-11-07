@@ -30,6 +30,12 @@ class EmailLayouts
     ) {
     }
 
+    /** Cheap check (no parsing) whether any theme ships an mcp/blocks.json; used to decide which tools to list. */
+    public function hasAny(): bool
+    {
+        return [] !== (glob(rtrim($this->paths->getThemesPath(), '/').'/*/mcp/blocks.json') ?: []);
+    }
+
     /** @return array<string, array<string, mixed>> theme => library */
     public function all(): array
     {

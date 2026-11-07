@@ -70,8 +70,7 @@ class SetupStatus
         foreach (['write' => 'allow_write', 'live campaign edits' => 'live_campaign_edits', 'send' => 'allow_send', 'segment send' => 'allow_segment_send', 'destructive' => 'allow_destructive'] as $label => $param) {
             $tiers[] = $label.'='.($this->parameters->get('intellectit_mcp_'.$param) ? 'on' : 'off');
         }
-        $hiddenGroups = $this->parameters->get('intellectit_mcp_hidden_groups', []);
-        $hiddenGroups = is_array($hiddenGroups) ? $hiddenGroups : (preg_split('/[\s,]+/', (string) $hiddenGroups, -1, PREG_SPLIT_NO_EMPTY) ?: []);
+        $hiddenGroups = McpServerFactory::parseHiddenGroups($this->parameters->get('intellectit_mcp_hidden_groups', []));
         $add('operator tiers', 'info', implode(', ', $tiers).'; caller mode '.(string) $this->parameters->get('intellectit_mcp_caller_mode', 'attended').([] === $hiddenGroups ? '' : '; hidden groups: '.implode(', ', $hiddenGroups)));
 
         $prefix = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
