@@ -20,9 +20,9 @@ Sessions are stored in the Mautic database (`<prefix>intellectit_mcp_sessions`),
 
 | Tier | Parameter (default) | Tools registered | Scope |
 |---|---|---|---|
-| Read-only | always | `ReadTools`, `InsightTools`, `ProjectTools` reads, lists, describes | `mcp:read` |
+| Read-only | always | the read, list and describe tools of every `Tools/*` class (contacts, companies, segments, emails, campaigns, scoring, stages, projects, layouts, insights) | `mcp:read` |
 | Write | `intellectit_mcp_allow_write` (false) | create/update/upsert tools | `mcp:write`, `mcp:contacts:write` |
-| Live campaign edits | `intellectit_mcp_live_campaign_edits` (true, only with the Write tier) | step edits on running campaigns | additionally `mcp:campaigns:live` |
+| Live edits | `intellectit_mcp_live_campaign_edits` (**false**, only with the Write tier) | step edits on running campaigns and changes to published point triggers | additionally `mcp:campaigns:live` |
 | Send | `intellectit_mcp_allow_send` (false) | `preview_email_send`, `send_email` | `mcp:send` (opt-in) |
 | Segment send | `intellectit_mcp_allow_segment_send` (false) | segment mode of the send tools | `mcp:send` |
 
@@ -32,9 +32,13 @@ Sessions are stored in the Mautic database (`<prefix>intellectit_mcp_sessions`),
 
 1. `plan()` builds the recipient list and blockers for either contacts or the email's own segments. Contacts must be viewable (preview) or editable (send) by the user; segments additionally need `lead:leads:viewother`/`editother`.
 2. Exclusions: Do Not Contact (unless `intellectit_mcp_send_ignore_dnc`), contacts without a valid address. Blockers: unpublished email, template email to segments, segment switch off, over the cap, no eligible recipients.
-3. `send_email` without `confirm=true` returns the preview. With it, the plan is rebuilt and, if there are no blockers, Mautic's own `EmailModel::sendEmail` / `sendEmailToLists` sends it (segment sends are limited to the cap).
+3. `send_email` without `confirm=true` returns the preview. With it, the plan is rebuilt; the call must carry `expectedRecipientCount` equal to the rebuilt `recipient_count`, and if there are no blockers Mautic's own `EmailModel::sendEmail` / `sendEmailToLists` sends it. Mautic's segment sending applies the limit across the listed segments in total (read in its source); the cap is tested in contact mode only.
 4. `send_email` carries `_meta["anthropic/requiresUserInteraction"]`, so Claude Code prompts a person on every call. Server-side checks above do not depend on the client.
-5. Every send and every refused send is audited (mode, ids, counts, cap, whether the DNC override was on).
+5. Confirmed sends and sends blocked after `confirm=true` are audited (mode, ids, counts, cap, whether the DNC override was on). Previews and permission refusals are not.
+
+### Email outside the send tier
+
+Campaign steps added to running campaigns, contacts entering running campaigns through segment membership, and published point triggers can also cause email. They are guarded by `dryRun` with `live_effects`, OAuth scopes and the live-edit switch (off by default), not by the send tier.
 
 ## Insight tools (`Tools/InsightTools.php`)
 

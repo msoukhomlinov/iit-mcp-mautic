@@ -1,6 +1,5 @@
 # intellectit/mautic-mcp-bundle
 
-[![Packagist](https://img.shields.io/packagist/v/intellectit/mautic-mcp-bundle)](https://packagist.org/packages/intellectit/mautic-mcp-bundle) [![ci](https://github.com/msoukhomlinov/mautic-mcp-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/msoukhomlinov/mautic-mcp-bundle/actions/workflows/ci.yml)
 
 [Model Context Protocol](https://modelcontextprotocol.io) server for
 Mautic 7 at `/mcp` (Streamable HTTP). It is built on the official
@@ -11,7 +10,8 @@ Mautic 7 at `/mcp` (Streamable HTTP). It is built on the official
 Requires **Mautic 7.2+** (Composer-based installation) and **PHP 8.4+**:
 
 ```bash
-composer require intellectit/mautic-mcp-bundle
+composer config repositories.intellectit-mcp vcs https://github.com/msoukhomlinov/iit-mcp-mautic
+composer require intellectit/mautic-mcp-bundle:dev-main
 php bin/console mautic:plugins:reload
 ```
 
@@ -49,13 +49,13 @@ Claude, ChatGPT and other MCP clients can:
 - build and edit complete campaign flows (actions, decisions, conditions,
   waits). This also works on **running** campaigns, where changes are live:
   Mautic's scheduler executes them and may send emails. Publishing and
-  direct sending are not possible.
+  email sending is a separate opt-in tier (see Sending email).
 
 Every call runs with the Mautic permissions of the user who approved the
 client. OAuth 2.1 comes from
 [kopexa/mautic-oauth-bundle](https://github.com/kopexa-grc/mautic-oauth-bundle).
 
-Setup, tools and permission model: [docs/mcp.md](https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md).
+Design and safety model: [SCOPING.md](SCOPING.md) and [docs/architecture.md](docs/architecture.md). The original Kopexa setup notes: [docs/mcp.md](https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md).
 
 
 ## Capability gating
@@ -66,7 +66,7 @@ Write tools (everything that creates or changes data) are **off by default**: th
 $parameters['intellectit_mcp_allow_write'] = true;
 ```
 
-Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still apply on top of this. Further tiers (delete, send, raw API) will follow the same pattern when those tools exist.
+Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still apply on top of this. The send tools are a separate tier (see below). Delete and raw-API tiers are not built yet.
 
 ## Sending email (opt-in)
 
@@ -80,7 +80,8 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 ```
 
 - The token also needs the opt-in scope `mcp:send`.
-- `send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers).
+- `send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount`, the `recipient_count` the preview showed; a send whose recipients now differ is refused.
+- Email can also go out indirectly, outside this tier: steps added to running campaigns (needs `intellectit_mcp_live_campaign_edits`, off by default, and scope `mcp:campaigns:live`), contacts entering running campaigns through segments, and published point triggers.
 - Unpublished emails are never sent: a person publishes them in Mautic.
 - Target either contacts (`contactIds`) or segments (`segmentIds`, only the email's own segments, segment emails only).
 - Contacts on Do Not Contact and contacts without a valid address are skipped and named in the preview. `intellectit_mcp_send_ignore_dnc` overrides this for direct contact sends only (Mautic's segment sending always skips them). Do not enable it unless you are certain of your legal basis: emailing unsubscribed people can breach the Spam Act, GDPR and similar rules.
@@ -94,7 +95,8 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
   split by topic (`core.sh`: drafts, scopes, campaign flows run by
   Mautic's cron, running campaigns and their locks, roles;
   `scenarios.sh`: two realistic campaigns incl. a tracked email open;
-  `contacts.sh`, `crm.sh`, `points.sh`, `stages.sh`, `topics.sh`).
+  `contacts.sh`, `crm.sh`, `points.sh`, `stages.sh`, `topics.sh`, then
+  `insight.sh`, `send.sh`, `surface.sh` (served tools, instructions) and `gating.sh`).
 - [kopexa-grc/mautic-stack](https://github.com/kopexa-grc/mautic-stack)
   only tests the integration in its image: discovery behind the public
   URL, MCP sessions across replicas, the operator switch via environment,
@@ -105,7 +107,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
   [release-please](https://github.com/googleapis/release-please): it keeps a
   release PR open that bumps `VERSION`, the plugin version and `McpServerFactory::VERSION` and
   `CHANGELOG.md`. Merging it tags `v<version>` and creates the GitHub
-  release. Packagist and mautic-stack's Renovate pick the tag up.
+  release.
 - **Dependencies** are kept current by Renovate, once a month
   (security fixes immediately). Composer constraint updates
   are committed as `fix(deps):` and so lead to a patch release; CI-only

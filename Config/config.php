@@ -6,7 +6,7 @@ use MauticPlugin\IntellectItMcpBundle\Controller\McpController;
 
 return [
     'name'        => 'MCP',
-    'description' => 'Model Context Protocol server for AI assistants (Claude, ChatGPT). Read access to contacts, segments, emails and campaigns; creates unpublished email and campaign drafts and edits campaign flows, including running campaigns (live changes).',
+    'description' => 'Model Context Protocol server for AI assistants (Claude, ChatGPT). Reads contacts, segments, emails and campaigns and offers insights. Operator-enabled tiers: writes (drafts, segments, contacts, scoring, campaign flows) and email sending with preview and confirmation.',
     'version'     => '0.8.0', // x-release-please-version
     'author'      => 'IntellectIT (based on Kopexa)',
     'routes'      => [
@@ -46,8 +46,10 @@ return [
         'intellectit_mcp_send_ignore_dnc' => false,
         // Maximum items a list tool returns.
         'intellectit_mcp_page_limit' => 50,
-        // Allow changes to RUNNING (published) campaigns at all. The token
-        // additionally needs the scope mcp:campaigns:live.
-        'intellectit_mcp_live_campaign_edits' => true,
+        // Allow changes to RUNNING (published) campaigns and to published point triggers.
+        // Off by default: such changes are live and Mautic's scheduler can email contacts
+        // because of them, outside the send tier. The token additionally needs the scope
+        // mcp:campaigns:live, and the Write tier must be on.
+        'intellectit_mcp_live_campaign_edits' => false,
     ],
 ];

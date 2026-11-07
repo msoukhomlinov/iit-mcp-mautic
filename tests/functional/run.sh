@@ -12,7 +12,7 @@ here="$(dirname "$0")"
 install_mautic
 configure_oauth
 # Writes are off by default (gating.sh covers that); the other tests need them.
-set_params '{"intellectit_mcp_allow_write": true}'
+set_params '{"intellectit_mcp_allow_write": true, "intellectit_mcp_live_campaign_edits": true}'
 start_server
 login >/dev/null
 

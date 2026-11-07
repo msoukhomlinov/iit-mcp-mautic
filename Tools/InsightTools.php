@@ -97,6 +97,8 @@ class InsightTools
         }
         $leads = $this->table('leads');
         $limit = min(max(1, $limit), 100);
+        // GROUP_CONCAT cuts at 1,024 bytes on MySQL by default and would corrupt the last id silently.
+        $this->db->executeStatement('SET SESSION group_concat_max_len = 1048576');
         $rows  = $this->db->fetchAllAssociative(
             "SELECT LOWER(TRIM($field)) AS value, COUNT(*) AS contacts, GROUP_CONCAT(id ORDER BY id) AS ids
              FROM $leads WHERE $field IS NOT NULL AND TRIM($field) <> ''

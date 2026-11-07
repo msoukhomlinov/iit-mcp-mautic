@@ -460,12 +460,12 @@ class WriteTools
         }
 
         // Lock for running campaigns: allowed by the operator (Helm
-        // mautic.mcp.liveCampaignEdits) AND granted by the user at consent
+        // intellectit_mcp_live_campaign_edits) AND granted by the user at consent
         // (scope mcp:campaigns:live). Dry runs are always fine.
         $liveBlock = null;
         if ($campaign->isPublished()) {
             if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', true)) {
-                $liveBlock = 'Changes to running campaigns are disabled on this Mautic instance (mautic.mcp.liveCampaignEdits). Unpublish the campaign in Mautic to edit it, or ask an administrator.';
+                $liveBlock = 'Changes to running campaigns are disabled on this Mautic instance (intellectit_mcp_live_campaign_edits). Unpublish the campaign in Mautic to edit it, or ask an administrator.';
             } elseif (!$this->auth->hasScope($context, McpScopes::CAMPAIGNS_LIVE)) {
                 $liveBlock = 'This campaign is running. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect the client and tick "Change RUNNING campaigns" on the Mautic consent page, or unpublish the campaign in Mautic first.';
             }
