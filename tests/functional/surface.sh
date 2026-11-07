@@ -2,7 +2,7 @@
 # Served surface (IntellectIT MCP server standard): instructions size and opening rules, every tool
 # described, no root-level oneOf/anyOf/allOf, text under 4,096 characters, human gate on mautic_send_email.
 # Sourced by run.sh after send.sh; runs with every tier on and puts the config back.
-set_params '{"intellectit_mcp_allow_write": true, "intellectit_mcp_allow_send": true}'
+set_params '{"intellectit_mcp_allow_write": true, "intellectit_mcp_allow_send": true, "intellectit_mcp_allow_destructive": true}'
 mcp_init "$access"
 inst="$(jq -r '.result.instructions // empty' "$WORK/init")"
 list="$(mcp_post "$access" '{"jsonrpc":"2.0","id":30,"method":"tools/list"}')"
@@ -33,7 +33,7 @@ echo "  info  sample: $errtext"
 echo "  info  tools/list with every tier on: $n_tools tools, $list_bytes bytes"
 for prof in 'read-only|false|false' 'write|true|false'; do
   IFS='|' read -r pname pw ps <<<"$prof"
-  set_params "{\"intellectit_mcp_allow_write\": $pw, \"intellectit_mcp_allow_send\": $ps}"
+  set_params "{\"intellectit_mcp_allow_write\": $pw, \"intellectit_mcp_allow_send\": $ps, \"intellectit_mcp_allow_destructive\": false}"
   mcp_init "$access"
   pl="$(mcp_post "$access" '{"jsonrpc":"2.0","id":31,"method":"tools/list"}')"
   echo "  info  profile $pname: $(jq '.result.tools | length' <<<"$pl") tools, $(printf '%s' "$pl" | wc -c | tr -d ' ') bytes tools/list"
@@ -50,5 +50,5 @@ uhead="${uinst:0:512}"
 jq -e '[.result.tools[] | select(.name == "mautic_send_email") | ._meta["anthropic/requiresUserInteraction"]] | all(. != true)' <<<"$ulist" >/dev/null \
   && pass "unattended: mautic_send_email does not ask a person" || fail "unattended send still requires user interaction"
 set_params '{"intellectit_mcp_caller_mode": "attended"}'
-set_params '{"intellectit_mcp_allow_send": false}'
+set_params '{"intellectit_mcp_allow_send": false, "intellectit_mcp_allow_destructive": false}'
 mcp_init "$access"

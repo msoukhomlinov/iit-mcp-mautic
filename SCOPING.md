@@ -16,6 +16,7 @@ Recorded decisions for the IntellectIT Mautic MCP server, kept in the form the I
 |---|---|---|---|---|
 | Read-only | none | on | 27 | reads, insights, projects, lists |
 | Write | `intellectit_mcp_allow_write` | **off** | 58 | creates and edits emails and campaigns (unpublished), segments (created published), contacts, companies, scoring, stages, projects; `mautic_send_test_email` (to the user only). Edits to running campaigns and published point triggers also need `intellectit_mcp_live_campaign_edits` (**off**) and scope `mcp:campaigns:live` |
+| Destructive | `intellectit_mcp_allow_destructive` | **off** | +2 | `mautic_delete_record` (contact, company, segment, email, campaign) and `mautic_merge_contacts`; scope `mcp:destructive` (opt-in); preview, then `confirm=true` with `expectedName` / `expectedLoserId`; emails and campaigns must be unpublished, segments in use cannot be deleted; audited |
 | Send | `intellectit_mcp_allow_send` | **off** | +2 (29 with Write off, 60 with everything on) | `mautic_preview_email_send`, `mautic_send_email`; scope `mcp:send` (opt-in); segments need `intellectit_mcp_allow_segment_send`; cap `intellectit_mcp_send_max_recipients` (100) |
 
 Counts and sizes are measured by `tests/functional/surface.sh` (see Budget).
@@ -30,14 +31,14 @@ OAuth 2.1 (authorization code with PKCE, dynamic client registration) from `kope
 2. OAuth scopes (`mcp:read`, `mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`, `mcp:send`) decide what a token may call.
 3. Mautic role permissions decide what the user may touch.
 4. Sending: preview, then `mautic_send_email` with `confirm=true` and `expectedRecipientCount` (the preview's count; a different count is refused). The server re-plans at confirm time. The confirm is a plain flag, not a token bound to the preview. Unpublished emails never sent; Do Not Contact and addressless contacts skipped; per-call cap; `mautic_send_email` carries `requiresUserInteraction`.
-5. Changes with side effects elsewhere (segments, scoring, stages, live campaigns) offer `dryRun` with `live_effects`.
+5. Irreversible changes (delete, merge) are a separate tier with its own switch and scope, preview first, and a confirm that names the record. Changes with side effects elsewhere (segments, scoring, stages, live campaigns) offer `dryRun` with `live_effects`.
 6. Audit: writes, confirmed sends and sends blocked after `confirm=true` go to Mautic's audit log. Previews, `confirm=false` calls and permission refusals are not audited.
 7. Email outside the send tier: campaign steps on running campaigns (live edits, off by default, plus `mcp:campaigns:live`), contacts entering running campaigns through segments, and published point triggers can all cause email. They are guarded by `dryRun` with `live_effects`, scopes and the live-edit switch, not by the send tier.
 
 ## Budget (measured by `tests/functional/surface.sh`, Mautic 7.2.2)
 
-- Instructions: 3,221 characters attended, 3,186 unattended (limit 3,500); hard rules in the first 512 characters.
-- `tools/list` per profile (measured by `surface.sh`): read-only 27 tools, 13,448 bytes (about 3.4k tokens); write 58 tools, 54,167 bytes (about 13.5k tokens); every tier on 60 tools, 56,250 bytes (about 14k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
+- Instructions: 3,399 characters attended, 3,364 unattended (limit 3,500); hard rules in the first 512 characters.
+- `tools/list` per profile (measured by `surface.sh`): read-only 27 tools, 13,448 bytes (about 3.4k tokens); write 58 tools, 54,167 bytes (about 13.5k tokens); every tier on 62 tools, 58,359 bytes (about 14.6k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
 
 ## Exceptions
 

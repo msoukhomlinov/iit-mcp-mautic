@@ -39,6 +39,8 @@ return [
         // attended: a person is behind the client and is asked before changes and sends (default).
         // unattended: no questions; policy comes only from the switches, scopes and roles, and sends still need preview, confirm=true and expectedRecipientCount.
         'intellectit_mcp_caller_mode' => 'attended',
+        // Irreversible tools (delete a record, merge contacts) need this plus the opt-in scope mcp:destructive.
+        'intellectit_mcp_allow_destructive' => false,
         'intellectit_mcp_allow_send' => false,
         // Sending to whole segments needs this on top of intellectit_mcp_allow_send.
         'intellectit_mcp_allow_segment_send' => false,
