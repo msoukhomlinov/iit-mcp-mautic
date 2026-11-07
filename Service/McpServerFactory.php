@@ -182,7 +182,15 @@ class McpServerFactory
     public function server(): Server
     {
         $prefix = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
-        $cache  = new Psr16Cache(new DoctrineDbalAdapter($this->connection, 'mcp', 0, ['db_table' => $prefix.'intellectit_mcp_sessions']));
+        $adapter = new DoctrineDbalAdapter($this->connection, 'mcp', 0, ['db_table' => $prefix.'intellectit_mcp_sessions']);
+        $cache   = new Psr16Cache($adapter);
+        // Expired sessions are only removed by prune(): run it on about 1% of requests, never failing one.
+        if (1 === random_int(1, 100)) {
+            try {
+                $adapter->prune();
+            } catch (\Throwable) {
+            }
+        }
 
         $ro = new ToolAnnotations(readOnlyHint: true, openWorldHint: false);
         $rw = new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false);
@@ -216,9 +224,9 @@ class McpServerFactory
             ->setSession(new Psr16SessionStore($cache, 'session-', 3600));
 
         $hiddenTools = array_flip(array_merge([], ...array_map(static fn (string $g): array => self::GROUPS[$g], $hidden)));
-        $allowWrite = (bool) $this->parameters->get('intellectit_mcp_allow_write', false);
-        $allowSend  = (bool) $this->parameters->get('intellectit_mcp_allow_send', false);
-        $allowDestructive = (bool) $this->parameters->get('intellectit_mcp_allow_destructive', false);
+        $allowWrite = filter_var($this->parameters->get('intellectit_mcp_allow_write', false), FILTER_VALIDATE_BOOLEAN);
+        $allowSend  = filter_var($this->parameters->get('intellectit_mcp_allow_send', false), FILTER_VALIDATE_BOOLEAN);
+        $allowDestructive = filter_var($this->parameters->get('intellectit_mcp_allow_destructive', false), FILTER_VALIDATE_BOOLEAN);
         $gated      = array_merge(self::WRITE_TOOLS, self::CONTACT_TOOLS);
 
         // Operator ceiling: with writes off, write tools are not even listed (the token scopes still apply on top).

@@ -96,7 +96,30 @@ class SetupCommand extends Command
             include $file;
         }
         $parameters = array_replace($parameters, $changes);
-        file_put_contents($file, "<?php\n\$parameters = ".var_export($parameters, true).";\n", LOCK_EX);
-        @chmod($file, 0640);
+        $content = "<?php\n\$parameters = ".var_export($parameters, true).";\n";
+        $tmp     = tempnam(dirname($file), 'local.php.');
+        if (false !== $tmp && dirname($tmp) === dirname($file)) {
+            // Atomic: temp file next to the original (created 0600), mode 0640 (holds the keys, never world-readable), same owner, then rename over it.
+            $ok = false !== file_put_contents($tmp, $content) && chmod($tmp, 0640);
+            if ($ok && is_file($file)) {
+                @chown($tmp, (int) fileowner($file));
+                @chgrp($tmp, (int) filegroup($file));
+            }
+            if (!$ok || !rename($tmp, $file)) {
+                @unlink($tmp);
+                throw new \RuntimeException('Cannot write '.$file);
+            }
+        } else {
+            // config/ is not writable (tempnam fell back to the system temp dir): write in place as before.
+            if (false !== $tmp) {
+                @unlink($tmp);
+            }
+            if (false === file_put_contents($file, $content, LOCK_EX) || !chmod($file, 0640)) {
+                throw new \RuntimeException('Cannot write '.$file);
+            }
+        }
+        if (function_exists('opcache_invalidate')) {
+            @opcache_invalidate($file, true);
+        }
     }
 }

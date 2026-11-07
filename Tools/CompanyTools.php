@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\Lead;
@@ -46,6 +47,7 @@ class CompanyTools
         private readonly LeadModel $leads,
         private readonly FieldModel $fields,
         private readonly CoreParametersHelper $parameters,
+        private readonly EntityManagerInterface $em,
     ) {
     }
 
@@ -89,6 +91,22 @@ class CompanyTools
         $this->auth->requireEntityAccess($context, $company, 'lead:leads', 'view');
         $ids      = array_map(fn (array $r): int => (int) $r['lead_id'], $this->companies->getCompanyLeadRepository()->getCompanyLeads($id));
         $contacts = [];
+        if (!$this->auth->canViewOther('lead:leads')) {
+            // Only contacts the user owns (or may otherwise view).
+            $visible = [];
+            foreach ($ids as $leadId) {
+                $lead = $this->leads->getEntity($leadId);
+                if (!$lead instanceof Lead) {
+                    continue;
+                }
+                try {
+                    $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'view');
+                    $visible[] = $leadId;
+                } catch (ToolCallException) {
+                }
+            }
+            $ids = $visible;
+        }
         foreach (array_slice($ids, 0, self::MAX) as $leadId) {
             $lead = $this->leads->getEntity($leadId);
             if ($lead instanceof Lead) {
@@ -118,7 +136,10 @@ class CompanyTools
         $known   = $this->fields->getFieldList(false, false, ['isPublished' => true, 'object' => 'company']);
         $counts  = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'failed' => 0];
         $results = [];
-        foreach (array_values($companies) as $i => $row) {
+        $rows = array_values($companies);
+        foreach ($rows as $i => $row) {
+            $conn = $this->em->getConnection();
+            $conn->beginTransaction();
             try {
                 $data = [];
                 foreach ((array) ($row['fields'] ?? []) as $alias => $value) {
@@ -154,6 +175,7 @@ class CompanyTools
                     }
                     $this->auth->audit('company', (int) $company->getId(), $isNew ? 'create' : 'update', ['fields' => $changed, 'contacts' => array_map(fn (Lead $l): int => (int) $l->getId(), $link)]);
                 }
+                $conn->commit();
                 ++$counts[$status];
                 $results[] = array_filter([
                     'index'          => $i,
@@ -164,11 +186,21 @@ class CompanyTools
                     'links_contacts' => array_map(fn (Lead $l): int => (int) $l->getId(), $link) ?: null,
                 ], fn ($v): bool => null !== $v);
             } catch (ToolCallException $e) {
+                $this->rollBack($conn);
                 ++$counts['failed'];
                 $results[] = ['index' => $i, 'status' => 'failed', 'error' => $e->getMessage()];
             } catch (\Throwable $e) {
+                $this->rollBack($conn);
                 ++$counts['failed'];
                 $results[] = ['index' => $i, 'status' => 'failed', 'error' => 'Mautic rejected the company: '.$e->getMessage()];
+                if (!$this->em->isOpen()) {
+                    // The EntityManager is closed: later rows cannot be saved.
+                    for ($j = $i + 1; $j < count($rows); ++$j) {
+                        ++$counts['failed'];
+                        $results[] = ['index' => $j, 'status' => 'skipped', 'error' => 'Skipped: an earlier row closed the database session.'];
+                    }
+                    break;
+                }
             }
         }
 
@@ -215,7 +247,8 @@ class CompanyTools
         $company = $this->find($companyId);
         $this->auth->requireEntityAccess($context, $company, 'lead:leads', 'edit');
         $members = array_map(fn (array $r): int => (int) $r['lead_id'], $this->companies->getCompanyLeadRepository()->getCompanyLeads($companyId));
-        $removed = [];
+        // Check access on all contacts first, so a refusal unlinks nothing.
+        $leads = [];
         foreach (array_unique(array_map('intval', $contactIds)) as $id) {
             if (!in_array($id, $members, true)) {
                 continue;
@@ -223,9 +256,13 @@ class CompanyTools
             $lead = $this->leads->getEntity($id);
             if ($lead instanceof Lead) {
                 $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'edit');
-                $this->companies->removeLeadFromCompany($company, $lead);
-                $removed[] = $id;
+                $leads[] = $lead;
             }
+        }
+        $removed = [];
+        foreach ($leads as $lead) {
+            $this->companies->removeLeadFromCompany($company, $lead);
+            $removed[] = (int) $lead->getId();
         }
         if ([] !== $removed) {
             $this->auth->audit('company', $companyId, 'remove_contacts', ['contacts' => $removed]);
@@ -258,6 +295,16 @@ class CompanyTools
         }
 
         return $leads;
+    }
+
+    private function rollBack(\Doctrine\DBAL\Connection $conn): void
+    {
+        try {
+            if ($conn->isTransactionActive()) {
+                $conn->rollBack();
+            }
+        } catch (\Throwable) {
+        }
     }
 
     private function find(int $id): Company

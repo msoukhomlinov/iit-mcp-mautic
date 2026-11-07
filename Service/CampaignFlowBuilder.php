@@ -11,11 +11,13 @@ use Mautic\CampaignBundle\EventCollector\EventCollector;
 use Mautic\CampaignBundle\Form\Type\EventType;
 use Mautic\CampaignBundle\Model\CampaignModel;
 use Mautic\CampaignBundle\Model\EventModel;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\Tag;
 use Mautic\LeadBundle\Model\TagModel;
 use Mcp\Exception\ToolCallException;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -45,6 +47,9 @@ class CampaignFlowBuilder
         'plugin.leadpush'      => true,
         'focus.show'           => true,
         'dwc.push_content'     => true,
+        'sms.send_text_sms'    => true,
+        'notification.send_notification'        => true,
+        'notification.send_mobile_notification' => true,
     ];
 
     public function __construct(
@@ -56,6 +61,8 @@ class CampaignFlowBuilder
         private readonly ValidatorInterface $validator,
         private readonly EntityManagerInterface $em,
         private readonly TagModel $tags,
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly CoreParametersHelper $parameters,
     ) {
     }
 
@@ -271,13 +278,6 @@ class CampaignFlowBuilder
         if ([] !== $this->tagsToCreate) {
             $result['tags_to_create'] = array_values(array_unique($this->tagsToCreate));
         }
-        if ($dryRun) {
-            return $result;
-        }
-        if ($published && [] !== $deleted && !$allowDeletions) {
-            throw McpError::from('This would delete steps of a published campaign: '.json_encode($changes['removed']).'. Check the affected contacts (dry_run) and repeat with allow_deletions=true, optionally with redirects for waiting contacts.');
-        }
-
         // 4. Canvas: sources, nodes and connections the builder understands.
         $sources = [];
         if ($campaign->getLists()->count() > 0) {
@@ -287,8 +287,23 @@ class CampaignFlowBuilder
             $sources[] = 'forms';
         }
         if ([] === $sources) {
-            throw McpError::from('The campaign has no source. Add segments first (mautic_update_campaign_draft segmentIds).');
+            if (!$dryRun) {
+                throw McpError::from('The campaign has no source. Add segments first (mautic_update_campaign_draft segmentIds).');
+            }
+            // A dry run still reports the change set; it only notes that saving needs a source.
+            $result['save_blocked_because'] = 'no_source: the campaign has no segments or forms; add segments first (mautic_update_campaign_draft segmentIds).';
         }
+        if ($published && [] !== $deleted && !$allowDeletions) {
+            if ($dryRun) {
+                $result['save_blocked_because'] = 'needs_allow_deletions: this would delete steps of a published campaign; saving needs allow_deletions=true (optionally with redirects).';
+            } else {
+                throw McpError::from('This would delete steps of a published campaign: '.json_encode($changes['removed']).'. Check the affected contacts (dry_run) and repeat with allow_deletions=true, optionally with redirects for waiting contacts.');
+            }
+        }
+        if ($dryRun) {
+            return $result;
+        }
+
         $connections = [];
         foreach ($byKey as $step) {
             if (null === $step['_parent']) {
@@ -384,8 +399,8 @@ class CampaignFlowBuilder
             }
             $ids = [];
             foreach ((array) $properties[$field] as $value) {
-                if (is_int($value) || ctype_digit((string) $value)) {
-                    $ids[] = (int) $value;
+                if (is_int($value)) {
+                    $ids[] = $value;
                     continue;
                 }
                 $name = trim((string) $value);
@@ -393,6 +408,9 @@ class CampaignFlowBuilder
                     continue;
                 }
                 $existing = $this->em->getRepository(Tag::class)->findOneBy(['tag' => $name]);
+                if (!$existing instanceof Tag && ctype_digit($name)) {
+                    $existing = $this->em->find(Tag::class, (int) $name);
+                }
                 if ($existing instanceof Tag) {
                     $ids[] = (int) $existing->getId();
                 } elseif ($this->dryRun) {
@@ -700,10 +718,18 @@ class CampaignFlowBuilder
         if (in_array($kind, ['action', 'condition'], true) && (array_key_exists('wait', $step) || null === $event)) {
             $wait = is_array($step['wait'] ?? null) ? $step['wait'] : [];
             if (isset($wait['at'])) {
-                $at = date_create_immutable((string) $wait['at']);
+                // The form reads the date in the user's timezone, else Mautic's default. A date without an offset means that local time; an explicit offset wins.
+                $tz = $this->tokenStorage->getToken()?->getUser()?->getTimezone() ?: (string) $this->parameters->get('default_timezone');
+                try {
+                    $zone = new \DateTimeZone($tz ?: 'UTC');
+                } catch (\Exception) {
+                    $zone = new \DateTimeZone('UTC');
+                }
+                $at = date_create_immutable((string) $wait['at'], $zone);
                 if (false === $at) {
                     throw McpError::from(sprintf('Step "%s": wait.at is not a valid date.', $key));
                 }
+                $at = $at->setTimezone($zone);
                 $submit += ['triggerMode' => 'date', 'triggerDate' => $at->format('Y-m-d H:i')];
             } elseif (isset($wait['interval'])) {
                 $unit = (string) ($wait['unit'] ?? 'd');

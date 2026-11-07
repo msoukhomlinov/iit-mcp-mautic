@@ -3,6 +3,7 @@ name: release-please
 # Run by hand when a release is wanted: it opens a release PR from the
 # conventional commits on main (VERSION, CHANGELOG.md, plugin version);
 # merging that PR tags v<version> and creates the GitHub release.
+# It then runs ci.yml against the new tag (post-release check).
 # Needs Settings > Actions > General > "Allow GitHub Actions to create and
 # approve pull requests"; without it the run fails.
 
@@ -19,9 +20,23 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - id: release
         uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # The tag is pushed with GITHUB_TOKEN, which does not trigger ci.yml's tag
+  # push, so call it directly once a release exists.
+  ci:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.release-please.outputs.tag_name }}

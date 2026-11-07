@@ -108,8 +108,10 @@ class LayoutTools
         foreach ($this->segmentEntities($context, $segmentIds) as $segment) {
             $email->addList($segment);
         }
-        $this->emails->saveEntity($email);
-        $this->storeMjml($email, $rendered['mjml']);
+        $this->em->wrapInTransaction(function () use ($email, $rendered): void {
+            $this->emails->saveEntity($email);
+            $this->storeMjml($email, $rendered['mjml']);
+        });
         $this->auth->audit('email', (int) $email->getId(), 'create', ['name' => $name, 'layout' => $theme, 'panels' => array_column($panels, 'type')]);
 
         return $this->result($email, 'Draft created in the '.$theme.' theme (unpublished). It is editable in Mautic\'s builder; review and publish it there.');
@@ -156,8 +158,10 @@ class LayoutTools
             $email->setPreheaderText($preheader);
         }
         $this->topics->apply($email, $topic);
-        $this->emails->saveEntity($email);
-        $this->storeMjml($email, $rendered['mjml']);
+        $this->em->wrapInTransaction(function () use ($email, $rendered): void {
+            $this->emails->saveEntity($email);
+            $this->storeMjml($email, $rendered['mjml']);
+        });
         $this->auth->audit('email', (int) $email->getId(), 'update', ['layout' => $theme, 'panels' => array_column($panels, 'type')]);
 
         return $this->result($email, 'Draft content replaced ('.count($panels).' panel(s)).');
