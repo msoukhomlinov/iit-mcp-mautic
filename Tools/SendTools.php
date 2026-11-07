@@ -20,7 +20,7 @@ use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
 /**
  * Real email sending (scope mcp:send, off unless intellectit_mcp_allow_send).
- * Every send is previewed first: send_email without confirm=true only
+ * Every send is previewed first: mautic_send_email without confirm=true only
  * returns the preview. Do-Not-Contact contacts are excluded unless the
  * operator set intellectit_mcp_send_ignore_dnc (direct contact sends only:
  * Mautic's own segment sending always skips them). Publishing an email
@@ -39,7 +39,7 @@ class SendTools
     }
 
     /**
-     * Preview a send without sending anything: who would receive the email, who is excluded and why (Do Not Contact, no valid address) and what could stop the send. Target either contacts (contactIds) or segments (segmentIds), not both. Call this before send_email and show the result to the user.
+     * Preview a send without sending anything: who would receive the email, who is excluded and why (Do Not Contact, no valid address) and what could stop the send. Target either contacts (contactIds) or segments (segmentIds), not both. Call this before mautic_send_email and show the result to the user.
      *
      * @param int       $emailId    Email ID
      * @param list<int> $contactIds Contacts to email directly

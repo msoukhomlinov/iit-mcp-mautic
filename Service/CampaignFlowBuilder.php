@@ -103,7 +103,7 @@ class CampaignFlowBuilder
     }
 
     /**
-     * The campaign's flow in the same format set_campaign_steps accepts.
+     * The campaign's flow in the same format mautic_set_campaign_steps accepts.
      * Keys of existing steps are their Mautic event IDs.
      *
      * @return list<array<string, mixed>>
@@ -287,7 +287,7 @@ class CampaignFlowBuilder
             $sources[] = 'forms';
         }
         if ([] === $sources) {
-            throw new ToolCallException('The campaign has no source. Add segments first (update_campaign_draft segmentIds).');
+            throw new ToolCallException('The campaign has no source. Add segments first (mautic_update_campaign_draft segmentIds).');
         }
         $connections = [];
         foreach ($byKey as $step) {
@@ -684,7 +684,7 @@ class CampaignFlowBuilder
         }
         $properties = $this->tagNamesToIds($step['type'], is_array($step['properties'] ?? null) ? $step['properties'] : []);
         if ($form->has('properties')) {
-            // Values echoed back from get_campaign that the form does not
+            // Values echoed back from mautic_get_campaign that the form does not
             // know (Mautic bookkeeping) are dropped if unchanged.
             $stored = null !== $event ? $this->cleanProperties($event->getProperties()) : [];
             foreach ($properties as $name => $value) {
@@ -731,7 +731,7 @@ class CampaignFlowBuilder
                 $origin   = $error->getOrigin();
                 $errors[] = ($origin ? $origin->getName().': ' : '').$error->getMessage();
             }
-            throw new ToolCallException(sprintf('Step "%s" (%s) is invalid: %s. Use describe_campaign_step_type for its properties.', $key, $step['type'], implode('; ', array_unique($errors))));
+            throw new ToolCallException(sprintf('Step "%s" (%s) is invalid: %s. Use mautic_describe_campaign_step_type for its properties.', $key, $step['type'], implode('; ', array_unique($errors))));
         }
 
         $result = array_merge($data, (array) $form->getData());
@@ -766,7 +766,7 @@ class CampaignFlowBuilder
             }
         }
 
-        throw new ToolCallException(sprintf('Unknown step type "%s". See list_campaign_step_types.', $type));
+        throw new ToolCallException(sprintf('Unknown step type "%s". See mautic_list_campaign_step_types.', $type));
     }
 
     /**

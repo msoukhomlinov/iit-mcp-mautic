@@ -58,6 +58,8 @@ client. OAuth 2.1 comes from
 Design and safety model: [SCOPING.md](SCOPING.md) and [docs/architecture.md](docs/architecture.md). The original Kopexa setup notes: [docs/mcp.md](https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md).
 
 
+> **Tool names:** every tool is prefixed `mautic_` (for example `mautic_get_contact`), unlike the upstream Kopexa bundle. Clients and prompts written for the upstream names must be updated.
+
 ## Capability gating
 
 Write tools (everything that creates or changes data) are **off by default**: they are not listed in `tools/list` and cannot be called, whatever scopes a token holds. An operator enables them in `config/local.php`:
@@ -70,7 +72,7 @@ Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still app
 
 ## Sending email (opt-in)
 
-`preview_email_send` and `send_email` can email real recipients. They are **off by default** and are not even listed until an operator turns them on in `config/local.php`:
+`mautic_preview_email_send` and `mautic_send_email` can email real recipients. They are **off by default** and are not even listed until an operator turns them on in `config/local.php`:
 
 ```php
 $parameters['intellectit_mcp_allow_send'] = true;           // register the send tools
@@ -80,7 +82,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 ```
 
 - The token also needs the opt-in scope `mcp:send`.
-- `send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount`, the `recipient_count` the preview showed; a send whose recipients now differ is refused.
+- `mautic_send_email` without `confirm=true` sends nothing and returns the preview (recipients, exclusions, warnings, blockers). With `confirm=true` it also needs `expectedRecipientCount`, the `recipient_count` the preview showed; a send whose recipients now differ is refused.
 - Email can also go out indirectly, outside this tier: steps added to running campaigns (needs `intellectit_mcp_live_campaign_edits`, off by default, and scope `mcp:campaigns:live`), contacts entering running campaigns through segments, and published point triggers.
 - Unpublished emails are never sent: a person publishes them in Mautic.
 - Target either contacts (`contactIds`) or segments (`segmentIds`, only the email's own segments, segment emails only).

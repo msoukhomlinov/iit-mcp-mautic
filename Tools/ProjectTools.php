@@ -93,7 +93,7 @@ class ProjectTools
     {
         $this->auth->require($context, ProjectPermissions::CAN_CREATE);
         if ($this->projects->getRepository()->checkProjectNameExists($name)) {
-            throw new ToolCallException(sprintf('A project named "%s" already exists (see list_projects).', $name));
+            throw new ToolCallException(sprintf('A project named "%s" already exists (see mautic_list_projects).', $name));
         }
         $project = new Project();
         $project->setName($name);
@@ -129,7 +129,7 @@ class ProjectTools
     }
 
     /**
-     * Add items to a project. type is one of item_types from list_projects (e.g. "email", "campaign", "segment", "form", "page", "asset", "point", "pointtrigger", "stage", "company"). Needs edit rights on each item.
+     * Add items to a project. type is one of item_types from mautic_list_projects (e.g. "email", "campaign", "segment", "form", "page", "asset", "point", "pointtrigger", "stage", "company"). Needs edit rights on each item.
      *
      * @param list<int> $ids
      *
@@ -213,7 +213,7 @@ class ProjectTools
     {
         $project = $this->projects->getEntity($id);
         if (!$project instanceof Project || !$project->getId()) {
-            throw new ToolCallException(sprintf('Project %d not found (see list_projects).', $id));
+            throw new ToolCallException(sprintf('Project %d not found (see mautic_list_projects).', $id));
         }
 
         return $project;

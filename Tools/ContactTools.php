@@ -29,7 +29,7 @@ const CONTACT_SCHEMA = [
         'email'  => ['type' => 'string', 'description' => 'Email address; identifies existing contacts (with the other unique fields of this Mautic)'],
         'fields' => [
             'type'                 => 'object',
-            'description'          => 'Contact fields by alias (see list_contact_fields), e.g. {"firstname": "Alex", "lastname": "Weber", "company": "ACME GmbH", "position": "CISO", "phone": "+49 431 123", "city": "Kiel", "country": "Germany"}',
+            'description'          => 'Contact fields by alias (see mautic_list_contact_fields), e.g. {"firstname": "Alex", "lastname": "Weber", "company": "ACME GmbH", "position": "CISO", "phone": "+49 431 123", "city": "Kiel", "country": "Germany"}',
             'additionalProperties' => ['type' => ['string', 'number', 'boolean', 'null']],
         ],
         'tags'   => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Tags to add; prefix "-" removes a tag, e.g. "-lead"'],
@@ -70,7 +70,7 @@ class ContactTools
     }
 
     /**
-     * List the fields of contacts or companies (alias, label, type, choices, whether it identifies records). Use the aliases in upsert_contacts / upsert_companies and in segment filters.
+     * List the fields of contacts or companies (alias, label, type, choices, whether it identifies records). Use the aliases in mautic_upsert_contacts / mautic_upsert_companies and in segment filters.
      *
      * @param string $object "contact" or "company"
      *
@@ -428,7 +428,7 @@ class ContactTools
         }
         $unknown = array_diff(array_keys($data), array_keys($known));
         if ([] !== $unknown) {
-            throw new ToolCallException(sprintf('Unknown contact field(s): %s. See list_contact_fields.', implode(', ', $unknown)));
+            throw new ToolCallException(sprintf('Unknown contact field(s): %s. See mautic_list_contact_fields.', implode(', ', $unknown)));
         }
         if (in_array($data['email'] ?? '', ['', null], true) && [] === array_filter($data, fn ($v): bool => !in_array($v, [null, ''], true))) {
             throw new ToolCallException('A contact needs an email address or other field values.');

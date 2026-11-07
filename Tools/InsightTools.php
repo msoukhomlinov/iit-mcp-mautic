@@ -20,7 +20,7 @@ use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
  */
 class InsightTools
 {
-    /** Columns find_duplicate_contacts may group by (never taken from user input as SQL). */
+    /** Columns mautic_find_duplicate_contacts may group by (never taken from user input as SQL). */
     private const DUPLICATE_COLUMNS = ['email', 'phone', 'mobile'];
 
     public function __construct(
@@ -112,7 +112,7 @@ class InsightTools
                 'contacts'    => (int) $r['contacts'],
                 'contact_ids' => array_map('intval', explode(',', (string) $r['ids'])),
             ], $rows),
-            'hint'   => 'Review the contacts with get_contact, then merge them in Mautic (contact list, select, Merge). Groups are capped by limit.',
+            'hint'   => 'Review the contacts with mautic_get_contact, then merge them in Mautic (contact list, select, Merge). Groups are capped by limit.',
         ];
     }
 

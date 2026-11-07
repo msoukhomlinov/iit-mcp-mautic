@@ -240,7 +240,7 @@ class ReadTools
     }
 
     /**
-     * Get one campaign with its segments and its flow (steps: actions, decisions, conditions, waits, yes/no paths, contacts per step), in the format set_campaign_steps accepts.
+     * Get one campaign with its segments and its flow (steps: actions, decisions, conditions, waits, yes/no paths, contacts per step), in the format mautic_set_campaign_steps accepts.
      *
      * @param int $id Campaign ID
      *
@@ -256,7 +256,7 @@ class ReadTools
 
         return $this->campaignSummary($campaign) + [
             'steps' => $this->flow->currentSteps($campaign),
-            'hint'  => 'steps use the format of set_campaign_steps; keys are step IDs. Edit with update_campaign_step / add_campaign_step / remove_campaign_step, or send the whole list back to set_campaign_steps.',
+            'hint'  => 'steps use the format of mautic_set_campaign_steps; keys are step IDs. Edit with mautic_update_campaign_step / mautic_add_campaign_step / mautic_remove_campaign_step, or send the whole list back to mautic_set_campaign_steps.',
         ];
     }
 
@@ -273,7 +273,7 @@ class ReadTools
     }
 
     /**
-     * Describe one campaign step type: its properties (names, kinds, required, choices), which steps it may follow, and whether it has yes/no paths. Call this before using a type in set_campaign_steps.
+     * Describe one campaign step type: its properties (names, kinds, required, choices), which steps it may follow, and whether it has yes/no paths. Call this before using a type in mautic_set_campaign_steps.
      *
      * @param string $type Step type, e.g. "email.send", "email.open", "lead.changetags"
      *

@@ -28,9 +28,9 @@ const FILTERS_SCHEMA = [
         'required'             => ['field', 'operator'],
         'additionalProperties' => false,
         'properties'           => [
-            'field'    => ['type' => 'string', 'description' => 'Filter field from list_segment_filter_fields, e.g. "country", "tags", "leadlist", "date_added", "companyname", a custom field alias'],
-            'object'   => ['type' => 'string', 'enum' => ['contact', 'company', 'behaviors'], 'description' => 'Where the field lives (default: from list_segment_filter_fields)'],
-            'operator' => ['type' => 'string', 'description' => 'Operator from list_segment_filter_fields, e.g. "=", "!=", "like", "in", "!in", "empty", "!empty", "gt", "lt", "gte", "lte", "between", "regexp"'],
+            'field'    => ['type' => 'string', 'description' => 'Filter field from mautic_list_segment_filter_fields, e.g. "country", "tags", "leadlist", "date_added", "companyname", a custom field alias'],
+            'object'   => ['type' => 'string', 'enum' => ['contact', 'company', 'behaviors'], 'description' => 'Where the field lives (default: from mautic_list_segment_filter_fields)'],
+            'operator' => ['type' => 'string', 'description' => 'Operator from mautic_list_segment_filter_fields, e.g. "=", "!=", "like", "in", "!in", "empty", "!empty", "gt", "lt", "gte", "lte", "between", "regexp"'],
             'value'    => ['description' => 'Filter value. Tags by name, segments by ID (lists for "in"/"!in"); dates absolute ("2026-01-31") or relative ("-30 days", "today", "last month"); omit for "empty"/"!empty"'],
             'glue'     => ['type' => 'string', 'enum' => ['and', 'or'], 'description' => 'How this filter joins the previous ones (default "and"; "or" starts a new group)'],
         ],
@@ -105,9 +105,9 @@ class SegmentTools
     }
 
     /**
-     * Create a segment. Without filters it is a static list (fill it with upsert_contacts or add_contacts_to_segment). With filters it is dynamic: Mautic's segment job adds and removes contacts as they match. dryRun validates the filters and counts the matching contacts.
+     * Create a segment. Without filters it is a static list (fill it with mautic_upsert_contacts or mautic_add_contacts_to_segment). With filters it is dynamic: Mautic's segment job adds and removes contacts as they match. dryRun validates the filters and counts the matching contacts.
      *
-     * @param list<array<string, mixed>> $filters Filters, see list_segment_filter_fields
+     * @param list<array<string, mixed>> $filters Filters, see mautic_list_segment_filter_fields
      *
      * @return array<string, mixed>
      */
@@ -138,7 +138,7 @@ class SegmentTools
         $this->auth->audit('segment', (int) $segment->getId(), 'create', ['name' => $name, 'filters' => count($filters)]);
 
         return $this->result($segment, [] === $filters
-            ? 'Static segment created. Add contacts with upsert_contacts or add_contacts_to_segment.'
+            ? 'Static segment created. Add contacts with mautic_upsert_contacts or mautic_add_contacts_to_segment.'
             : 'Dynamic segment created. Mautic fills it with its next segment run (cron), about '.$matching.' contact(s) match now.') + ['matching_contacts' => $matching];
     }
 
@@ -218,7 +218,7 @@ class SegmentTools
                 }
             }
             if (null === $def) {
-                throw new ToolCallException(sprintf('Filter %d: unknown field "%s". See list_segment_filter_fields.', $i + 1, $field));
+                throw new ToolCallException(sprintf('Filter %d: unknown field "%s". See mautic_list_segment_filter_fields.', $i + 1, $field));
             }
             $operator  = (string) ($f['operator'] ?? '');
             $operators = array_map('strval', array_values((array) ($def['operators'] ?? [])));

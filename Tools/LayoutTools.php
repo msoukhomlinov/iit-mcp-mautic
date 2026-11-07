@@ -25,7 +25,7 @@ const LAYOUT_SCHEMA = [
     'items'    => [
         'type'                 => 'object',
         'required'             => ['type'],
-        'description'          => 'A panel: {"type": "<panel>", "<area>": [elements]}. Areas and elements per panel: see list_email_layouts. Example: {"type": "article", "items": [{"type": "title", "text": "Hallo"}, {"type": "text", "html": "…"}, {"type": "button", "text": "Jetzt ansehen", "url": "https://…"}]}',
+        'description'          => 'A panel: {"type": "<panel>", "<area>": [elements]}. Areas and elements per panel: see mautic_list_email_layouts. Example: {"type": "article", "items": [{"type": "title", "text": "Hallo"}, {"type": "text", "html": "…"}, {"type": "button", "text": "Jetzt ansehen", "url": "https://…"}]}',
         'properties'           => ['type' => ['type' => 'string']],
         'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'object', 'required' => ['type'], 'properties' => ['type' => ['type' => 'string']]]],
     ],
@@ -50,7 +50,7 @@ class LayoutTools
     }
 
     /**
-     * List the brand email layouts: themes with their panels (e.g. hero, article, cards), the elements each panel takes (label, title, text, button, image, ...) and their fields. Use them with create_email_from_layout.
+     * List the brand email layouts: themes with their panels (e.g. hero, article, cards), the elements each panel takes (label, title, text, button, image, ...) and their fields. Use them with mautic_create_email_from_layout.
      *
      * @return array<string, mixed>
      */
@@ -62,14 +62,14 @@ class LayoutTools
     }
 
     /**
-     * Create an unpublished email in the brand theme from panels and elements (see list_email_layouts). Header with logo and footer with imprint, privacy and unsubscribe are added automatically. The email opens in Mautic's builder like any theme email; send yourself a test with send_test_email. Prefer this over create_email_draft.
+     * Create an unpublished email in the brand theme from panels and elements (see mautic_list_email_layouts). Header with logo and footer with imprint, privacy and unsubscribe are added automatically. The email opens in Mautic's builder like any theme email; send yourself a test with mautic_send_test_email. Prefer this over mautic_create_email_draft.
      *
      * @param list<array<string, mixed>> $panels     Panels in order
      * @param string                     $type       "segment" (newsletter) or "template" (campaigns, forms, double opt-in)
      * @param list<int>                  $segmentIds Segments of a segment email
      * @param string                     $preheader  Preview text after the subject
      * @param string                     $theme      Theme with layouts (default: the first, e.g. "kopexa")
-     * @param string                     $topic      Topic of the email (name or ID from list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
+     * @param string                     $topic      Topic of the email (name or ID from mautic_list_email_topics): people who switched the topic off in their email preferences do not get it. Leave empty only for service emails the person asked for
      *
      * @return array<string, mixed>
      */
@@ -112,10 +112,10 @@ class LayoutTools
     }
 
     /**
-     * Replace the content of an unpublished, never-sent email with new panels (see list_email_layouts); optionally change the subject.
+     * Replace the content of an unpublished, never-sent email with new panels (see mautic_list_email_layouts); optionally change the subject.
      *
      * @param list<array<string, mixed>> $panels Panels in order
-     * @param string|null                $topic  New topic (name or ID, "" removes it), see list_email_topics
+     * @param string|null                $topic  New topic (name or ID, "" removes it), see mautic_list_email_topics
      *
      * @return array<string, mixed>
      */

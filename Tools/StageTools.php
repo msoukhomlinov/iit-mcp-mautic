@@ -66,7 +66,7 @@ class StageTools
     ): array {
         $this->auth->require($context, 'stage:stages:create');
         if ($this->stages->getRepository()->findOneBy(['name' => $name]) instanceof Stage) {
-            throw new ToolCallException(sprintf('A stage named "%s" already exists (see list_stages).', $name));
+            throw new ToolCallException(sprintf('A stage named "%s" already exists (see mautic_list_stages).', $name));
         }
         $this->requireFreeWeight($weight, null);
         $stage = new Stage();
@@ -137,7 +137,7 @@ class StageTools
         if ('' !== trim($stage)) {
             $new = $this->stages->getRepository()->findByIdOrName(trim($stage));
             if (!$new instanceof Stage) {
-                throw new ToolCallException(sprintf('Stage "%s" not found (see list_stages).', $stage));
+                throw new ToolCallException(sprintf('Stage "%s" not found (see mautic_list_stages).', $stage));
             }
             if (!$new->isPublished()) {
                 throw new ToolCallException(sprintf('Stage "%s" is not published. A person publishes it in Mautic first.', $new->getName()));
@@ -200,7 +200,7 @@ class StageTools
     {
         $stage = $this->stages->getEntity($id);
         if (!$stage instanceof Stage || !$stage->getId()) {
-            throw new ToolCallException(sprintf('Stage %d not found (see list_stages).', $id));
+            throw new ToolCallException(sprintf('Stage %d not found (see mautic_list_stages).', $id));
         }
 
         return $stage;
