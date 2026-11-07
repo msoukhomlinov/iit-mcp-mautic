@@ -7,6 +7,7 @@ namespace MauticPlugin\IntellectItMcpBundle\Service;
 use Doctrine\DBAL\Connection;
 use Firebase\JWT\Key;
 use GuzzleHttp\Psr7\HttpFactory;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Session\Psr16SessionStore;
@@ -62,6 +63,7 @@ class McpServerFactory
         private readonly ProjectTools $projectTools,
         private readonly Connection $connection,
         private readonly LoggerInterface $logger,
+        private readonly CoreParametersHelper $parameters,
     ) {
     }
 
@@ -124,7 +126,7 @@ class McpServerFactory
         $ro = new ToolAnnotations(readOnlyHint: true, openWorldHint: false);
         $rw = new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false);
 
-        return Server::builder()
+        $builder = Server::builder()
             ->setServerInfo('Mautic', self::VERSION, 'Mautic marketing automation (IntellectIT build)', websiteUrl: $this->oauth->issuer(), title: 'Mautic')
             // One page for all tools: not every client follows nextCursor.
             ->setPaginationLimit(200)
@@ -143,68 +145,80 @@ class McpServerFactory
                 'Return the "url" of created drafts to the user so they can review them.',
             ]))
             ->setLogger($this->logger)
-            ->setSession(new Psr16SessionStore($cache, 'session-', 3600))
-            ->addTool([$this->read, 'searchContacts'], 'search_contacts', 'Search contacts', null, $ro)
-            ->addTool([$this->read, 'getContact'], 'get_contact', 'Get contact', null, $ro)
-            ->addTool([$this->read, 'listSegments'], 'list_segments', 'List segments', null, $ro)
-            ->addTool([$this->read, 'listEmails'], 'list_emails', 'List emails', null, $ro)
-            ->addTool([$this->read, 'getEmail'], 'get_email', 'Get email', null, $ro)
-            ->addTool([$this->read, 'listEmailTopics'], 'list_email_topics', 'Email topics', null, $ro)
-            ->addTool([$this->read, 'getEmailStats'], 'get_email_stats', 'Email statistics', null, $ro)
-            ->addTool([$this->read, 'listCampaigns'], 'list_campaigns', 'List campaigns', null, $ro)
-            ->addTool([$this->read, 'getCampaign'], 'get_campaign', 'Get campaign', null, $ro)
-            ->addTool([$this->read, 'listCampaignStepTypes'], 'list_campaign_step_types', 'Campaign step types', null, $ro)
-            ->addTool([$this->read, 'describeCampaignStepType'], 'describe_campaign_step_type', 'Describe campaign step type', null, $ro)
-            ->addTool([$this->contacts, 'listContactFields'], 'list_contact_fields', 'List contact fields', null, $ro)
-            ->addTool([$this->contacts, 'upsertContacts'], 'upsert_contacts', 'Create or update contacts', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->segmentTools, 'createSegment'], 'create_segment', 'Create segment', null, $rw)
-            ->addTool([$this->segmentTools, 'updateSegment'], 'update_segment', 'Update segment', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->segmentTools, 'listSegmentFilterFields'], 'list_segment_filter_fields', 'Segment filter fields', null, $ro)
-            ->addTool([$this->contacts, 'createContactField'], 'create_contact_field', 'Create contact or company field', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->companies, 'searchCompanies'], 'search_companies', 'Search companies', null, $ro)
-            ->addTool([$this->companies, 'getCompany'], 'get_company', 'Get company', null, $ro)
-            ->addTool([$this->companies, 'upsertCompanies'], 'upsert_companies', 'Create or update companies', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->companies, 'addContactsToCompany'], 'add_contacts_to_company', 'Link contacts to company', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->companies, 'removeContactsFromCompany'], 'remove_contacts_from_company', 'Unlink contacts from company', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->read, 'getContactActivity'], 'get_contact_activity', 'Contact activity', null, $ro)
-            ->addTool([$this->layoutTools, 'listEmailLayouts'], 'list_email_layouts', 'Brand email layouts', null, $ro)
-            ->addTool([$this->layoutTools, 'createEmailFromLayout'], 'create_email_from_layout', 'Create email in the brand theme', null, $rw)
-            ->addTool([$this->layoutTools, 'updateEmailLayout'], 'update_email_layout', 'Replace email content (brand theme)', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->pointTools, 'listPointGroups'], 'list_point_groups', 'Point groups', null, $ro)
-            ->addTool([$this->pointTools, 'createPointGroup'], 'create_point_group', 'Create point group', null, $rw)
-            ->addTool([$this->pointTools, 'updatePointGroup'], 'update_point_group', 'Update point group', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->pointTools, 'listPointActionTypes'], 'list_point_action_types', 'Point action types', null, $ro)
-            ->addTool([$this->pointTools, 'describePointActionType'], 'describe_point_action_type', 'Describe point action type', null, $ro)
-            ->addTool([$this->pointTools, 'listPointActions'], 'list_point_actions', 'Point actions', null, $ro)
-            ->addTool([$this->pointTools, 'createPointAction'], 'create_point_action', 'Create point action', null, $rw)
-            ->addTool([$this->pointTools, 'updatePointAction'], 'update_point_action', 'Update point action', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->pointTools, 'listPointTriggerEventTypes'], 'list_point_trigger_event_types', 'Point trigger event types', null, $ro)
-            ->addTool([$this->pointTools, 'describePointTriggerEventType'], 'describe_point_trigger_event_type', 'Describe point trigger event type', null, $ro)
-            ->addTool([$this->pointTools, 'listPointTriggers'], 'list_point_triggers', 'Point triggers', null, $ro)
-            ->addTool([$this->pointTools, 'createPointTrigger'], 'create_point_trigger', 'Create point trigger', null, $rw)
-            ->addTool([$this->pointTools, 'updatePointTrigger'], 'update_point_trigger', 'Update point trigger', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->pointTools, 'adjustContactPoints'], 'adjust_contact_points', 'Change contact points', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true))
-            ->addTool([$this->write, 'sendTestEmail'], 'send_test_email', 'Send test email to yourself', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true))
-            ->addTool([$this->contacts, 'addContactsToSegment'], 'add_contacts_to_segment', 'Add contacts to segment', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->contacts, 'removeContactsFromSegment'], 'remove_contacts_from_segment', 'Remove contacts from segment', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->write, 'createEmailDraft'], 'create_email_draft', 'Create email draft', null, $rw)
-            ->addTool([$this->write, 'updateEmailDraft'], 'update_email_draft', 'Update email draft', null, $rw)
-            ->addTool([$this->write, 'createCampaignDraft'], 'create_campaign_draft', 'Create campaign draft', null, $rw)
-            ->addTool([$this->write, 'updateCampaignDraft'], 'update_campaign_draft', 'Update campaign draft', null, $rw)
-            ->addTool([$this->write, 'setCampaignSteps'], 'set_campaign_steps', 'Set campaign flow', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->write, 'updateCampaignStep'], 'update_campaign_step', 'Update campaign step', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->write, 'addCampaignStep'], 'add_campaign_step', 'Add campaign step', null, $rw)
-            ->addTool([$this->write, 'removeCampaignStep'], 'remove_campaign_step', 'Remove campaign step', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->stageTools, 'listStages'], 'list_stages', 'Stages', null, $ro)
-            ->addTool([$this->stageTools, 'createStage'], 'create_stage', 'Create stage', null, $rw)
-            ->addTool([$this->stageTools, 'updateStage'], 'update_stage', 'Update stage', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->stageTools, 'setContactStage'], 'set_contact_stage', 'Move contact to stage', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true))
-            ->addTool([$this->projectTools, 'listProjects'], 'list_projects', 'Projects', null, $ro)
-            ->addTool([$this->projectTools, 'getProject'], 'get_project', 'Project with its items', null, $ro)
-            ->addTool([$this->projectTools, 'createProject'], 'create_project', 'Create project', null, $rw)
-            ->addTool([$this->projectTools, 'updateProject'], 'update_project', 'Update project', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->projectTools, 'addToProject'], 'add_to_project', 'Add items to project', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->addTool([$this->projectTools, 'removeFromProject'], 'remove_from_project', 'Remove items from project', null, new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false))
-            ->build();
+            ->setSession(new Psr16SessionStore($cache, 'session-', 3600));
+
+        $allowWrite = (bool) $this->parameters->get('intellectit_mcp_allow_write', false);
+        $gated      = array_merge(self::WRITE_TOOLS, self::CONTACT_TOOLS);
+
+        // Operator ceiling: with writes off, write tools are not even listed (the token scopes still apply on top).
+        foreach ([
+            [[$this->read, 'searchContacts'], 'search_contacts', 'Search contacts', $ro],
+            [[$this->read, 'getContact'], 'get_contact', 'Get contact', $ro],
+            [[$this->read, 'listSegments'], 'list_segments', 'List segments', $ro],
+            [[$this->read, 'listEmails'], 'list_emails', 'List emails', $ro],
+            [[$this->read, 'getEmail'], 'get_email', 'Get email', $ro],
+            [[$this->read, 'listEmailTopics'], 'list_email_topics', 'Email topics', $ro],
+            [[$this->read, 'getEmailStats'], 'get_email_stats', 'Email statistics', $ro],
+            [[$this->read, 'listCampaigns'], 'list_campaigns', 'List campaigns', $ro],
+            [[$this->read, 'getCampaign'], 'get_campaign', 'Get campaign', $ro],
+            [[$this->read, 'listCampaignStepTypes'], 'list_campaign_step_types', 'Campaign step types', $ro],
+            [[$this->read, 'describeCampaignStepType'], 'describe_campaign_step_type', 'Describe campaign step type', $ro],
+            [[$this->contacts, 'listContactFields'], 'list_contact_fields', 'List contact fields', $ro],
+            [[$this->contacts, 'upsertContacts'], 'upsert_contacts', 'Create or update contacts', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->segmentTools, 'createSegment'], 'create_segment', 'Create segment', $rw],
+            [[$this->segmentTools, 'updateSegment'], 'update_segment', 'Update segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->segmentTools, 'listSegmentFilterFields'], 'list_segment_filter_fields', 'Segment filter fields', $ro],
+            [[$this->contacts, 'createContactField'], 'create_contact_field', 'Create contact or company field', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->companies, 'searchCompanies'], 'search_companies', 'Search companies', $ro],
+            [[$this->companies, 'getCompany'], 'get_company', 'Get company', $ro],
+            [[$this->companies, 'upsertCompanies'], 'upsert_companies', 'Create or update companies', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->companies, 'addContactsToCompany'], 'add_contacts_to_company', 'Link contacts to company', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->companies, 'removeContactsFromCompany'], 'remove_contacts_from_company', 'Unlink contacts from company', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->read, 'getContactActivity'], 'get_contact_activity', 'Contact activity', $ro],
+            [[$this->layoutTools, 'listEmailLayouts'], 'list_email_layouts', 'Brand email layouts', $ro],
+            [[$this->layoutTools, 'createEmailFromLayout'], 'create_email_from_layout', 'Create email in the brand theme', $rw],
+            [[$this->layoutTools, 'updateEmailLayout'], 'update_email_layout', 'Replace email content (brand theme)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->pointTools, 'listPointGroups'], 'list_point_groups', 'Point groups', $ro],
+            [[$this->pointTools, 'createPointGroup'], 'create_point_group', 'Create point group', $rw],
+            [[$this->pointTools, 'updatePointGroup'], 'update_point_group', 'Update point group', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->pointTools, 'listPointActionTypes'], 'list_point_action_types', 'Point action types', $ro],
+            [[$this->pointTools, 'describePointActionType'], 'describe_point_action_type', 'Describe point action type', $ro],
+            [[$this->pointTools, 'listPointActions'], 'list_point_actions', 'Point actions', $ro],
+            [[$this->pointTools, 'createPointAction'], 'create_point_action', 'Create point action', $rw],
+            [[$this->pointTools, 'updatePointAction'], 'update_point_action', 'Update point action', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->pointTools, 'listPointTriggerEventTypes'], 'list_point_trigger_event_types', 'Point trigger event types', $ro],
+            [[$this->pointTools, 'describePointTriggerEventType'], 'describe_point_trigger_event_type', 'Describe point trigger event type', $ro],
+            [[$this->pointTools, 'listPointTriggers'], 'list_point_triggers', 'Point triggers', $ro],
+            [[$this->pointTools, 'createPointTrigger'], 'create_point_trigger', 'Create point trigger', $rw],
+            [[$this->pointTools, 'updatePointTrigger'], 'update_point_trigger', 'Update point trigger', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->pointTools, 'adjustContactPoints'], 'adjust_contact_points', 'Change contact points', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true)],
+            [[$this->write, 'sendTestEmail'], 'send_test_email', 'Send test email to yourself', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true)],
+            [[$this->contacts, 'addContactsToSegment'], 'add_contacts_to_segment', 'Add contacts to segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->contacts, 'removeContactsFromSegment'], 'remove_contacts_from_segment', 'Remove contacts from segment', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->write, 'createEmailDraft'], 'create_email_draft', 'Create email draft', $rw],
+            [[$this->write, 'updateEmailDraft'], 'update_email_draft', 'Update email draft', $rw],
+            [[$this->write, 'createCampaignDraft'], 'create_campaign_draft', 'Create campaign draft', $rw],
+            [[$this->write, 'updateCampaignDraft'], 'update_campaign_draft', 'Update campaign draft', $rw],
+            [[$this->write, 'setCampaignSteps'], 'set_campaign_steps', 'Set campaign flow', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->write, 'updateCampaignStep'], 'update_campaign_step', 'Update campaign step', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->write, 'addCampaignStep'], 'add_campaign_step', 'Add campaign step', $rw],
+            [[$this->write, 'removeCampaignStep'], 'remove_campaign_step', 'Remove campaign step', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
+            [[$this->stageTools, 'listStages'], 'list_stages', 'Stages', $ro],
+            [[$this->stageTools, 'createStage'], 'create_stage', 'Create stage', $rw],
+            [[$this->stageTools, 'updateStage'], 'update_stage', 'Update stage', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->stageTools, 'setContactStage'], 'set_contact_stage', 'Move contact to stage', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true)],
+            [[$this->projectTools, 'listProjects'], 'list_projects', 'Projects', $ro],
+            [[$this->projectTools, 'getProject'], 'get_project', 'Project with its items', $ro],
+            [[$this->projectTools, 'createProject'], 'create_project', 'Create project', $rw],
+            [[$this->projectTools, 'updateProject'], 'update_project', 'Update project', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->projectTools, 'addToProject'], 'add_to_project', 'Add items to project', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+            [[$this->projectTools, 'removeFromProject'], 'remove_from_project', 'Remove items from project', new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false)],
+        ] as [$handler, $name, $title, $annotations]) {
+            if ($allowWrite || !in_array($name, $gated, true)) {
+                $builder->addTool($handler, $name, $title, null, $annotations);
+            }
+        }
+
+        return $builder->build();
     }
 }

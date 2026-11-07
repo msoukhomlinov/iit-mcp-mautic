@@ -30,6 +30,10 @@ return [
         ],
     ],
     'parameters' => [
+        // Operator ceiling for write tools (everything that creates or changes
+        // data). Off by default: they are not listed and cannot be called, whatever
+        // scopes the token holds. Turn on with intellectit_mcp_allow_write=true.
+        'intellectit_mcp_allow_write' => false,
         // Maximum items a list tool returns.
         'intellectit_mcp_page_limit' => 50,
         // Allow changes to RUNNING (published) campaigns at all. The token
