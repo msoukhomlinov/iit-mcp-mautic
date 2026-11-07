@@ -48,7 +48,7 @@ install_mautic() {
 }
 
 start_server() {
-  cat >"$MAUTIC_DIR/kopexa-router.php" <<'PHP'
+  cat >"$MAUTIC_DIR/mcp-router.php" <<'PHP'
 <?php
 // Router for PHP's built-in server: static files as is, everything else to Mautic.
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
@@ -60,7 +60,7 @@ $_SERVER['SCRIPT_FILENAME'] = __DIR__.'/docroot/index.php';
 chdir(__DIR__.'/docroot');
 require __DIR__.'/docroot/index.php';
 PHP
-  (cd "$MAUTIC_DIR/docroot" && PHP_CLI_SERVER_WORKERS=4 php -d memory_limit=512M -d opcache.revalidate_freq=0 -S "127.0.0.1:$PORT" ../kopexa-router.php >"$WORK/server.log" 2>&1 &)
+  (cd "$MAUTIC_DIR/docroot" && PHP_CLI_SERVER_WORKERS=4 php -d memory_limit=512M -d opcache.revalidate_freq=0 -S "127.0.0.1:$PORT" ../mcp-router.php >"$WORK/server.log" 2>&1 &)
   for _ in $(seq 1 60); do
     [[ "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/s/login")" == 200 ]] && { pass "web server up"; return; }
     sleep 1
@@ -144,7 +144,7 @@ access_token() {
   jq -r .access_token "$WORK/token"
 }
 
-# MCP (kopexa/mautic-mcp-bundle), Streamable HTTP with a session.
+# MCP (intellectit/mautic-mcp-bundle), Streamable HTTP with a session.
 MCP_SESSION=""
 mcp_post() { # <token> <json-rpc body>: prints the JSON-RPC message
   local out

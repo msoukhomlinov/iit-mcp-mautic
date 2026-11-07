@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Service;
+namespace MauticPlugin\IntellectItMcpBundle\Service;
 
 use Mautic\CategoryBundle\Entity\Category;
 use Mautic\CategoryBundle\Model\CategoryModel;

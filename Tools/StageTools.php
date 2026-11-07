@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\DBAL\Connection;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -13,8 +13,8 @@ use Mautic\StageBundle\Model\StageModel;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
-use MauticPlugin\KopexaMcpBundle\Service\SegmentEffects;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\SegmentEffects;
 
 /**
  * Stages: the lifecycle of a contact (e.g. Lead -> MQL -> SQL -> Customer).

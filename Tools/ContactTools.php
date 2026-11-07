@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -19,8 +19,8 @@ use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
-use MauticPlugin\KopexaMcpBundle\Service\SegmentEffects;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\SegmentEffects;
 
 const CONTACT_SCHEMA = [
     'type'                 => 'object',

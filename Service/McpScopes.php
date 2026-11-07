@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Service;
+namespace MauticPlugin\IntellectItMcpBundle\Service;
 
 use MauticPlugin\KopexaOAuthBundle\Scope\ScopeDefinition;
 use MauticPlugin\KopexaOAuthBundle\Scope\ScopeProviderInterface;

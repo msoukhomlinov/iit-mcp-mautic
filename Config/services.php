@@ -12,9 +12,9 @@ return function (ContainerConfigurator $configurator): void {
         ->autoconfigure()
         ->public();
 
-    $services->load('MauticPlugin\\KopexaMcpBundle\\', '../')
+    $services->load('MauticPlugin\\IntellectItMcpBundle\\', '../')
         ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, ['Tests', 'DependencyInjection'])).'}');
 
-    $services->load('MauticPlugin\\KopexaMcpBundle\\Controller\\', '../Controller')
+    $services->load('MauticPlugin\\IntellectItMcpBundle\\Controller\\', '../Controller')
         ->tag('controller.service_arguments');
 };

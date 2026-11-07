@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -14,7 +14,7 @@ use Mautic\ProjectBundle\Service\ProjectEntityLoaderService;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
 /**
  * Projects (Mautic 7): group emails, campaigns, segments, forms, pages,

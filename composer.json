@@ -1,5 +1,5 @@
 {
-    "name": "kopexa/mautic-mcp-bundle",
+    "name": "intellectit/mautic-mcp-bundle",
     "description": "Model Context Protocol (MCP) server for Mautic: lets Claude, ChatGPT and other MCP clients read contacts, segments, emails and campaigns, write brand emails and campaign drafts, create and update contacts, companies, fields and segments, with the user's Mautic permissions. OAuth 2.1 via kopexa/mautic-oauth-bundle.",
     "type": "mautic-plugin",
     "license": "Apache-2.0",
@@ -12,20 +12,24 @@
         "claude",
         "chatgpt"
     ],
-    "homepage": "https://github.com/kopexa-grc/mautic-mcp-bundle",
+    "homepage": "https://github.com/msoukhomlinov/mautic-mcp-bundle",
     "support": {
-        "issues": "https://github.com/kopexa-grc/mautic-mcp-bundle/issues",
-        "source": "https://github.com/kopexa-grc/mautic-mcp-bundle",
-        "security": "https://github.com/kopexa-grc/mautic-mcp-bundle/security/policy"
+        "issues": "https://github.com/msoukhomlinov/mautic-mcp-bundle/issues",
+        "source": "https://github.com/msoukhomlinov/mautic-mcp-bundle",
+        "security": "https://github.com/msoukhomlinov/mautic-mcp-bundle/security/policy"
     },
     "authors": [
         {
-            "name": "Kopexa",
+            "name": "IntellectIT",
+            "homepage": "https://intellectit.com.au"
+        },
+        {
+            "name": "Kopexa (original author)",
             "homepage": "https://kopexa.com"
         }
     ],
     "extra": {
-        "install-directory-name": "KopexaMcpBundle"
+        "install-directory-name": "IntellectItMcpBundle"
     },
     "require": {
         "php": "~8.4",

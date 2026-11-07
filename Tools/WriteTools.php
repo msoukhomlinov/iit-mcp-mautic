@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Model\CampaignModel;
@@ -17,10 +17,10 @@ use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\CampaignFlowBuilder;
-use MauticPlugin\KopexaMcpBundle\Service\McpScopes;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
-use MauticPlugin\KopexaMcpBundle\Service\EmailTopics;
+use MauticPlugin\IntellectItMcpBundle\Service\CampaignFlowBuilder;
+use MauticPlugin\IntellectItMcpBundle\Service\McpScopes;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\EmailTopics;
 
 const STEP_SCHEMA = [
                 'type'                 => 'object',
@@ -464,7 +464,7 @@ class WriteTools
         // (scope mcp:campaigns:live). Dry runs are always fine.
         $liveBlock = null;
         if ($campaign->isPublished()) {
-            if (!$this->parameters->get('kopexa_mcp_live_campaign_edits', true)) {
+            if (!$this->parameters->get('intellectit_mcp_live_campaign_edits', true)) {
                 $liveBlock = 'Changes to running campaigns are disabled on this Mautic instance (mautic.mcp.liveCampaignEdits). Unpublish the campaign in Mautic to edit it, or ask an administrator.';
             } elseif (!$this->auth->hasScope($context, McpScopes::CAMPAIGNS_LIVE)) {
                 $liveBlock = 'This campaign is running. Changing it needs the permission "mcp:campaigns:live" (changes are live and may send emails). Reconnect the client and tick "Change RUNNING campaigns" on the Mautic consent page, or unpublish the campaign in Mautic first.';

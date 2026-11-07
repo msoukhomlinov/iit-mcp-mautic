@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -14,9 +14,9 @@ use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\GrapesJsBuilderBundle\Entity\GrapesJsBuilder;
-use MauticPlugin\KopexaMcpBundle\Service\EmailLayouts;
-use MauticPlugin\KopexaMcpBundle\Service\EmailTopics;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\EmailLayouts;
+use MauticPlugin\IntellectItMcpBundle\Service\EmailTopics;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
 const LAYOUT_SCHEMA = [
     'type'     => 'array',
