@@ -32,12 +32,12 @@ OAuth 2.1 (authorization code with PKCE, dynamic client registration) from `kope
 3. Mautic role permissions decide what the user may touch.
 4. Sending: preview, then `mautic_send_email` with `confirm=true` and `expectedRecipientCount` (the preview's count; a different count is refused). The server re-plans at confirm time. The confirm is a plain flag, not a token bound to the preview. Unpublished emails never sent; Do Not Contact and addressless contacts skipped; per-call cap; `mautic_send_email` carries `requiresUserInteraction`.
 5. Irreversible changes (delete, merge) are a separate tier with its own switch and scope, preview first, and a confirm that names the record. Changes with side effects elsewhere (segments, scoring, stages, live campaigns) offer `dryRun` with `live_effects`.
-6. Audit: writes, confirmed sends and sends blocked after `confirm=true` go to Mautic's audit log. Previews, `confirm=false` calls and permission refusals are not audited.
+6. Audit: writes, confirmed sends, sends blocked after `confirm=true`, and every PERMISSION_DENIED, BLOCKED_BY_POLICY or CONFIRM_REQUIRED refusal (object `refusal`, with code and ref) go to Mautic's audit log. Previews and `confirm=false` calls are not audited.
 7. Email outside the send tier: campaign steps on running campaigns (live edits, off by default, plus `mcp:campaigns:live`), contacts entering running campaigns through segments, and published point triggers can all cause email. They are guarded by `dryRun` with `live_effects`, scopes and the live-edit switch, not by the send tier.
 
 ## Budget (measured by `tests/functional/surface.sh`, Mautic 7.2.2)
 
-- Instructions: 3,399 characters attended, 3,364 unattended (limit 3,500); hard rules in the first 512 characters.
+- Instructions: 3,237 characters attended, 3,202 unattended (limit 3,500); hard rules in the first 512 characters.
 - `tools/list` per profile (measured by `surface.sh`): read-only 27 tools, 13,448 bytes (about 3.4k tokens); write 58 tools, 54,167 bytes (about 13.5k tokens); every tier on 62 tools, 58,359 bytes (about 14.6k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
 
 ## Exceptions
@@ -60,7 +60,7 @@ Rule, reason, approver, date. "PENDING" means inherited from upstream and not ye
 ## Open gaps against the standard (not exceptions, planned or undecided)
 
 - No `mautic_guide` tool or outcome skills; playbooks live in the instructions.
-- Audit has no per-call outcome or approver record beyond the audit-log row; previews are not audited.
+- Audit has no approver record beyond the audit-log row; previews are not audited (owner chose refusals only).
 - No per-day send limit (per-call and per-hour only; the hourly count comes from the audit log).
 - The raw-API passthrough tool was considered and skipped by the owner (2026-11-07): the named tools cover the work and a passthrough widens the surface.
 - Contact merge, delete and the hourly send limit are built. Confirmed sends hold a database lock (`GET_LOCK`) so the hourly check and its audit row cannot interleave; a send that fails midway is counted at its planned size.

@@ -28,6 +28,7 @@ class McpUserContext
         private readonly CorePermissions $security,
         private readonly AuditLogModel $auditLog,
     ) {
+        McpError::auditTo(fn (string $code, string $message, string $ref) => $this->audit('refusal', 0, 'refused', ['code' => $code, 'message' => $message]));
     }
 
     public function user(RequestContext $context): User
