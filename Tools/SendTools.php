@@ -69,6 +69,7 @@ class SendTools
             return ['sent' => false, 'message' => 'Nothing sent. Show this preview to the user and call again with confirm=true after they agree.'] + $preview;
         }
         if ([] !== $preview['blockers']) {
+            $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'blockers' => $preview['blockers']]);
             throw new ToolCallException('Not sent: '.implode(' ', $preview['blockers']));
         }
 
@@ -99,6 +100,8 @@ class SendTools
             'segmentIds' => $segmentIds,
             'sent'       => $result['sent_count'],
             'failed'     => $result['failed_count'],
+            'cap'        => $preview['max_recipients_per_call'],
+            'dnc_override' => (bool) $this->parameters->get('intellectit_mcp_send_ignore_dnc', false),
         ]);
 
         return $result + ['email' => ['id' => $email->getId(), 'name' => $email->getName()]];

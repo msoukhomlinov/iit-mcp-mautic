@@ -55,6 +55,8 @@ source "$here/topics.sh"
 source "$here/insight.sh"
 # shellcheck source=tests/functional/send.sh
 source "$here/send.sh"
+# shellcheck source=tests/functional/surface.sh
+source "$here/surface.sh"
 # shellcheck source=tests/functional/gating.sh
 source "$here/gating.sh"
 echo "all MCP checks passed"
