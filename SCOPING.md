@@ -37,7 +37,7 @@ OAuth 2.1 (authorization code with PKCE, dynamic client registration) from `kope
 ## Budget (measured by `tests/functional/surface.sh`, Mautic 7.2.2)
 
 - Instructions: 3,170 characters (limit 3,500); hard rules in the first 512 characters.
-- `tools/list` with every tier on: 60 tools, 56,250 bytes (about 14k tokens), 0 parameters without a description (enforced by `surface.sh`). The standard's budget is under about 10k tokens per profile: this is over it with every tier on; the read-only profile is much smaller. See exception 5.
+- `tools/list` per profile (measured by `surface.sh`): read-only 27 tools, 13,448 bytes (about 3.4k tokens); write 58 tools, 54,167 bytes (about 13.5k tokens); every tier on 60 tools, 56,250 bytes (about 14k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
 
 ## Exceptions
 
@@ -51,10 +51,10 @@ Rule, reason, approver, date. "PENDING" means inherited from upstream and not ye
 | 4 | Do Not Contact is never overridden | Operator parameter `intellectit_mcp_send_ignore_dnc` (default off, direct contact sends only) exists at the owner's request; the override is written to the audit log | Max Soukhomlinov | 2026-11-07 | APPROVED |
 | 5 | About 10 always-loaded tools, long tail behind search/describe/dispatch; under about 10k tokens served | Upstream's 66 one-per-operation tools were reduced to 60 by merging six sibling pairs (add/remove and list/describe) behind `action`/`type` parameters, and every parameter is now described. Remainder: 60 tools, about 14k tokens with every tier on. Evidence that more merging is possible but costly: create/update pairs for eight resources differ in required fields | Max Soukhomlinov (plan: merge, describe, record the remainder) | 2026-11-07 | APPROVED as a plan; the final numbers above have not been reviewed by the owner |
 | 6 | Domain prefix on tool names for federation | Bare names (`mautic_get_contact`) inherited from upstream. Owner chose to prefix every tool with `mautic_` (breaking change for existing clients) | Max Soukhomlinov | 2026-11-07 | APPROVED, DONE |
-| 7 | Stateless operation | MCP sessions are stored in the Mautic database (`Psr16SessionStore`, one hour), inherited from upstream; replica-safe | none yet | | PENDING |
+| 7 | Stateless operation | MCP sessions are stored in the Mautic database (`Psr16SessionStore`, one hour), inherited from upstream; replica-safe | Max Soukhomlinov | 2026-11-07 | APPROVED |
 | 8 | Running-campaign edits default to allowed (upstream) | Default changed to **off**: such edits can email contacts outside the send tier | Max Soukhomlinov | 2026-11-07 | APPROVED, DONE |
-| 9 | The server never asks a human (no-questions contract) | The instructions require the user's agreement before changes and sends; right for an interactive product, wrong for unattended callers | none yet | | PENDING |
-| 10 | Error taxonomy codes and correlation IDs | Refusals are free-text messages | none yet | | PENDING |
+| 9 | The server never asks a human (no-questions contract) | Owner decision: the server must work both attended and unattended. Today the instructions assume a person; the design for unattended callers (operator-set policy, gated writes refused rather than asked) is not built yet | Max Soukhomlinov (requirement only) | 2026-11-07 | OPEN: to be designed |
+| 10 | Error taxonomy codes and correlation IDs | Refusals are free-text messages today. Owner decided to build stable codes and a correlation ID in errors and audit rows | Max Soukhomlinov (build) | 2026-11-07 | OPEN: to be built |
 
 ## Open gaps against the standard (not exceptions, planned or undecided)
 

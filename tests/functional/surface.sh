@@ -25,6 +25,13 @@ jq -e '(.result.tools[] | select(.name == "mautic_send_email") | ._meta["anthrop
 undescribed="$(jq -r '[.result.tools[] | .name as $n | (.inputSchema.properties // {} | to_entries[] | select((.value.description // "") == "") | "\($n).\(.key)")] | join(" ")' <<<"$list")"
 [[ -z "$undescribed" ]] && pass "every parameter of every tool has a description" || { echo "  undescribed: $undescribed"; fail "parameters without a description"; }
 echo "  info  tools/list with every tier on: $n_tools tools, $list_bytes bytes"
+for prof in 'read-only|false|false' 'write|true|false'; do
+  IFS='|' read -r pname pw ps <<<"$prof"
+  set_params "{\"intellectit_mcp_allow_write\": $pw, \"intellectit_mcp_allow_send\": $ps}"
+  mcp_init "$access"
+  pl="$(mcp_post "$access" '{"jsonrpc":"2.0","id":31,"method":"tools/list"}')"
+  echo "  info  profile $pname: $(jq '.result.tools | length' <<<"$pl") tools, $(printf '%s' "$pl" | wc -c | tr -d ' ') bytes tools/list"
+done
 
 set_params '{"intellectit_mcp_allow_send": false}'
 mcp_init "$access"
