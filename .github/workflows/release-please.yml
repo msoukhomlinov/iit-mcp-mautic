@@ -2,7 +2,7 @@ name: release-please
 
 # Conventional commits on main -> release-please keeps a release PR open
 # (VERSION, CHANGELOG.md, plugin version). Merging it tags v<version> and
-# creates the GitHub release; Packagist and mautic-stack's Renovate pick it up.
+# creates the GitHub release.
 
 on:
   push:
@@ -24,18 +24,3 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-      # Packagist normally learns about new tags through the GitHub
-      # integration; this makes it immediate and works without it. Skipped
-      # until the PACKAGIST_USERNAME / PACKAGIST_API_TOKEN secrets exist.
-      - name: Update Packagist
-        if: ${{ steps.release.outputs.release_created }}
-        env:
-          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
-          PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
-        run: |
-          if [[ -z "$PACKAGIST_USERNAME" || -z "$PACKAGIST_API_TOKEN" ]]; then
-            echo "::notice::Packagist secrets not set; relying on the Packagist GitHub integration."; exit 0
-          fi
-          curl -fsS -X POST -H 'Content-Type: application/json' \
-            "https://packagist.org/api/update-package?username=$PACKAGIST_USERNAME&apiToken=$PACKAGIST_API_TOKEN" \
-            -d '{"repository":{"url":"https://github.com/msoukhomlinov/mautic-mcp-bundle"}}'
