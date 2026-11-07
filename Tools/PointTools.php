@@ -30,17 +30,18 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 const TRIGGER_EVENTS_SCHEMA = [
-    'type'     => 'array',
-    'maxItems' => 20,
+    'type'        => 'array',
+    'description' => 'Trigger events in run order; each has a type and optional name, key and properties',
+    'maxItems'    => 20,
     'items'    => [
         'type'                 => 'object',
         'required'             => ['type'],
         'additionalProperties' => false,
         'properties'           => [
             'key'        => ['type' => 'string', 'description' => 'ID of an existing event of this trigger (from mautic_list_point_triggers) to keep or change it; omit for new events'],
-            'type'       => ['type' => 'string', 'description' => 'Event type from mautic_list_point_trigger_event_types, e.g. "lead.changetags", "email.send_to_user"'],
+            'type'       => ['type' => 'string', 'description' => 'Event type from mautic_point_trigger_event_types, e.g. "lead.changetags", "email.send_to_user"'],
             'name'       => ['type' => 'string'],
-            'properties' => ['type' => ['object', 'array'], 'description' => 'Settings, see mautic_describe_point_trigger_event_type'],
+            'properties' => ['type' => ['object', 'array'], 'description' => 'Settings, see mautic_point_trigger_event_types'],
         ],
     ],
 ];
@@ -104,6 +105,9 @@ class PointTools
     /**
      * Create a point group. Point actions, triggers and contact points can then use it.
      *
+     * @param string $name        Group name, 1 to 191 characters
+     * @param string $description Optional description; empty means none
+     *
      * @return array<string, mixed>
      */
     public function createPointGroup(RequestContext $context, #[Schema(minLength: 1, maxLength: 191)] string $name, string $description = ''): array
@@ -121,6 +125,10 @@ class PointTools
 
     /**
      * Rename a point group or change its description.
+     *
+     * @param int         $id          Point group ID (from mautic_list_point_groups)
+     * @param string|null $name        New name; omit to keep
+     * @param string|null $description New description; omit to keep
      *
      * @return array<string, mixed>
      */
@@ -189,6 +197,8 @@ class PointTools
     /**
      * List point actions (what earns how many points), with type, points, group and settings.
      *
+     * @param string $search Filter by text in the name; empty lists all
+     *
      * @return array<string, mixed>
      */
     public function listPointActions(RequestContext $context, string $search = ''): array
@@ -201,8 +211,13 @@ class PointTools
     /**
      * Create an unpublished point action: contacts get `delta` points (negative to subtract) when the action happens, optionally in a point group. A person publishes it in Mautic.
      *
-     * @param array<string, mixed> $properties Settings of the type (mautic_describe_point_action_type)
+     * @param string               $name        Action name, 1 to 191 characters
+     * @param string               $type        Action type key, e.g. "url.hit" (from mautic_point_action_types)
+     * @param int                  $delta       Points awarded per occurrence; negative subtracts
+     * @param array<string, mixed> $properties Settings of the type (mautic_point_action_types)
+     * @param int|null             $groupId     Point group ID; omit to score in the contact's total points
      * @param bool                 $repeatable Award the points every time, not only once per contact
+     * @param string               $description Optional description
      *
      * @return array<string, mixed>
      */
@@ -211,7 +226,7 @@ class PointTools
         #[Schema(minLength: 1, maxLength: 191)] string $name,
         string $type,
         int $delta,
-        #[Schema(definition: ['type' => ['object', 'array'], 'description' => 'Settings of the type (an object), see mautic_describe_point_action_type'])] array $properties = [],
+        #[Schema(definition: ['type' => ['object', 'array'], 'description' => 'Settings of the type (an object), see mautic_point_action_types'])] array $properties = [],
         ?int $groupId = null,
         bool $repeatable = false,
         string $description = '',
@@ -239,7 +254,13 @@ class PointTools
     /**
      * Change a point action (name, points, settings, group, repeatable). Published actions change scoring from now on (no emails are sent by this).
      *
+     * @param int                       $id          Point action ID (from mautic_list_point_actions)
+     * @param string|null               $name        New name; omit to keep
+     * @param int|null                  $delta       New points per occurrence (negative subtracts); omit to keep
      * @param array<string, mixed>|null $properties Replace the settings
+     * @param int|null                  $groupId     New point group ID; 0 removes the group, omit to keep
+     * @param bool|null                 $repeatable  true awards every time, false once per contact; omit to keep
+     * @param string|null               $description New description; omit to keep
      *
      * @return array<string, mixed>
      */
@@ -322,6 +343,8 @@ class PointTools
     /**
      * List point triggers with their score threshold, group and events.
      *
+     * @param string $search Filter by text in the name; empty lists all
+     *
      * @return array<string, mixed>
      */
     public function listPointTriggers(RequestContext $context, string $search = ''): array
@@ -334,7 +357,12 @@ class PointTools
     /**
      * Create an unpublished point trigger: when a contact reaches `points` (in total, or in a point group), its events run. A person publishes it in Mautic. With triggerExistingLeads, publishing it runs the events for contacts that are already at the score.
      *
+     * @param string                     $name                 Trigger name, 1 to 191 characters
+     * @param int                        $points               Score at which the events run
      * @param list<array<string, mixed>> $events Events in order
+     * @param int|null                   $groupId              Point group ID; omit to use the contact's total points
+     * @param bool                       $triggerExistingLeads Also run the events for contacts already at the score
+     * @param string                     $description          Optional description
      *
      * @return array<string, mixed>
      */
@@ -374,7 +402,14 @@ class PointTools
     /**
      * Change a point trigger: name, threshold, group, events (replace the list; keep existing events by their key). A PUBLISHED trigger is live: contacts reaching the score get its events (emails, pushes), and with triggerExistingLeads new events run at once for contacts already at the score. That needs the scope mcp:campaigns:live: call with dryRun first and show the user live_effects.
      *
+     * @param int                             $id                   Point trigger ID (from mautic_list_point_triggers)
+     * @param string|null                     $name                 New name; omit to keep
+     * @param int|null                        $points               New score threshold; omit to keep
      * @param list<array<string, mixed>>|null $events Replace the events
+     * @param int|null                        $groupId              New point group ID; omit to keep (0 is ignored)
+     * @param bool|null                       $triggerExistingLeads Run events for contacts already at the score; omit to keep
+     * @param string|null                     $description          New description; omit to keep
+     * @param bool                            $dryRun               Validate and preview (incl. live_effects) without saving
      *
      * @return array<string, mixed>
      */
@@ -383,7 +418,7 @@ class PointTools
         int $id,
         ?string $name = null,
         ?int $points = null,
-        #[Schema(definition: ['anyOf' => [TRIGGER_EVENTS_SCHEMA, ['type' => 'null']]])] ?array $events = null,
+        #[Schema(definition: ['description' => 'Replace all events (list); omit to keep. Keep existing ones by their key', 'anyOf' => [TRIGGER_EVENTS_SCHEMA, ['type' => 'null']]])] ?array $events = null,
         ?int $groupId = null,
         ?bool $triggerExistingLeads = null,
         ?string $description = null,
@@ -455,9 +490,12 @@ class PointTools
     /**
      * Change a contact's points: add, subtract or set, in total or in a point group, with a reason in the points history. This can fire PUBLISHED point triggers right away (emails, pushes): call with dryRun first, it lists the triggers the change would fire.
      *
+     * @param int      $contactId Contact ID
+     * @param int      $points    Amount to add or subtract, or the new score when operator is "set"
      * @param string   $operator "add", "subtract" or "set"
      * @param int|null $groupId  Point group (default: the contact's total points)
      * @param string   $reason   Shown in the contact's points history
+     * @param bool     $dryRun   Show before/after points and triggers that would fire, without saving
      *
      * @return array<string, mixed>
      */
@@ -532,11 +570,11 @@ class PointTools
         if ($form->has('properties')) {
             $props              = array_key_exists('properties', $data) ? (array) $data['properties'] : (array) ($point->getProperties() ?? []);
             $data['properties'] = $this->tagNamesToIds($form->get('properties'), $props);
-            $this->requireFields($form->get('properties'), $data['properties'], sprintf('Point action (%s)', $point->getType()), 'mautic_describe_point_action_type');
+            $this->requireFields($form->get('properties'), $data['properties'], sprintf('Point action (%s)', $point->getType()), 'mautic_point_action_types');
         }
         $form->submit($data, false);
         if (!$form->isValid()) {
-            throw new ToolCallException(sprintf('Point action (%s) is invalid: %s. See mautic_describe_point_action_type.', $point->getType(), $this->describer->errors($form)));
+            throw new ToolCallException(sprintf('Point action (%s) is invalid: %s. See mautic_point_action_types.', $point->getType(), $this->describer->errors($form)));
         }
     }
 
@@ -550,7 +588,7 @@ class PointTools
     {
         $def = $this->points->getPointActions()['actions'][$type] ?? null;
         if (!is_array($def)) {
-            throw new ToolCallException(sprintf('Unknown point action type "%s". See mautic_list_point_action_types.', $type));
+            throw new ToolCallException(sprintf('Unknown point action type "%s". See mautic_point_action_types.', $type));
         }
 
         return $def;
@@ -561,7 +599,7 @@ class PointTools
     {
         $def = $this->triggers->getEvents()[$type] ?? null;
         if (!is_array($def)) {
-            throw new ToolCallException(sprintf('Unknown trigger event type "%s". See mautic_list_point_trigger_event_types.', $type));
+            throw new ToolCallException(sprintf('Unknown trigger event type "%s". See mautic_point_trigger_event_types.', $type));
         }
 
         return $def;
@@ -609,11 +647,11 @@ class PointTools
             }
             if ($form->has('properties')) {
                 $submit['properties'] = $this->tagNamesToIds($form->get('properties'), (array) $submit['properties']);
-                $this->requireFields($form->get('properties'), $submit['properties'], sprintf('Event %d (%s)', $i + 1, $type), 'mautic_describe_point_trigger_event_type');
+                $this->requireFields($form->get('properties'), $submit['properties'], sprintf('Event %d (%s)', $i + 1, $type), 'mautic_point_trigger_event_types');
             }
             $form->submit($submit, false);
             if (!$form->isValid()) {
-                throw new ToolCallException(sprintf('Event %d (%s) is invalid: %s. See mautic_describe_point_trigger_event_type.', $i + 1, $type, $this->describer->errors($form)));
+                throw new ToolCallException(sprintf('Event %d (%s) is invalid: %s. See mautic_point_trigger_event_types.', $i + 1, $type, $this->describer->errors($form)));
             }
             $data = (array) $form->getData();
             $id   = '' !== $key ? $key : 'new'.$i;
@@ -807,5 +845,29 @@ class PointTools
     private function prefix(): string
     {
         return defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
+    }
+
+    /**
+     * Point action types: without a type, list what can earn points (page hits, downloads, form submits, email opens, ...); with a type, describe its settings (field names, required, choices) for mautic_create_point_action / mautic_update_point_action.
+     *
+     * @param string $type Leave empty to list all types, or a type such as "url.hit" to describe it
+     *
+     * @return array<string, mixed>
+     */
+    public function pointActionTypes(RequestContext $context, string $type = ''): array
+    {
+        return '' === $type ? $this->listPointActionTypes($context) : $this->describePointActionType($context, $type);
+    }
+
+    /**
+     * Point trigger event types: without a type, list what can happen when a contact reaches a score (change tags, segments, stage, add to campaign, send email, ...; "outbound" marks events that reach the contact or other systems); with a type, describe its settings.
+     *
+     * @param string $type Leave empty to list all types, or a type such as "lead.changetags" to describe it
+     *
+     * @return array<string, mixed>
+     */
+    public function pointTriggerEventTypes(RequestContext $context, string $type = ''): array
+    {
+        return '' === $type ? $this->listPointTriggerEventTypes($context) : $this->describePointTriggerEventType($context, $type);
     }
 }

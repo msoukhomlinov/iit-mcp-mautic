@@ -22,8 +22,9 @@ jq -e '[.result.tools[] | select((.description | length) > 4096)] | length == 0'
   && pass "no tool description exceeds 4,096 characters" || fail "tool description over 4,096 characters"
 jq -e '(.result.tools[] | select(.name == "mautic_send_email") | ._meta["anthropic/requiresUserInteraction"]) == true and ([.result.tools[] | select(.name == "mautic_preview_email_send") | ._meta["anthropic/requiresUserInteraction"]] | all(. != true))' <<<"$list" >/dev/null \
   && pass "mautic_send_email asks a person (requiresUserInteraction); the preview does not" || { jq -c '.result.tools[] | select(.name == "mautic_send_email")' <<<"$list" | head -c 600; fail "requiresUserInteraction missing on mautic_send_email"; }
-undescribed="$(jq '[.result.tools[] | .inputSchema.properties // {} | to_entries[] | select((.value.description // "") == "")] | length' <<<"$list")"
-echo "  info  tools/list with every tier on: $n_tools tools, $list_bytes bytes; $undescribed parameters without a description"
+undescribed="$(jq -r '[.result.tools[] | .name as $n | (.inputSchema.properties // {} | to_entries[] | select((.value.description // "") == "") | "\($n).\(.key)")] | join(" ")' <<<"$list")"
+[[ -z "$undescribed" ]] && pass "every parameter of every tool has a description" || { echo "  undescribed: $undescribed"; fail "parameters without a description"; }
+echo "  info  tools/list with every tier on: $n_tools tools, $list_bytes bytes"
 
 set_params '{"intellectit_mcp_allow_send": false}'
 mcp_init "$access"

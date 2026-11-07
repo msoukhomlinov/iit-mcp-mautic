@@ -731,7 +731,7 @@ class CampaignFlowBuilder
                 $origin   = $error->getOrigin();
                 $errors[] = ($origin ? $origin->getName().': ' : '').$error->getMessage();
             }
-            throw new ToolCallException(sprintf('Step "%s" (%s) is invalid: %s. Use mautic_describe_campaign_step_type for its properties.', $key, $step['type'], implode('; ', array_unique($errors))));
+            throw new ToolCallException(sprintf('Step "%s" (%s) is invalid: %s. Use mautic_campaign_step_types for its properties.', $key, $step['type'], implode('; ', array_unique($errors))));
         }
 
         $result = array_merge($data, (array) $form->getData());
@@ -766,7 +766,7 @@ class CampaignFlowBuilder
             }
         }
 
-        throw new ToolCallException(sprintf('Unknown step type "%s". See mautic_list_campaign_step_types.', $type));
+        throw new ToolCallException(sprintf('Unknown step type "%s". See mautic_campaign_step_types.', $type));
     }
 
     /**

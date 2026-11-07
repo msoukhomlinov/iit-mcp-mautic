@@ -34,7 +34,7 @@ mcp_init "$access"
 jq -e '.result.serverInfo.name == "Mautic"' "$WORK/init" >/dev/null && [[ -n "$MCP_SESSION" ]] \
   && pass "initialize (session stored in the database)" || { cat "$WORK/init"; fail "initialize"; }
 tools="$(mcp_post "$access" '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')"
-jq -e '(.result.tools | length) >= 60 and (.result | has("nextCursor") | not)' <<<"$tools" >/dev/null \
+jq -e '(.result.tools | length) >= 55 and (.result | has("nextCursor") | not)' <<<"$tools" >/dev/null \
   && pass "tools/list: $(jq '.result.tools | length' <<<"$tools") tools on one page" || { echo "$tools" | head -c 600; fail "tools/list"; }
 
 # shellcheck source=tests/functional/core.sh
