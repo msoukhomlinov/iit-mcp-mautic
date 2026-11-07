@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -14,8 +14,8 @@ use Mautic\LeadBundle\Segment\ContactSegmentService;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
-use MauticPlugin\KopexaMcpBundle\Service\SegmentEffects;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\SegmentEffects;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;

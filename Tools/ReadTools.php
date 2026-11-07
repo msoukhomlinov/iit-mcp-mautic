@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Model\CampaignModel;
@@ -16,9 +16,9 @@ use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\CampaignFlowBuilder;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
-use MauticPlugin\KopexaMcpBundle\Service\EmailTopics;
+use MauticPlugin\IntellectItMcpBundle\Service\CampaignFlowBuilder;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\EmailTopics;
 
 /**
  * Read-only tools (scope mcp:read). Every call is checked against the
@@ -310,7 +310,7 @@ class ReadTools
         if (!$this->auth->canViewOther($permissionBase)) {
             $force[] = ['column' => $alias.'.createdBy', 'expr' => 'eq', 'value' => $this->auth->currentUserId()];
         }
-        $max    = (int) $this->parameters->get('kopexa_mcp_page_limit', 50);
+        $max    = (int) $this->parameters->get('intellectit_mcp_page_limit', 50);
         $result = $model->getEntities([
             'start'          => max(0, $offset),
             'limit'          => min(max(1, $limit), $max),

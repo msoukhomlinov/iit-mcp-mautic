@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-use MauticPlugin\KopexaMcpBundle\Controller\McpController;
+use MauticPlugin\IntellectItMcpBundle\Controller\McpController;
 
 return [
     'name'        => 'MCP',
     'description' => 'Model Context Protocol server for AI assistants (Claude, ChatGPT). Read access to contacts, segments, emails and campaigns; creates unpublished email and campaign drafts and edits campaign flows, including running campaigns (live changes).',
     'version'     => '0.8.0', // x-release-please-version
-    'author'      => 'Kopexa',
+    'author'      => 'IntellectIT (based on Kopexa)',
     'routes'      => [
         'public' => [
-            'kopexa_mcp_endpoint' => [
+            'intellectit_mcp_endpoint' => [
                 'path'       => '/mcp',
                 'controller' => McpController::class.'::mcpAction',
                 'method'     => 'GET|POST|DELETE|OPTIONS',
             ],
             // RFC 9728: both the plain and the path-inserted location.
-            'kopexa_mcp_resource_metadata' => [
+            'intellectit_mcp_resource_metadata' => [
                 'path'       => '/.well-known/oauth-protected-resource',
                 'controller' => McpController::class.'::resourceMetadataAction',
                 'method'     => 'GET|OPTIONS',
             ],
-            'kopexa_mcp_resource_metadata_path' => [
+            'intellectit_mcp_resource_metadata_path' => [
                 'path'       => '/.well-known/oauth-protected-resource/mcp',
                 'controller' => McpController::class.'::resourceMetadataAction',
                 'method'     => 'GET|OPTIONS',
@@ -31,9 +31,9 @@ return [
     ],
     'parameters' => [
         // Maximum items a list tool returns.
-        'kopexa_mcp_page_limit' => 50,
+        'intellectit_mcp_page_limit' => 50,
         // Allow changes to RUNNING (published) campaigns at all. The token
         // additionally needs the scope mcp:campaigns:live.
-        'kopexa_mcp_live_campaign_edits' => true,
+        'intellectit_mcp_live_campaign_edits' => true,
     ],
 ];

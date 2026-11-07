@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Tools;
+namespace MauticPlugin\IntellectItMcpBundle\Tools;
 
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\LeadBundle\Entity\Company;
@@ -14,7 +14,7 @@ use Mautic\LeadBundle\Model\LeadModel;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
-use MauticPlugin\KopexaMcpBundle\Service\McpUserContext;
+use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
 const COMPANY_SCHEMA = [
     'type'                 => 'object',

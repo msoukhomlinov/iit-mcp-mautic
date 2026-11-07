@@ -107,11 +107,11 @@ jq -e '(.changes.removed | length == 1) and (.steps | length == 4)' <<<"$gone" >
   && pass "remove_campaign_step with confirm (contacts redirected to the reminder)" || { echo "$gone" | head -c 1500; fail "remove_campaign_step"; }
 console mautic:campaigns:trigger -i "$campid" >/dev/null 2>&1 \
   && pass "campaign keeps running after the edits (campaigns:trigger)" || fail "campaigns:trigger after edits"
-# Operator switch: kopexa_mcp_live_campaign_edits=false refuses even a token
+# Operator switch: intellectit_mcp_live_campaign_edits=false refuses even a token
 # with mcp:campaigns:live (the MCP session survives the config change).
-set_params '{"kopexa_mcp_live_campaign_edits": false}'
+set_params '{"intellectit_mcp_live_campaign_edits": false}'
 off="$(result "$(call "$live_token" update_campaign_step "{\"campaignId\":$campid,\"key\":\"$reminder_id\",\"wait\":{\"interval\":6,\"unit\":\"d\"}}")")"
-set_params '{"kopexa_mcp_live_campaign_edits": true}'
+set_params '{"intellectit_mcp_live_campaign_edits": true}'
 grep -q 'disabled on this Mautic instance' <<<"$off" \
   && pass "liveCampaignEdits=false locks running campaigns even with the scope" || { echo "$off" | head -c 800; fail "operator switch"; }
 stats="$(result "$(call "$access" get_email_stats "{\"id\":$eid}")")"

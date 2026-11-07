@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\DependencyInjection;
+namespace MauticPlugin\IntellectItMcpBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
-final class KopexaMcpExtension extends Extension
+final class IntellectItMcpExtension extends Extension
 {
     /** @param array<mixed> $configs */
     public function load(array $configs, ContainerBuilder $container): void

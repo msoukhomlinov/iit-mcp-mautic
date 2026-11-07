@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Service;
+namespace MauticPlugin\IntellectItMcpBundle\Service;
 
 use Mautic\CoreBundle\Model\AuditLogModel;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
@@ -100,7 +100,7 @@ class McpUserContext
     public function audit(string $object, int|string $objectId, string $action, array $details = []): void
     {
         $this->auditLog->writeToLog([
-            'bundle'   => 'kopexa_mcp',
+            'bundle'   => 'intellectit_mcp',
             'object'   => $object,
             'objectId' => $objectId,
             'action'   => $action,

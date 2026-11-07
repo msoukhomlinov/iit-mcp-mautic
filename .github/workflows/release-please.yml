@@ -38,4 +38,4 @@ jobs:
           fi
           curl -fsS -X POST -H 'Content-Type: application/json' \
             "https://packagist.org/api/update-package?username=$PACKAGIST_USERNAME&apiToken=$PACKAGIST_API_TOKEN" \
-            -d '{"repository":{"url":"https://github.com/kopexa-grc/mautic-mcp-bundle"}}'
+            -d '{"repository":{"url":"https://github.com/msoukhomlinov/mautic-mcp-bundle"}}'

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Controller;
+namespace MauticPlugin\IntellectItMcpBundle\Controller;
 
 use GuzzleHttp\Psr7\ServerRequest;
-use MauticPlugin\KopexaMcpBundle\Service\McpScopes;
-use MauticPlugin\KopexaMcpBundle\Service\McpServerFactory;
+use MauticPlugin\IntellectItMcpBundle\Service\McpScopes;
+use MauticPlugin\IntellectItMcpBundle\Service\McpServerFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -41,7 +41,7 @@ final class McpController
 
             $response = $this->factory->server()->run($this->factory->transport($psr));
         } catch (\Throwable $e) {
-            $this->logger->error('kopexa_mcp: request failed', ['exception' => $e]);
+            $this->logger->error('intellectit_mcp: request failed', ['exception' => $e]);
 
             return new JsonResponse(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32603, 'message' => 'Internal error']], 500);
         }

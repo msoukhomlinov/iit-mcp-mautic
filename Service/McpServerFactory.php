@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\KopexaMcpBundle\Service;
+namespace MauticPlugin\IntellectItMcpBundle\Service;
 
 use Doctrine\DBAL\Connection;
 use Firebase\JWT\Key;
@@ -18,15 +18,15 @@ use Mcp\Server\Transport\Http\OAuth\JwtTokenValidator;
 use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata;
 use Mcp\Server\Transport\Http\OAuth\ScopePolicy;
 use Mcp\Server\Transport\StreamableHttpTransport;
-use MauticPlugin\KopexaMcpBundle\Tools\CompanyTools;
-use MauticPlugin\KopexaMcpBundle\Tools\ContactTools;
-use MauticPlugin\KopexaMcpBundle\Tools\LayoutTools;
-use MauticPlugin\KopexaMcpBundle\Tools\PointTools;
-use MauticPlugin\KopexaMcpBundle\Tools\ProjectTools;
-use MauticPlugin\KopexaMcpBundle\Tools\SegmentTools;
-use MauticPlugin\KopexaMcpBundle\Tools\StageTools;
-use MauticPlugin\KopexaMcpBundle\Tools\ReadTools;
-use MauticPlugin\KopexaMcpBundle\Tools\WriteTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\CompanyTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\ContactTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\LayoutTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\PointTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\ProjectTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\SegmentTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\StageTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\ReadTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\WriteTools;
 use MauticPlugin\KopexaOAuthBundle\Service\Settings as OAuthSettings;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -119,13 +119,13 @@ class McpServerFactory
     public function server(): Server
     {
         $prefix = defined('MAUTIC_TABLE_PREFIX') ? (string) MAUTIC_TABLE_PREFIX : '';
-        $cache  = new Psr16Cache(new DoctrineDbalAdapter($this->connection, 'mcp', 0, ['db_table' => $prefix.'kopexa_mcp_sessions']));
+        $cache  = new Psr16Cache(new DoctrineDbalAdapter($this->connection, 'mcp', 0, ['db_table' => $prefix.'intellectit_mcp_sessions']));
 
         $ro = new ToolAnnotations(readOnlyHint: true, openWorldHint: false);
         $rw = new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false);
 
         return Server::builder()
-            ->setServerInfo('Mautic', self::VERSION, 'Mautic marketing automation (Kopexa build)', websiteUrl: $this->oauth->issuer(), title: 'Mautic')
+            ->setServerInfo('Mautic', self::VERSION, 'Mautic marketing automation (IntellectIT build)', websiteUrl: $this->oauth->issuer(), title: 'Mautic')
             // One page for all tools: not every client follows nextCursor.
             ->setPaginationLimit(200)
             ->setInstructions(implode("\n", [

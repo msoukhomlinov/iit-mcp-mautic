@@ -1,6 +1,6 @@
-# kopexa/mautic-mcp-bundle
+# intellectit/mautic-mcp-bundle
 
-[![Packagist](https://img.shields.io/packagist/v/kopexa/mautic-mcp-bundle)](https://packagist.org/packages/kopexa/mautic-mcp-bundle) [![ci](https://github.com/kopexa-grc/mautic-mcp-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/kopexa-grc/mautic-mcp-bundle/actions/workflows/ci.yml)
+[![Packagist](https://img.shields.io/packagist/v/intellectit/mautic-mcp-bundle)](https://packagist.org/packages/intellectit/mautic-mcp-bundle) [![ci](https://github.com/msoukhomlinov/mautic-mcp-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/msoukhomlinov/mautic-mcp-bundle/actions/workflows/ci.yml)
 
 [Model Context Protocol](https://modelcontextprotocol.io) server for
 Mautic 7 at `/mcp` (Streamable HTTP). It is built on the official
@@ -11,7 +11,7 @@ Mautic 7 at `/mcp` (Streamable HTTP). It is built on the official
 Requires **Mautic 7.2+** (Composer-based installation) and **PHP 8.4+**:
 
 ```bash
-composer require kopexa/mautic-mcp-bundle
+composer require intellectit/mautic-mcp-bundle
 php bin/console mautic:plugins:reload
 ```
 
@@ -83,4 +83,4 @@ Setup, tools and permission model: [docs/mcp.md](https://github.com/kopexa-grc/m
   are committed as `fix(deps):` and so lead to a patch release; CI-only
   updates (`ci:`) do not.
 
-Apache-2.0 · [Kopexa](https://kopexa.com)
+Apache-2.0 · IntellectIT, forked from [kopexa-grc/mautic-mcp-bundle](https://github.com/kopexa-grc/mautic-mcp-bundle) by [Kopexa](https://kopexa.com)

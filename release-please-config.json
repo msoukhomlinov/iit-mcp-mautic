@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "kopexa/mautic-mcp-bundle",
+      "package-name": "intellectit/mautic-mcp-bundle",
       "version-file": "VERSION",
       "include-component-in-tag": false,
       "include-v-in-tag": true,
