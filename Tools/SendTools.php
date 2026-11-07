@@ -51,7 +51,28 @@ class SendTools
      */
     public function previewEmailSend(RequestContext $context, int $emailId, array $contactIds = [], array $segmentIds = []): array
     {
-        return $this->plan($context, $emailId, $contactIds, $segmentIds, 'view')['preview'];
+        $preview = $this->plan($context, $emailId, $contactIds, $segmentIds, 'view')['preview'];
+        $this->auditPreview($emailId, $preview, 'preview');
+
+        return $preview;
+    }
+
+    /**
+     * Record that a send was previewed (who looked at what), so a later send can be traced to its preview. Not counted against the hourly limit.
+     *
+     * @param array<string, mixed> $preview
+     */
+    private function auditPreview(int $emailId, array $preview, string $via): void
+    {
+        $this->auth->audit('email', $emailId, 'send_preview', [
+            'mode'            => $preview['mode'],
+            'targets'         => $preview['targets'],
+            'targets_hash'    => $preview['targets_hash'],
+            'recipient_count' => $preview['recipient_count'],
+            'can_send'        => $preview['can_send'],
+            'blockers'        => $preview['blockers'],
+            'call'            => $via,
+        ]);
     }
 
     /**
@@ -93,6 +114,7 @@ class SendTools
         $plan    = $this->plan($context, $emailId, $contactIds, $segmentIds, 'edit');
         $preview = $plan['preview'];
         if (!$confirm) {
+            $this->auditPreview($emailId, $preview, 'send_without_confirm');
             $next = 'unattended' === $this->parameters->get('intellectit_mcp_caller_mode', 'attended')
                 ? 'Check this preview against your task, then call again with confirm=true, expectedRecipientCount and targetsHash.'
                 : 'Show this preview to the user and call again with confirm=true after they agree.';

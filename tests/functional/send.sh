@@ -31,10 +31,15 @@ prev="$(result "$(call "$send_token" mautic_preview_email_send "{\"emailId\":$em
 jq -e --argjson ok "$c_ok" --argjson d "$c_dnc" --argjson n "$c_none" '.mode == "contacts" and .recipient_count == 1 and .recipients[0].id == $ok and .excluded.do_not_contact == [$d] and .excluded.no_valid_email == [$n] and .can_send == true' <<<"$prev" >/dev/null \
   && pass "mautic_preview_email_send: 1 recipient; DNC and no-address contacts excluded and named" || { echo "$prev" | head -c 900; fail "preview"; }
 
+[[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send_preview' AND details LIKE '%targets_hash%' AND details LIKE '%\"ref\"%'")" -ge 1 ]] \
+  && pass "a send preview is written to the audit log (with targets_hash and ref)" || fail "preview not audited"
+
 unconf="$(result "$(call "$send_token" mautic_send_email "{\"emailId\":$em,\"contactIds\":[$c_ok]}")")"
 jq -e '.sent == false and .recipient_count == 1' <<<"$unconf" >/dev/null \
   && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em")" == 0 ]] \
-  && pass "mautic_send_email without confirm sends nothing and returns the preview" || { echo "$unconf" | head -c 600; fail "unconfirmed send"; }
+  && [[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send_preview' AND details LIKE '%send_without_confirm%'")" -ge 1 ]] \
+  && [[ "$(db "SELECT COUNT(*) FROM audit_log WHERE bundle = 'intellectit_mcp' AND object = 'email' AND object_id = $em AND action = 'send'")" == 0 ]] \
+  && pass "mautic_send_email without confirm sends nothing, returns the preview, and is audited as a preview (not as a send)" || { echo "$unconf" | head -c 600; fail "unconfirmed send"; }
 
 draft="$(call "$send_token" mautic_send_email "{\"emailId\":$em_off,\"contactIds\":[$c_ok],\"confirm\":true}")"
 grep -q 'not published' <<<"$draft" && [[ "$(db "SELECT COUNT(*) FROM email_stats WHERE email_id = $em_off")" == 0 ]] \
