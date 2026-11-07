@@ -76,6 +76,7 @@ Token scopes (`mcp:write`, `mcp:contacts:write`, `mcp:campaigns:live`) still app
 
 ```php
 $parameters['intellectit_mcp_allow_send'] = true;           // register the send tools
+$parameters['intellectit_mcp_allow_destructive'] = true;    // register delete and merge (also needs scope mcp:destructive)
 $parameters['intellectit_mcp_caller_mode'] = 'unattended';  // default 'attended'; unattended: instructions never ask a person, send_email does not request a human prompt
 $parameters['intellectit_mcp_allow_segment_send'] = false;  // also allow whole segments
 $parameters['intellectit_mcp_send_max_recipients'] = 100;   // cap per call

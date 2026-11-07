@@ -21,6 +21,7 @@ use Mcp\Server\Transport\Http\OAuth\ScopePolicy;
 use Mcp\Server\Transport\StreamableHttpTransport;
 use MauticPlugin\IntellectItMcpBundle\Tools\CompanyTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ContactTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\DestructiveTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\InsightTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\LayoutTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\PointTools;
@@ -55,6 +56,9 @@ class McpServerFactory
     /** Tools that need the opt-in scope mcp:send (and intellectit_mcp_allow_send). */
     private const SEND_TOOLS = ['mautic_preview_email_send', 'mautic_send_email'];
 
+    /** Irreversible tools: need the opt-in scope mcp:destructive and intellectit_mcp_allow_destructive. */
+    private const DESTRUCTIVE_TOOLS = ['mautic_delete_record', 'mautic_merge_contacts'];
+
     public function __construct(
         private readonly OAuthSettings $oauth,
         private readonly ReadTools $read,
@@ -68,6 +72,7 @@ class McpServerFactory
         private readonly ProjectTools $projectTools,
         private readonly InsightTools $insightTools,
         private readonly SendTools $sendTools,
+        private readonly DestructiveTools $destructiveTools,
         private readonly Connection $connection,
         private readonly LoggerInterface $logger,
         private readonly CoreParametersHelper $parameters,
@@ -84,7 +89,7 @@ class McpServerFactory
         return new ProtectedResourceMetadata(
             resource: $this->oauth->resource(),
             authorizationServers: [$this->oauth->issuer()],
-            scopesSupported: [McpScopes::READ, McpScopes::WRITE, McpScopes::CONTACTS_WRITE, McpScopes::CAMPAIGNS_LIVE, McpScopes::SEND],
+            scopesSupported: [McpScopes::READ, McpScopes::WRITE, McpScopes::CONTACTS_WRITE, McpScopes::CAMPAIGNS_LIVE, McpScopes::SEND, McpScopes::DESTRUCTIVE],
             resourceName: 'Mautic',
             resourceDocumentation: 'https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md',
         );
@@ -106,7 +111,7 @@ class McpServerFactory
         );
         $scopes = new ScopePolicy(
             default: [McpScopes::READ],
-            tools: array_fill_keys(self::WRITE_TOOLS, [McpScopes::WRITE]) + array_fill_keys(self::CONTACT_TOOLS, [McpScopes::CONTACTS_WRITE]) + array_fill_keys(self::SEND_TOOLS, [McpScopes::SEND]),
+            tools: array_fill_keys(self::WRITE_TOOLS, [McpScopes::WRITE]) + array_fill_keys(self::CONTACT_TOOLS, [McpScopes::CONTACTS_WRITE]) + array_fill_keys(self::SEND_TOOLS, [McpScopes::SEND]) + array_fill_keys(self::DESTRUCTIVE_TOOLS, [McpScopes::DESTRUCTIVE]),
         );
 
         return new StreamableHttpTransport(
@@ -165,13 +170,14 @@ class McpServerFactory
                 'Contacts, companies, segments (scope mcp:contacts:write): mautic_upsert_contacts / mautic_upsert_companies match on unique fields, up to 100 per call (aliases: mautic_list_contact_fields; mautic_create_contact_field adds missing ones). Segments are static (mautic_create_segment, mautic_change_segment_contacts) or dynamic (filters: mautic_list_segment_filter_fields). Joining a segment can start running campaigns and segment emails: call with dryRun first, show live_effects and matching_contacts, save only after confirmation. Never change records the user did not ask for; Do-Not-Contact is never changed.',
                 'Lead scoring: point groups, point actions (mautic_point_action_types) and triggers (mautic_point_trigger_event_types). New ones are created unpublished; a person publishes them. Changing a PUBLISHED trigger is live and needs mcp:campaigns:live; mautic_adjust_contact_points can fire triggers at once. dryRun first, show live_effects / triggers. Stages are the contact lifecycle (mautic_list_stages): new stages are unpublished; mautic_set_contact_stage only moves into published stages and can make segments and campaigns pick the contact up (dryRun first). Projects group items by topic and change nothing else.',
                 'Running (published) campaigns: flows can be edited (mautic_set_campaign_steps, update/add/mautic_remove_campaign_step) only if the instance allows it and the token has mcp:campaigns:live. Changes are live and can send email: dryRun first, show live_effects (outbound steps, contacts, save_allowed), save only after confirmation. New campaigns and emails are created unpublished.',
-                'Sending tools need the operator switch and scope mcp:send; confirm with expectedRecipientCount from the preview. Segment sends need a further switch, reach only the email\'s own segments and are capped per call. Campaign steps on running campaigns, segment joins and point triggers can also cause email (see live_effects). Return the "url" of created drafts so the user can review them.',
+                'Delete and merge (mautic_delete_record, mautic_merge_contacts) need an operator switch and scope mcp:destructive, preview first, confirm=true plus the expected name or loser id. Sending tools need the operator switch and scope mcp:send; confirm with expectedRecipientCount from the preview. Segment sends need a further switch, reach only the email\'s own segments and are capped per call. Campaign steps on running campaigns, segment joins and point triggers can also cause email (see live_effects). Return the "url" of created drafts so the user can review them.',
             ]))
             ->setLogger($this->logger)
             ->setSession(new Psr16SessionStore($cache, 'session-', 3600));
 
         $allowWrite = (bool) $this->parameters->get('intellectit_mcp_allow_write', false);
         $allowSend  = (bool) $this->parameters->get('intellectit_mcp_allow_send', false);
+        $allowDestructive = (bool) $this->parameters->get('intellectit_mcp_allow_destructive', false);
         $gated      = array_merge(self::WRITE_TOOLS, self::CONTACT_TOOLS);
 
         // Operator ceiling: with writes off, write tools are not even listed (the token scopes still apply on top).
@@ -200,6 +206,8 @@ class McpServerFactory
             [[$this->insightTools, 'getSegmentSummary'], 'mautic_get_segment_summary', 'Segment summary', $ro],
             [[$this->insightTools, 'findDuplicateContacts'], 'mautic_find_duplicate_contacts', 'Find duplicate contacts', $ro],
             [[$this->insightTools, 'getCampaignHealth'], 'mautic_get_campaign_health', 'Campaign health check', $ro],
+            [[$this->destructiveTools, 'deleteRecord'], 'mautic_delete_record', 'Delete a record (cannot be undone)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false), ['anthropic/requiresUserInteraction' => true]],
+            [[$this->destructiveTools, 'mergeContacts'], 'mautic_merge_contacts', 'Merge two contacts (cannot be undone)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false), ['anthropic/requiresUserInteraction' => true]],
             [[$this->sendTools, 'previewEmailSend'], 'mautic_preview_email_send', 'Preview an email send', new ToolAnnotations(readOnlyHint: true, openWorldHint: false)],
             [[$this->sendTools, 'sendEmail'], 'mautic_send_email', 'Send an email to contacts or segments', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true), ['anthropic/requiresUserInteraction' => true]],
             [[$this->layoutTools, 'listEmailLayouts'], 'mautic_list_email_layouts', 'Brand email layouts', $ro],
@@ -238,8 +246,9 @@ class McpServerFactory
             [[$this->projectTools, 'changeProjectItems'], 'mautic_change_project_items', 'Add or remove items of a project', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false)],
         ] as $row) {
             [$handler, $name, $title, $annotations, $meta] = array_pad($row, 5, null);
-            if (in_array($name, self::SEND_TOOLS, true) ? $allowSend : ($allowWrite || !in_array($name, $gated, true))) {
-                // mautic_send_email carries requiresUserInteraction (a client prompts a person for every send) unless the operator runs unattended.
+            $enabled = in_array($name, self::DESTRUCTIVE_TOOLS, true) ? $allowDestructive : (in_array($name, self::SEND_TOOLS, true) ? $allowSend : ($allowWrite || !in_array($name, $gated, true)));
+            if ($enabled) {
+                // mautic_send_email, mautic_delete_record and mautic_merge_contacts carry requiresUserInteraction (a client prompts a person) unless the operator runs unattended.
                 $builder->addTool($handler, $name, $title, null, $annotations, null, null, $unattended ? null : $meta);
             }
         }

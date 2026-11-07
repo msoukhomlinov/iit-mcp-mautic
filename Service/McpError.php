@@ -28,7 +28,7 @@ final class McpError
         self::PERMISSION_DENIED => '/role does not allow|access token|needs the permission|Your Mautic user/i',
         self::UPSTREAM_ERROR    => '/^Mautic (did not|could not|rejected)/',
         self::NOT_FOUND         => '/ not found|there is no step|does not exist/i',
-        self::BLOCKED_BY_POLICY => '/not published|switched off|disabled on this|operator|published campaigns? |Only unpublished|via MCP|at most \d+|^Not sent|^This would delete|running/i',
+        self::BLOCKED_BY_POLICY => '/not published|switched off|disabled on this|operator|published campaigns? |Only unpublished|via MCP|at most \d+|^Not (sent|deleted)|^This would delete|running/i',
     ];
 
     private static ?string $correlationId = null;
