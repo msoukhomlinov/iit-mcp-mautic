@@ -12,6 +12,7 @@ use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mcp\Capability\Attribute\Schema;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -125,14 +126,14 @@ class CompanyTools
                 }
                 $unknown = array_diff(array_keys($data), array_keys($known));
                 if ([] !== $unknown) {
-                    throw new ToolCallException(sprintf('Unknown company field(s): %s. See mautic_list_contact_fields with object "company".', implode(', ', $unknown)));
+                    throw McpError::from(sprintf('Unknown company field(s): %s. See mautic_list_contact_fields with object "company".', implode(', ', $unknown)));
                 }
                 [, $found] = IdentifyCompanyHelper::findCompany($data, $this->companies);
                 $company   = [] !== $found ? end($found) : new Company();
                 $isNew     = !$company->getId();
                 if ($isNew) {
                     if (in_array($data['companyname'] ?? '', ['', null], true)) {
-                        throw new ToolCallException('New companies need "companyname".');
+                        throw McpError::from('New companies need "companyname".');
                     }
                     $this->auth->require($context, 'lead:leads:create');
                 } else {
@@ -250,7 +251,7 @@ class CompanyTools
             }
             $lead = $this->leads->getEntity($id);
             if (!$lead instanceof Lead || !$lead->getId()) {
-                throw new ToolCallException(sprintf('Contact %d not found.', $id));
+                throw McpError::from(sprintf('Contact %d not found.', $id));
             }
             $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'edit');
             $leads[] = $lead;
@@ -263,7 +264,7 @@ class CompanyTools
     {
         $company = $this->companies->getEntity($id);
         if (!$company instanceof Company || !$company->getId()) {
-            throw new ToolCallException(sprintf('Company %d not found.', $id));
+            throw McpError::from(sprintf('Company %d not found.', $id));
         }
 
         return $company;

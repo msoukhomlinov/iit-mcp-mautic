@@ -14,7 +14,7 @@ use Mautic\LeadBundle\Entity\LeadList;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\CampaignFlowBuilder;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
@@ -67,7 +67,7 @@ class ReadTools
     {
         $lead = $this->leads->getEntity($id);
         if (!$lead instanceof Lead || !$lead->getId()) {
-            throw new ToolCallException(sprintf('Contact %d not found.', $id));
+            throw McpError::from(sprintf('Contact %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'view');
 
@@ -95,7 +95,7 @@ class ReadTools
     {
         $lead = $this->leads->getEntity($id);
         if (!$lead instanceof Lead || !$lead->getId()) {
-            throw new ToolCallException(sprintf('Contact %d not found.', $id));
+            throw McpError::from(sprintf('Contact %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'view');
         $data = $this->leads->getEngagements($lead, ['search' => $search, 'includeEvents' => array_values(array_map('strval', $types)), 'excludeEvents' => []], ['timestamp', 'DESC'], $page, $limit);
@@ -257,7 +257,7 @@ class ReadTools
     {
         $campaign = $this->campaigns->getEntity($id);
         if (!$campaign instanceof Campaign || !$campaign->getId()) {
-            throw new ToolCallException(sprintf('Campaign %d not found.', $id));
+            throw McpError::from(sprintf('Campaign %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $campaign, 'campaign:campaigns', 'view');
 
@@ -299,7 +299,7 @@ class ReadTools
     {
         $email = $this->emails->getEntity($id);
         if (!$email instanceof Email || !$email->getId()) {
-            throw new ToolCallException(sprintf('Email %d not found.', $id));
+            throw McpError::from(sprintf('Email %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $email, 'email:emails', 'view');
 

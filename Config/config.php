@@ -36,6 +36,9 @@ return [
         'intellectit_mcp_allow_write' => false,
         // Real email sending (mautic_preview_email_send, mautic_send_email). Off by default; the
         // token additionally needs the opt-in scope mcp:send. Unpublished emails are never sent.
+        // attended: a person is behind the client and is asked before changes and sends (default).
+        // unattended: no questions; policy comes only from the switches, scopes and roles, and sends still need preview, confirm=true and expectedRecipientCount.
+        'intellectit_mcp_caller_mode' => 'attended',
         'intellectit_mcp_allow_send' => false,
         // Sending to whole segments needs this on top of intellectit_mcp_allow_send.
         'intellectit_mcp_allow_segment_send' => false,

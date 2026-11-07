@@ -14,7 +14,7 @@ use Mautic\LeadBundle\Model\DoNotContact;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 
@@ -68,19 +68,23 @@ class SendTools
         $plan    = $this->plan($context, $emailId, $contactIds, $segmentIds, 'edit');
         $preview = $plan['preview'];
         if (!$confirm) {
-            return ['sent' => false, 'message' => 'Nothing sent. Show this preview to the user and call again with confirm=true after they agree.'] + $preview;
+            $next = 'unattended' === $this->parameters->get('intellectit_mcp_caller_mode', 'attended')
+                ? 'Check this preview against your task, then call again with confirm=true and expectedRecipientCount.'
+                : 'Show this preview to the user and call again with confirm=true after they agree.';
+
+            return ['sent' => false, 'message' => 'Nothing sent. '.$next] + $preview;
         }
         if ([] !== $preview['blockers']) {
             $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'blockers' => $preview['blockers']]);
-            throw new ToolCallException('Not sent: '.implode(' ', $preview['blockers']));
+            throw McpError::from('Not sent: '.implode(' ', $preview['blockers']));
         }
 
         if (null === $expectedRecipientCount) {
-            throw new ToolCallException(sprintf('Pass expectedRecipientCount (the preview shows %d) to confirm this send.', $preview['recipient_count']));
+            throw McpError::from(sprintf('Pass expectedRecipientCount (the preview shows %d) to confirm this send.', $preview['recipient_count']));
         }
         if ($expectedRecipientCount !== $preview['recipient_count']) {
             $this->auth->audit('email', $emailId, 'send_blocked', ['mode' => $preview['mode'], 'expected' => $expectedRecipientCount, 'actual' => $preview['recipient_count']]);
-            throw new ToolCallException(sprintf('Not sent: you expected %d recipients but %d would receive it now. Preview again and confirm the new number with the user.', $expectedRecipientCount, $preview['recipient_count']));
+            throw McpError::from(sprintf('Not sent: you expected %d recipients but %d would receive it now. Preview again and confirm the new number with the user.', $expectedRecipientCount, $preview['recipient_count']));
         }
 
         /** @var Email $email */
@@ -96,7 +100,7 @@ class SendTools
                 'return_errors' => true,
             ]);
             if (false === $errors) {
-                throw new ToolCallException('Mautic did not send the email.');
+                throw McpError::from('Mautic did not send the email.');
             }
             $failed = is_array($errors) ? count($errors) : 0;
             $result = ['sent' => true, 'sent_count' => count($plan['recipients']) - $failed, 'failed_count' => $failed];
@@ -128,11 +132,11 @@ class SendTools
         $contactIds = array_values(array_unique(array_map('intval', $contactIds)));
         $segmentIds = array_values(array_unique(array_map('intval', $segmentIds)));
         if (($contactIds === []) === ($segmentIds === [])) {
-            throw new ToolCallException('Give either contactIds or segmentIds (exactly one of them).');
+            throw McpError::from('Give either contactIds or segmentIds (exactly one of them).');
         }
         $email = $this->emails->getEntity($emailId);
         if (!$email instanceof Email || !$email->getId()) {
-            throw new ToolCallException(sprintf('Email %d not found.', $emailId));
+            throw McpError::from(sprintf('Email %d not found.', $emailId));
         }
         $this->auth->requireEntityAccess($context, $email, 'email:emails', 'view');
 
@@ -156,7 +160,7 @@ class SendTools
             foreach (array_slice($contactIds, 0, $cap + 1) as $id) {
                 $lead = $this->leads->getEntity($id);
                 if (!$lead instanceof Lead || !$lead->getId()) {
-                    throw new ToolCallException(sprintf('Contact %d not found.', $id));
+                    throw McpError::from(sprintf('Contact %d not found.', $id));
                 }
                 $this->auth->requireEntityAccess($context, $lead, 'lead:leads', $leadAction);
                 if (false === filter_var((string) $lead->getEmail(), FILTER_VALIDATE_EMAIL)) {
@@ -200,7 +204,7 @@ class SendTools
             $perList = [];
             foreach ($segmentIds as $sid) {
                 if (!isset($assigned[$sid])) {
-                    throw new ToolCallException(sprintf('Segment %d is not one of the segments this email is assigned to (%s).', $sid, [] === $assigned ? 'none' : implode(', ', array_keys($assigned))));
+                    throw McpError::from(sprintf('Segment %d is not one of the segments this email is assigned to (%s).', $sid, [] === $assigned ? 'none' : implode(', ', array_keys($assigned))));
                 }
                 $this->auth->requireEntityAccess($context, $assigned[$sid], 'lead:lists', 'view');
                 $count     = (int) $this->emails->getPendingLeads($email, $sid, true);

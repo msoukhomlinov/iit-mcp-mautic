@@ -161,7 +161,7 @@ class CampaignFlowBuilder
     public function applySteps(Campaign $campaign, array $steps, bool $dryRun = false, bool $allowDeletions = false, array $redirects = []): array
     {
         if ([] === $steps || count($steps) > self::MAX_STEPS) {
-            throw new ToolCallException(sprintf('Provide 1 to %d steps.', self::MAX_STEPS));
+            throw McpError::from(sprintf('Provide 1 to %d steps.', self::MAX_STEPS));
         }
         $existing           = $this->liveEvents($campaign);
         $published          = $campaign->isPublished();
@@ -172,24 +172,24 @@ class CampaignFlowBuilder
         $byKey = [];
         foreach (array_values($steps) as $i => $step) {
             if (!is_array($step)) {
-                throw new ToolCallException(sprintf('Step %d must be an object.', $i + 1));
+                throw McpError::from(sprintf('Step %d must be an object.', $i + 1));
             }
             $key = trim((string) ($step['key'] ?? ''));
             if ('' === $key || isset($byKey[$key])) {
-                throw new ToolCallException(sprintf('Step %d: "key" must be set and unique.', $i + 1));
+                throw McpError::from(sprintf('Step %d: "key" must be set and unique.', $i + 1));
             }
             $event = ctype_digit($key) ? ($existing[(int) $key] ?? null) : null;
             if (ctype_digit($key) && null === $event) {
-                throw new ToolCallException(sprintf('Step "%s": there is no step with this ID in the campaign. Use a non-numeric key (e.g. "reminder") for new steps.', $key));
+                throw McpError::from(sprintf('Step "%s": there is no step with this ID in the campaign. Use a non-numeric key (e.g. "reminder") for new steps.', $key));
             }
             $type = (string) ($step['type'] ?? $event?->getType() ?? '');
             if (null !== $event && $type !== $event->getType()) {
-                throw new ToolCallException(sprintf('Step "%s": the type of an existing step cannot change (%s -> %s). Remove it and add a new step instead.', $key, $event->getType(), $type));
+                throw McpError::from(sprintf('Step "%s": the type of an existing step cannot change (%s -> %s). Remove it and add a new step instead.', $key, $event->getType(), $type));
             }
             [$eventType, $settings] = $this->settings($type);
             $parent                 = isset($step['parent']) && '' !== $step['parent'] ? (string) $step['parent'] : null;
             if (null !== $parent && !isset($byKey[$parent])) {
-                throw new ToolCallException(sprintf('Step "%s": parent "%s" must be listed before it.', $key, $parent));
+                throw McpError::from(sprintf('Step "%s": parent "%s" must be listed before it.', $key, $parent));
             }
             $byKey[$key] = ['type' => $type] + $step + [
                 '_eventType' => $eventType,
@@ -211,7 +211,7 @@ class CampaignFlowBuilder
                 $wasParent = $step['_event']->getParent() ? (string) $step['_event']->getParent()->getId() : null;
                 $nowParent = null !== $parent ? $parent['_id'] : null;
                 if ($wasParent !== $nowParent || ($step['_event']->getDecisionPath() ?? null) !== ($step['path'] ?? null)) {
-                    throw new ToolCallException(sprintf('Step "%s": steps of a published campaign cannot be moved (parent/path). Change it in a draft copy, or unpublish first.', $key));
+                    throw McpError::from(sprintf('Step "%s": steps of a published campaign cannot be moved (parent/path). Change it in a draft copy, or unpublish first.', $key));
                 }
             }
         }
@@ -244,7 +244,7 @@ class CampaignFlowBuilder
             if (isset($redirects[(string) $id])) {
                 $target = $byKey[$redirects[(string) $id]] ?? null;
                 if (null === $target || null === $target['_event']) {
-                    throw new ToolCallException(sprintf('Redirect of step %d: "%s" must be an existing step that is kept.', $id, $redirects[(string) $id]));
+                    throw McpError::from(sprintf('Redirect of step %d: "%s" must be an existing step that is kept.', $id, $redirects[(string) $id]));
                 }
                 $redirect = (int) $target['_id'];
             }
@@ -275,7 +275,7 @@ class CampaignFlowBuilder
             return $result;
         }
         if ($published && [] !== $deleted && !$allowDeletions) {
-            throw new ToolCallException('This would delete steps of a published campaign: '.json_encode($changes['removed']).'. Check the affected contacts (dry_run) and repeat with allow_deletions=true, optionally with redirects for waiting contacts.');
+            throw McpError::from('This would delete steps of a published campaign: '.json_encode($changes['removed']).'. Check the affected contacts (dry_run) and repeat with allow_deletions=true, optionally with redirects for waiting contacts.');
         }
 
         // 4. Canvas: sources, nodes and connections the builder understands.
@@ -287,7 +287,7 @@ class CampaignFlowBuilder
             $sources[] = 'forms';
         }
         if ([] === $sources) {
-            throw new ToolCallException('The campaign has no source. Add segments first (mautic_update_campaign_draft segmentIds).');
+            throw McpError::from('The campaign has no source. Add segments first (mautic_update_campaign_draft segmentIds).');
         }
         $connections = [];
         foreach ($byKey as $step) {
@@ -311,7 +311,7 @@ class CampaignFlowBuilder
             foreach ($campaign->getEvents() as $event) {
                 $violations = $this->validator->validate($event);
                 if (count($violations) > 0) {
-                    throw new ToolCallException(sprintf('Step "%s": %s', $event->getName(), $violations->get(0)->getMessage()));
+                    throw McpError::from(sprintf('Step "%s": %s', $event->getName(), $violations->get(0)->getMessage()));
                 }
             }
             $this->campaigns->saveEntity($campaign);
@@ -323,7 +323,7 @@ class CampaignFlowBuilder
         } catch (\Throwable $e) {
             $conn->rollBack();
             $this->em->clear();
-            throw $e instanceof ToolCallException ? $e : new ToolCallException('Saving the campaign steps failed: '.$e->getMessage(), previous: $e);
+            throw $e instanceof ToolCallException ? $e : McpError::from('Saving the campaign steps failed: '.$e->getMessage());
         }
 
         $result['steps'] = $this->currentSteps($campaign);
@@ -609,11 +609,11 @@ class CampaignFlowBuilder
 
         if (null === $parent) {
             if (null !== $path) {
-                throw new ToolCallException(sprintf('Step "%s": "path" is only used after a decision or condition.', $key));
+                throw McpError::from(sprintf('Step "%s": "path" is only used after a decision or condition.', $key));
             }
             $allowed = $step['_settings']['connectionRestrictions']['source'] ?? [];
             if ([] !== array_filter($allowed)) {
-                throw new ToolCallException(sprintf('Step "%s" (%s) cannot be the first step; it must follow: %s.', $key, $step['type'], json_encode($allowed)));
+                throw McpError::from(sprintf('Step "%s" (%s) cannot be the first step; it must follow: %s.', $key, $step['type'], json_encode($allowed)));
             }
 
             return;
@@ -621,28 +621,28 @@ class CampaignFlowBuilder
 
         $parentKind = $parent['_eventType'];
         if (in_array($parentKind, ['decision', 'condition'], true) && !in_array($path, ['yes', 'no'], true)) {
-            throw new ToolCallException(sprintf('Step "%s": after the %s "%s" set "path" to "yes" or "no".', $key, $parentKind, $parent['key']));
+            throw McpError::from(sprintf('Step "%s": after the %s "%s" set "path" to "yes" or "no".', $key, $parentKind, $parent['key']));
         }
         if ('action' === $parentKind && null !== $path) {
-            throw new ToolCallException(sprintf('Step "%s": "path" is only used after a decision or condition.', $key));
+            throw McpError::from(sprintf('Step "%s": "path" is only used after a decision or condition.', $key));
         }
         // Mautic's builder: a decision cannot directly follow a decision.
         if ('decision' === $parentKind && 'decision' === $kind) {
-            throw new ToolCallException(sprintf('Step "%s": a decision cannot directly follow the decision "%s". Put an action or condition in between.', $key, $parent['key']));
+            throw McpError::from(sprintf('Step "%s": a decision cannot directly follow the decision "%s". Put an action or condition in between.', $key, $parent['key']));
         }
         // connectionRestrictions of the step types.
         $mustFollow = $step['_settings']['connectionRestrictions']['source'][$parentKind] ?? [];
         if ([] !== $mustFollow && !in_array($parent['type'], $mustFollow, true)) {
-            throw new ToolCallException(sprintf('Step "%s" (%s) can only follow: %s.', $key, $step['type'], implode(', ', $mustFollow)));
+            throw McpError::from(sprintf('Step "%s" (%s) can only follow: %s.', $key, $step['type'], implode(', ', $mustFollow)));
         }
         $mayLead = $parent['_settings']['connectionRestrictions']['target'][$kind] ?? [];
         if ([] !== $mayLead && !in_array($step['type'], $mayLead, true)) {
-            throw new ToolCallException(sprintf('Step "%s" (%s) cannot follow "%s" (%s).', $key, $step['type'], $parent['key'], $parent['type']));
+            throw McpError::from(sprintf('Step "%s" (%s) cannot follow "%s" (%s).', $key, $step['type'], $parent['key'], $parent['type']));
         }
         // "No" path of a decision = contact did not act: needs a wait.
         $hasWait = !empty($step['wait']) || (!array_key_exists('wait', $step) && null !== $step['_event'] && null !== $this->waitOf($step['_event']));
         if ('decision' === $parentKind && 'no' === $path && 'decision' !== $kind && !$hasWait) {
-            throw new ToolCallException(sprintf('Step "%s": on the "no" path of a decision set "wait" (how long to wait for the contact), e.g. {"interval": 3, "unit": "d"}.', $key));
+            throw McpError::from(sprintf('Step "%s": on the "no" path of a decision set "wait" (how long to wait for the contact), e.g. {"interval": 3, "unit": "d"}.', $key));
         }
     }
 
@@ -694,7 +694,7 @@ class CampaignFlowBuilder
             }
             $submit['properties'] = $properties;
         } elseif ([] !== array_diff_key($properties, null !== $event ? $this->cleanProperties($event->getProperties()) : [])) {
-            throw new ToolCallException(sprintf('Step "%s": %s has no properties.', $key, $step['type']));
+            throw McpError::from(sprintf('Step "%s": %s has no properties.', $key, $step['type']));
         }
 
         if (in_array($kind, ['action', 'condition'], true) && (array_key_exists('wait', $step) || null === $event)) {
@@ -702,13 +702,13 @@ class CampaignFlowBuilder
             if (isset($wait['at'])) {
                 $at = date_create_immutable((string) $wait['at']);
                 if (false === $at) {
-                    throw new ToolCallException(sprintf('Step "%s": wait.at is not a valid date.', $key));
+                    throw McpError::from(sprintf('Step "%s": wait.at is not a valid date.', $key));
                 }
                 $submit += ['triggerMode' => 'date', 'triggerDate' => $at->format('Y-m-d H:i')];
             } elseif (isset($wait['interval'])) {
                 $unit = (string) ($wait['unit'] ?? 'd');
                 if (!in_array($unit, self::UNITS, true) || (int) $wait['interval'] < 1) {
-                    throw new ToolCallException(sprintf('Step "%s": wait needs interval >= 1 and unit one of i (minutes), h, d, m (months), y.', $key));
+                    throw McpError::from(sprintf('Step "%s": wait needs interval >= 1 and unit one of i (minutes), h, d, m (months), y.', $key));
                 }
                 $submit += ['triggerMode' => 'interval', 'triggerInterval' => (int) $wait['interval'], 'triggerIntervalUnit' => $unit];
             } else {
@@ -731,7 +731,7 @@ class CampaignFlowBuilder
                 $origin   = $error->getOrigin();
                 $errors[] = ($origin ? $origin->getName().': ' : '').$error->getMessage();
             }
-            throw new ToolCallException(sprintf('Step "%s" (%s) is invalid: %s. Use mautic_campaign_step_types for its properties.', $key, $step['type'], implode('; ', array_unique($errors))));
+            throw McpError::from(sprintf('Step "%s" (%s) is invalid: %s. Use mautic_campaign_step_types for its properties.', $key, $step['type'], implode('; ', array_unique($errors))));
         }
 
         $result = array_merge($data, (array) $form->getData());
@@ -766,7 +766,7 @@ class CampaignFlowBuilder
             }
         }
 
-        throw new ToolCallException(sprintf('Unknown step type "%s". See mautic_campaign_step_types.', $type));
+        throw McpError::from(sprintf('Unknown step type "%s". See mautic_campaign_step_types.', $type));
     }
 
     /**

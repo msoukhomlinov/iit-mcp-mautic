@@ -8,7 +8,6 @@ use Mautic\CoreBundle\Model\AuditLogModel;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Model\UserModel;
-use Mcp\Exception\ToolCallException;
 use Mcp\Server\RequestContext;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -41,7 +40,7 @@ class McpUserContext
 
         $user = ctype_digit($sub) ? $this->users->getEntity((int) $sub) : null;
         if (!$user instanceof User || !$user->getId() || !$user->isPublished()) {
-            throw new ToolCallException('The Mautic user of this access token does not exist or is disabled.');
+            throw McpError::from('The Mautic user of this access token does not exist or is disabled.');
         }
 
         $this->tokenStorage->setToken(new UsernamePasswordToken($user, 'main', $user->getRoles()));
@@ -58,7 +57,7 @@ class McpUserContext
     {
         $this->user($context);
         if (!$this->security->isGranted($permission, 'MATCH_ONE')) {
-            throw new ToolCallException(sprintf('Your Mautic role does not allow this (%s).', implode(', ', (array) $permission)));
+            throw McpError::from(sprintf('Your Mautic role does not allow this (%s).', implode(', ', (array) $permission)));
         }
     }
 
@@ -69,14 +68,14 @@ class McpUserContext
         if (!$this->security->checkPermissionExists("{$base}:{$action}own")) {
             // Bundles with standard permissions only (stages, projects): no own/other.
             if (!$this->security->isGranted("{$base}:{$action}")) {
-                throw new ToolCallException(sprintf('Your Mautic role does not allow to %s this item.', $action));
+                throw McpError::from(sprintf('Your Mautic role does not allow to %s this item.', $action));
             }
 
             return;
         }
         $owner = method_exists($entity, 'getPermissionUser') ? $entity->getPermissionUser() : (method_exists($entity, 'getCreatedBy') ? $entity->getCreatedBy() : 0);
         if (!$this->security->hasEntityAccess("{$base}:{$action}own", "{$base}:{$action}other", $owner)) {
-            throw new ToolCallException(sprintf('Your Mautic role does not allow to %s this item.', $action));
+            throw McpError::from(sprintf('Your Mautic role does not allow to %s this item.', $action));
         }
     }
 
@@ -104,7 +103,7 @@ class McpUserContext
             'object'   => $object,
             'objectId' => $objectId,
             'action'   => $action,
-            'details'  => $details + ['via' => 'MCP', 'client_id' => $this->clientId],
+            'details'  => $details + ['via' => 'MCP', 'client_id' => $this->clientId, 'ref' => McpError::correlationId()],
         ]);
     }
 }

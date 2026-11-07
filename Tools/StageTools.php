@@ -11,7 +11,7 @@ use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\StageBundle\Entity\Stage;
 use Mautic\StageBundle\Model\StageModel;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 use MauticPlugin\IntellectItMcpBundle\Service\SegmentEffects;
@@ -70,7 +70,7 @@ class StageTools
     ): array {
         $this->auth->require($context, 'stage:stages:create');
         if ($this->stages->getRepository()->findOneBy(['name' => $name]) instanceof Stage) {
-            throw new ToolCallException(sprintf('A stage named "%s" already exists (see mautic_list_stages).', $name));
+            throw McpError::from(sprintf('A stage named "%s" already exists (see mautic_list_stages).', $name));
         }
         $this->requireFreeWeight($weight, null);
         $stage = new Stage();
@@ -107,7 +107,7 @@ class StageTools
         if (null !== $name && $name !== $stage->getName()) {
             $other = $this->stages->getRepository()->findOneBy(['name' => $name]);
             if ($other instanceof Stage && $other->getId() !== $stage->getId()) {
-                throw new ToolCallException(sprintf('A stage named "%s" already exists.', $name));
+                throw McpError::from(sprintf('A stage named "%s" already exists.', $name));
             }
             $stage->setName($name);
         }
@@ -143,17 +143,17 @@ class StageTools
     ): array {
         $lead = $this->leads->getEntity($contactId);
         if (!$lead instanceof Lead || !$lead->getId()) {
-            throw new ToolCallException(sprintf('Contact %d not found.', $contactId));
+            throw McpError::from(sprintf('Contact %d not found.', $contactId));
         }
         $this->auth->requireEntityAccess($context, $lead, 'lead:leads', 'edit');
         $new = null;
         if ('' !== trim($stage)) {
             $new = $this->stages->getRepository()->findByIdOrName(trim($stage));
             if (!$new instanceof Stage) {
-                throw new ToolCallException(sprintf('Stage "%s" not found (see mautic_list_stages).', $stage));
+                throw McpError::from(sprintf('Stage "%s" not found (see mautic_list_stages).', $stage));
             }
             if (!$new->isPublished()) {
-                throw new ToolCallException(sprintf('Stage "%s" is not published. A person publishes it in Mautic first.', $new->getName()));
+                throw McpError::from(sprintf('Stage "%s" is not published. A person publishes it in Mautic first.', $new->getName()));
             }
         }
         $old    = $lead->getStage();
@@ -205,7 +205,7 @@ class StageTools
         $other = $this->stages->getRepository()->findOneBy(['weight' => $weight]);
         if ($other instanceof Stage && $other->getId() !== $ignoreId) {
             $used = array_map('intval', $this->connection->fetchFirstColumn(sprintf('SELECT weight FROM %sstages ORDER BY weight', $this->prefix())));
-            throw new ToolCallException(sprintf('Stage "%s" already has weight %d; each stage needs its own weight (used: %s).', $other->getName(), $weight, implode(', ', $used)));
+            throw McpError::from(sprintf('Stage "%s" already has weight %d; each stage needs its own weight (used: %s).', $other->getName(), $weight, implode(', ', $used)));
         }
     }
 
@@ -213,7 +213,7 @@ class StageTools
     {
         $stage = $this->stages->getEntity($id);
         if (!$stage instanceof Stage || !$stage->getId()) {
-            throw new ToolCallException(sprintf('Stage %d not found (see mautic_list_stages).', $id));
+            throw McpError::from(sprintf('Stage %d not found (see mautic_list_stages).', $id));
         }
 
         return $stage;

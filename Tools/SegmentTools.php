@@ -12,7 +12,7 @@ use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use Mautic\LeadBundle\Segment\ContactSegmentService;
 use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use MauticPlugin\IntellectItMcpBundle\Service\McpError;
 use Mcp\Server\RequestContext;
 use MauticPlugin\IntellectItMcpBundle\Service\McpUserContext;
 use MauticPlugin\IntellectItMcpBundle\Service\SegmentEffects;
@@ -167,7 +167,7 @@ class SegmentTools
     ): array {
         $segment = $this->segments->getEntity($id);
         if (!$segment instanceof LeadList || !$segment->getId()) {
-            throw new ToolCallException(sprintf('Segment %d not found.', $id));
+            throw McpError::from(sprintf('Segment %d not found.', $id));
         }
         $this->auth->requireEntityAccess($context, $segment, 'lead:lists', 'edit');
         $this->segmentContext();
@@ -178,7 +178,7 @@ class SegmentTools
             $data['filters'] = $this->mauticFilters($filters);
         }
         if ([] === $data) {
-            throw new ToolCallException('Nothing to change.');
+            throw McpError::from('Nothing to change.');
         }
         $current = $this->segments->getRepository()->getLeadCount([$id]);
         $this->submit($segment, $data);
@@ -226,12 +226,12 @@ class SegmentTools
                 }
             }
             if (null === $def) {
-                throw new ToolCallException(sprintf('Filter %d: unknown field "%s". See mautic_list_segment_filter_fields.', $i + 1, $field));
+                throw McpError::from(sprintf('Filter %d: unknown field "%s". See mautic_list_segment_filter_fields.', $i + 1, $field));
             }
             $operator  = (string) ($f['operator'] ?? '');
             $operators = array_map('strval', array_values((array) ($def['operators'] ?? [])));
             if (!in_array($operator, $operators, true)) {
-                throw new ToolCallException(sprintf('Filter %d (%s): operator "%s" is not allowed; use one of %s.', $i + 1, $field, $operator, implode(', ', $operators)));
+                throw McpError::from(sprintf('Filter %d (%s): operator "%s" is not allowed; use one of %s.', $i + 1, $field, $operator, implode(', ', $operators)));
             }
             $type  = (string) ($def['properties']['type'] ?? 'text');
             $value = $f['value'] ?? null;
@@ -249,7 +249,7 @@ class SegmentTools
                 $value = (string) $value;
             }
             if (null === $value && !in_array($operator, ['empty', '!empty'], true)) {
-                throw new ToolCallException(sprintf('Filter %d (%s): "value" is required for operator "%s".', $i + 1, $field, $operator));
+                throw McpError::from(sprintf('Filter %d (%s): "value" is required for operator "%s".', $i + 1, $field, $operator));
             }
 
             $out[] = [
@@ -271,7 +271,7 @@ class SegmentTools
         $form = $this->segments->createForm($segment, $this->formFactory, null, ['csrf_protection' => false, 'allow_extra_fields' => true]);
         $form->submit($data, false);
         if (!$form->isValid()) {
-            throw new ToolCallException('Mautic rejected the segment: '.$this->errors($form));
+            throw McpError::from('Mautic rejected the segment: '.$this->errors($form));
         }
     }
 
