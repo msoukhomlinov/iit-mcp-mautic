@@ -23,6 +23,7 @@ use MauticPlugin\IntellectItMcpBundle\Tools\CompanyTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ContactTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\DestructiveTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\InsightTools;
+use MauticPlugin\IntellectItMcpBundle\Tools\SetupTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\LayoutTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\PointTools;
 use MauticPlugin\IntellectItMcpBundle\Tools\ProjectTools;
@@ -71,6 +72,7 @@ class McpServerFactory
         private readonly StageTools $stageTools,
         private readonly ProjectTools $projectTools,
         private readonly InsightTools $insightTools,
+        private readonly SetupTools $setupTools,
         private readonly SendTools $sendTools,
         private readonly DestructiveTools $destructiveTools,
         private readonly Connection $connection,
@@ -91,7 +93,7 @@ class McpServerFactory
             authorizationServers: [$this->oauth->issuer()],
             scopesSupported: [McpScopes::READ, McpScopes::WRITE, McpScopes::CONTACTS_WRITE, McpScopes::CAMPAIGNS_LIVE, McpScopes::SEND, McpScopes::DESTRUCTIVE],
             resourceName: 'Mautic',
-            resourceDocumentation: 'https://github.com/kopexa-grc/mautic-stack/blob/main/docs/mcp.md',
+            resourceDocumentation: 'https://github.com/msoukhomlinov/iit-mcp-mautic#quick-start',
         );
     }
 
@@ -205,6 +207,7 @@ class McpServerFactory
             [[$this->read, 'getContactActivity'], 'mautic_get_contact_activity', 'Contact activity', $ro],
             [[$this->insightTools, 'getSegmentSummary'], 'mautic_get_segment_summary', 'Segment summary', $ro],
             [[$this->insightTools, 'findDuplicateContacts'], 'mautic_find_duplicate_contacts', 'Find duplicate contacts', $ro],
+            [[$this->setupTools, 'getSetupStatus'], 'mautic_setup_status', 'Server setup check', $ro],
             [[$this->insightTools, 'getCampaignHealth'], 'mautic_get_campaign_health', 'Campaign health check', $ro],
             [[$this->destructiveTools, 'deleteRecord'], 'mautic_delete_record', 'Delete a record (cannot be undone)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false), ['anthropic/requiresUserInteraction' => true]],
             [[$this->destructiveTools, 'mergeContacts'], 'mautic_merge_contacts', 'Merge two contacts (cannot be undone)', new ToolAnnotations(readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false), ['anthropic/requiresUserInteraction' => true]],

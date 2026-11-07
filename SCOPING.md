@@ -14,7 +14,7 @@ Recorded decisions for the IntellectIT Mautic MCP server, kept in the form the I
 
 | Profile | Switch | Default | Tools | Notes |
 |---|---|---|---|---|
-| Read-only | none | on | 27 | reads, insights, projects, lists |
+| Read-only | none | on | 28 | reads, insights, projects, lists |
 | Write | `intellectit_mcp_allow_write` | **off** | 58 | creates and edits emails and campaigns (unpublished), segments (created published), contacts, companies, scoring, stages, projects; `mautic_send_test_email` (to the user only). Edits to running campaigns and published point triggers also need `intellectit_mcp_live_campaign_edits` (**off**) and scope `mcp:campaigns:live` |
 | Destructive | `intellectit_mcp_allow_destructive` | **off** | +2 | `mautic_delete_record` (contact, company, segment, email, campaign) and `mautic_merge_contacts`; scope `mcp:destructive` (opt-in); preview, then `confirm=true` with `expectedName` / `expectedLoserId`; emails and campaigns must be unpublished, segments in use cannot be deleted; audited |
 | Send | `intellectit_mcp_allow_send` | **off** | +2 (29 with Write off, 60 with everything on) | `mautic_preview_email_send`, `mautic_send_email`; scope `mcp:send` (opt-in); segments need `intellectit_mcp_allow_segment_send`; cap `intellectit_mcp_send_max_recipients` (100) per call and `intellectit_mcp_send_max_per_hour` (500, all users, 0 = off) |
@@ -38,7 +38,7 @@ OAuth 2.1 (authorization code with PKCE, dynamic client registration) from `kope
 ## Budget (measured by `tests/functional/surface.sh`, Mautic 7.2.2)
 
 - Instructions: 3,237 characters attended, 3,202 unattended (limit 3,500); hard rules in the first 512 characters.
-- `tools/list` per profile (measured by `surface.sh`): read-only 27 tools, 13,448 bytes (about 3.4k tokens); write 58 tools, 54,167 bytes (about 13.5k tokens); every tier on 62 tools, 58,359 bytes (about 14.6k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
+- `tools/list` per profile (measured by `surface.sh`): read-only 28 tools, 13,855 bytes (about 3.5k tokens); write 59 tools, 54,695 bytes (about 13.7k tokens); every tier on 63 tools, 58,923 bytes (about 14.7k tokens). 0 parameters without a description (enforced). The standard's budget is under about 10k tokens per profile: read-only is inside it, write and send are over. See exception 5.
 
 ## Exceptions
 
@@ -81,4 +81,4 @@ Mutation checks (2026-11-07, Mautic 7.2.2): each guard below was broken by hand,
 | Role permission check always passes | fails (restricted role gets data) |
 | Destructive tools always registered | fails (`destructive tools listed by default`) |
 
-Inspector (2026-11-07): `@modelcontextprotocol/inspector@2.10.1 --cli` against the live server with a bearer token: initialize and `tools/list` (27 tools, read-only token, writes off), a `tools/call` text result, and a coded `NOT_FOUND` tool error all pass.
+Inspector (2026-11-07): `@modelcontextprotocol/inspector@2.10.1 --cli` against the live server with a bearer token: initialize and `tools/list` (27 tools at the time, read-only token, writes off; 28 since mautic_setup_status), a `tools/call` text result, and a coded `NOT_FOUND` tool error all pass.
