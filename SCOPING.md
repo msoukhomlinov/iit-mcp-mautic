@@ -65,5 +65,20 @@ Rule, reason, approver, date. "PENDING" means inherited from upstream and not ye
 - The raw-API passthrough tool was considered and skipped by the owner (2026-11-07): the named tools cover the work and a passthrough widens the surface.
 - Contact merge, delete and the hourly send limit are built. Confirmed sends hold a database lock (`GET_LOCK`) so the hourly check and its audit row cannot interleave; a send that fails midway is counted at its planned size.
 - No `composer audit` step in CI: the package has no lock file; its dependencies resolve inside Mautic.
-- No mutation-check evidence for the tests.
-- No MCP Inspector or protocol-conformance run (the functional suite speaks JSON-RPC directly).
+- The protocol check is the MCP Inspector CLI (v2.10.1, `tests/functional/inspector.sh`, run by hand: it downloads the Inspector); there is no full conformance suite beyond it and the JSON-RPC functional suite.
+
+## Test evidence
+
+Mutation checks (2026-11-07, Mautic 7.2.2): each guard below was broken by hand, one at a time, and the functional suite failed every time; the change was then reverted.
+
+| Mutation | Suite result |
+|---|---|
+| `mautic_send_email` accepts a different `expectedRecipientCount` | fails (`expectedRecipientCount not enforced`) |
+| Do Not Contact contacts no longer excluded from a send | fails (preview) |
+| Unpublished email may be sent | fails (`unpublished email sent`) |
+| Published email may be deleted | fails (`published email deleted`) |
+| Wrong `expectedName` accepted for a delete | fails (delete executed) |
+| Role permission check always passes | fails (restricted role gets data) |
+| Destructive tools always registered | fails (`destructive tools listed by default`) |
+
+Inspector (2026-11-07): `@modelcontextprotocol/inspector@2.10.1 --cli` against the live server with a bearer token: initialize and `tools/list` (27 tools, read-only token, writes off), a `tools/call` text result, and a coded `NOT_FOUND` tool error all pass.
