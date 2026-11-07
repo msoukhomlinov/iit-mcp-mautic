@@ -91,7 +91,7 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 ## Development
 
 - `bin/check.sh` checks the package (PHP lint, `composer validate`, version
-  consistency). CI runs it on every push and pull request.
+  consistency). CI runs it only for release tags and on demand (Actions, ci, Run workflow).
 - `tests/functional/run.sh` installs the plugin into a real Mautic 7 and
   tests it over HTTP; CI runs it on PHP 8.4 and 8.5. The tool tests are
   split by topic (`core.sh`: drafts, scopes, campaign flows run by
@@ -106,8 +106,8 @@ $parameters['intellectit_mcp_send_ignore_dnc'] = false;     // keep false, see b
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org)
   (`feat:`, `fix:`, `docs:`, `chore:` …); they drive versions and the changelog.
 - **Releases** are automated with
-  [release-please](https://github.com/googleapis/release-please): it keeps a
-  release PR open that bumps `VERSION`, the plugin version and `McpServerFactory::VERSION` and
+  [release-please](https://github.com/googleapis/release-please): run it by hand (Actions, release-please) and it opens a
+  release PR that bumps `VERSION`, the plugin version and `McpServerFactory::VERSION` and
   `CHANGELOG.md`. Merging it tags `v<version>` and creates the GitHub
   release.
 - **Dependencies** are kept current by Renovate, once a month

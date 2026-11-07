@@ -1,10 +1,17 @@
 name: ci
 
+# Runs only when a release is cut (a v* tag) and by hand (Actions, ci, Run
+# workflow), never on pushes or pull requests. Day to day the same checks run
+# locally (bin/check.sh, tests/functional/run.sh). Run it by hand before
+# merging a release PR; the tag run is the last gate on the release itself.
 on:
   push:
-    branches: [main]
-  pull_request:
+    tags: ['v*']
   workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -12,6 +19,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,6 +35,7 @@ jobs:
   functional:
     name: functional (PHP ${{ matrix.php }})
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
