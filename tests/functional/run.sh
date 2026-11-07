@@ -61,6 +61,8 @@ source "$here/review.sh"
 source "$here/destructive.sh"
 # shellcheck source=tests/functional/surface.sh
 source "$here/surface.sh"
+# shellcheck source=tests/functional/verify.sh
+source "$here/verify.sh"
 # shellcheck source=tests/functional/gating.sh
 source "$here/gating.sh"
 echo "all MCP checks passed"

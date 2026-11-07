@@ -323,7 +323,7 @@ class ReadTools
     }
 
     /**
-     * Same filtering as the Mautic API: users without "view others" only see their own items.
+     * Users without "view others" only see their own items (contacts: owned, or created and unowned).
      *
      * @return array{0: list<object>, 1: int}
      */
@@ -331,7 +331,11 @@ class ReadTools
     {
         $force = [];
         if (!$this->auth->canViewOther($permissionBase)) {
-            $force[] = ['column' => $alias.'.createdBy', 'expr' => 'eq', 'value' => $this->auth->currentUserId()];
+            $me = $this->auth->currentUserId();
+            // Same rule as the single-item check (getPermissionUser): a contact belongs to its owner, or to its creator while it has no owner.
+            $force[] = 'lead:leads' === $permissionBase
+                ? ['group' => [[['column' => $alias.'.owner_id', 'expr' => 'eq', 'value' => $me]], [['column' => $alias.'.owner_id', 'expr' => 'isNull'], ['column' => $alias.'.createdBy', 'expr' => 'eq', 'value' => $me]]]]
+                : ['column' => $alias.'.createdBy', 'expr' => 'eq', 'value' => $me];
         }
         $max    = (int) $this->parameters->get('intellectit_mcp_page_limit', 50);
         $result = $model->getEntities([
