@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b1fd38e5b50f59ef018b2c6605c5f1c123b48fb8789a446b96ba165c3403a56e",
+  "claims": [
+    {
+      "id": "claim_9007fb7ced2b4a3dbbb20361502ce66a",
+      "statement": "Copying an email with copyFromId clones it but gives the copy fresh segment collections (no audience copied), clears the publish window, and always creates the draft unpublished.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/WriteTools.php#L115-L153",
+          "version": "repo-lines-v1:sha256:947b684e0d21131c4fc57aaba77be1ff73c22d9f7ca38c2b61222c463b1542c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5YWRjN2RhNjVjMWM2NTU3NmExNDdmOWYxYWNmNzIwMDEzMTQyODYwMTExY2ViNDFmZDdiODFiZjE3MGM2N2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3MDNkYjIwOTgyYTg2ZjljMTI3MWQyYjA1ZDM3YzQyY2JmNDM1ZDNiYzZhOGI0ZGQ1OWRhNzliOTY4MTY2MTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzMjhkNGE1MjlmNmNhNGQyNTU4YmMxZDkwOTg1NzE2MjU1ZTQzYzlkODViM2U4NjVjODJhMzViODExNDhiZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2NjZjODAwYmUzNTQxMjY1MjNhNDM1OGQyODg2ZjgyYzcyOTU3YzBkNWQyNjQ4OTU0NDJkZjllODNmMTBiNGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_80089c9f96704a2cb771e69a96530caa",
+      "statement": "mautic_update_email_draft refuses to change emails that are published or have been sent.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/WriteTools.php#L188-L195",
+          "version": "repo-lines-v1:sha256:06d6a5b02cb07e8702e2f9d10981cdf3fbbc9e54d8480ed8f0b9a211a20de008:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTE1OWE3NTNhOTM0OTRlNjQ5Mjk0ZjQyNjQ2ZmFiNjcyMTczOTYyMDcyZGVjNjg5MzY0MjEzMGVmNzdmMWVkOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjI2YmIyNGVmMmJjNjIzZDgyNjdiZmZmMmQwMjk1NmNlM2E3NmMyYmI5ZGE1NDZjMDg4NzFkZjVhMjg3YzljMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjhhYmQ3NjEyYjMyYWZjNWUyZGY1ZGNmMWU4NjYwZjk3NDJkODI0ZWFkZGJjMjYzYjBjMWQ4NzBkYTY4ZDgwMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2e051bab942949f8bb7c513745e5f2d2",
+      "statement": "Campaign flow edits are serialised per campaign with a database advisory lock (10 second wait) and refused with BLOCKED_BY_POLICY if the lock cannot be taken; campaigns can only use template emails, not segment emails.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/WriteTools.php#L468-L523",
+          "version": "repo-lines-v1:sha256:e621bfa5e31a10123b353bcea36435dff2d36df6219dff743d72611a90aa6594:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxNDRjNzk3MDA4NGZkMzJlZmMzNWFlNzdlYmFhZTRkMzNhYjE5NGI3NGI5ZmE1NzRkYjFhNzg5NDcwMDY3NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyODMwMTU5YWI3YWQ4NDEwNGViY2VkOTlkNTU5ZmIwZDNhZDFhMGUwNTZlOTNhNzc4MDdhYTg3MzZkYmE3ODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6f59ea3f43b049378ab19a7e22ad5482",
+      "statement": "Real saves on a published campaign require both the live_campaign_edits operator switch and the mcp:campaigns:live scope; dry runs are always allowed and report live_effects.save_allowed.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/WriteTools.php#L525-L546",
+          "version": "repo-lines-v1:sha256:bfdb962afc7c519b15f2537972d7fd7995d035a0384d1fa304ad863e54b036e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlOTQ3ZWJmM2RhOTNmNmUyZjg3NzQ4YjkxYzQyZjNmZDZjNDdkZmYwYjQ4MjYxYTAwMjViNjY1OWE1YThmMmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRhOWY4NmQyOGU3ODRmOWZkMzFmYjcyZDE1ZjYwY2JjZWFhZmRkNjY5Y2JkNWI2ZGE3ODg4YTAyMzMyMWViYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxMzAxYzcwODhiNjc0ZjAxZTcwOGJmNGIxOTdlZmRmMmViMGQ2MzczZDFhNjM1NTFkZThjNThhOTgxNmI0MWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0594981e0764b4ca70a658433db44d4",
+      "statement": "CampaignFlowBuilder applies a flow as a diff of 1 to 100 steps, validates each step through its Symfony form, and writes events and canvas inside one transaction with rollback on failure.",
+      "evidence": [
+        {
+          "resource": "repo://Service/CampaignFlowBuilder.php#L168-L208",
+          "version": "repo-lines-v1:sha256:b4def03488526c7a3ac9cec17774b5e42766540642ea943f88cc3e09246811fa:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0Mjk2YWQxMmM3MWNiZWQzNzZiN2NjNGM2YmZiNmI1YjM1MjFjMDNkYzc2NTVhNmIxMzczODhkMGNmZjBmMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmOTI5ZDJlNGY3ZmYwZTY0NDg1NmQ4ZDMzNDUwYTQxZjk2N2UyNGQ1YmQwMWYzZGQ3YjYzY2ZkOTExODUwODkifQ"
+        },
+        {
+          "resource": "repo://Service/CampaignFlowBuilder.php#L321-L347",
+          "version": "repo-lines-v1:sha256:8c96248c7c5fc186a07b1607661543a2f5327cfd480b0a5fbb74535c61d5d027:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiMWY1MTdjNjEwM2YxYWFlMTY4MDE3MzU5MTE3NzBiNTlkOTcyZGJhNmEyZjliYTQ1YWUyNzNhOWU1OTQ4ZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3ZjkzZTEyYjk3Y2EyMzU0ZmJkOGQ1ZTY4MDE5NjYyZGE5ODEzMDc4MzgwZTAzODdkOTRjOWE2Y2YwYTJhZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwM2NkZTNiMjY3Nzc5OWI3YmE1NGI2YzYxYzQzMGIwM2VkMzliZjQ4NmZiMWNkMDFiNGRiNGFhODFmN2ZiYTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7eaae5bd93849c8b82d10b15cf787ce",
+      "statement": "On published campaigns steps cannot be moved, and deleting steps needs allowDeletions (a dry run reports needs_allow_deletions instead of failing).",
+      "evidence": [
+        {
+          "resource": "repo://Service/CampaignFlowBuilder.php#L215-L224",
+          "version": "repo-lines-v1:sha256:7aa7d664ce2e136dd8af4ac8fd86986e82cf63b41407b65c55eec928bc729c98:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNTRiMjYxOWFhOThjN2EyMjc4NjI0YTZlYTc3Y2MzODQ5NjljNmQ0ZmJhZjgwNmVmODFkNGQ0NjIxNGM2NmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3OTU5OWI1YWUyYTE0M2UwNjRlNTk3YjkzNDhjMDA3NzNiZTgyNzZkYzc0NjZjYjk1N2E2MWI1NTY2Yzc5NWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2NDRiYWQ3YTM5YTM4Y2FmMmJjNzc4YThkZDUwMWQ5YjNmYzcwZWRjYTM0ODIwODE4ZGE3ZDg2NWU1Y2YzMDMifQ"
+        },
+        {
+          "resource": "repo://Service/CampaignFlowBuilder.php#L296-L302",
+          "version": "repo-lines-v1:sha256:2b48df3260bb29531b2bec642c6c5d7c63430b28f51ec4b262a870b82a85b022:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDJiYjQ5NmZjZWM3ODRkMzMyZDhhN2Q2NTc4NGM1ZTNmMWNhMWUyNzY4ZWVlZGQxOTlhMWFlYjRmNTliMzYyZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjU3N2JkM2RiMGJmZGZiODI1NTU2MmJkYjdiNmMyMGNjZDZjMDQ4NTQ5YjBkZDkxMDM2NzMwZGM2NjkwZTZiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWY1OGJlYTk0M2RjYzMxMDJiZTA2OWY4YTc3MGI2MDJkMDJlMGMxYWU4ZmUyNGFkNDg5YjdlMWJkNTQyNWJmYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0174078726434311847ba813558c67d3",
+      "statement": "live_effects reports the campaign's contact count and added or changed outbound steps from a fixed list of outbound step types.",
+      "evidence": [
+        {
+          "resource": "repo://Service/CampaignFlowBuilder.php#L41-L53",
+          "version": "repo-lines-v1:sha256:d1daa96f4e8a3b4a9852b8cda62d7e264a4b624b73e25ff4b471796f3dacdc3d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3M2M3ZjU4YjE4ODJiZGY5M2JlMTQzODkwMmI3OTJjNmVjOTliZmVhNGM5NGY2NDk5Yjk4YzhhMTZlOWFmZTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NTkyODBmNjE1NmMxZjY1MWI1MjJiMWIxODYxNjNiNjZkYjQ1YWRiZmE5YmM2NzFiZWQwNzM1MjllZWMxZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZmNkODA3ZTU4MTdmZmNlNmM5ZjA0NjI2ZWNjZTNhNGNmMGMzYjE3YWM1YzM3YzQyM2FhZjY5YTM0NDVmNjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwNzJhZjEwOTQ1OWRhNWEzN2YxM2IyYTYxNDM4NmEyNWVmZmMzNjAzZmMzN2FjM2VmNGJlOGI2MDkwMGJlMDcifQ"
+        },
+        {
+          "resource": "repo://Service/CampaignFlowBuilder.php#L501-L525",
+          "version": "repo-lines-v1:sha256:c840c88846b1fc7f3f1dda40d1682df4027f0c9bdac9a4150fa0e7d9ad1ee1bd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1YzUxOGI0YWIyZTM5YzhmM2Q3ZDRkMWQ3NjYzNGRjMGM2OGIzNjMzNTU0NDI2ZTc3MzJiYmEzY2E0ZDAxN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2YjkyZWJlNGE5YjFmY2EwNzRiN2RlNTI1YWY3ZDNkNTU4NDI3OTlkYzc0ZWZmMDViMjczMjVhZWRlMDQ2OWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_551d54eb7b434b39866fb8742605b2af",
+      "statement": "mautic_get_campaign_health computes contacts, scheduled and overdue (over one hour) steps, 24-hour runs and failures and top three failure reasons, and sets status to attention when any warning applies.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/InsightTools.php#L144-L202",
+          "version": "repo-lines-v1:sha256:ad946d298128875b1a589357779439adc441862b25e7ef84acf59a1368387723:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5ZjUzODk1NTg2MzE0MjU0YTk2M2E0MjE4YjYxOTNhN2RhNzliNWNmNDNlNzIyZDI4NTBkMjk0ZWNiOWZhZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxMGVjYzE1M2JmMTdjYmMzM2YxNzJjMWNiNjg1NDUzZmIzZjIzZTNkMjkxNWQ4OTM3M2RhNDgzYzdkMjgyYzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YjFhZDYyYmQ5OWFjZTYzZjViNjQ0Y2E1NTQ2NjQwMDQ4ZGM4OTlhY2Y4MmQ4NDAyMzJhMTM2MzY3NWZmNjIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

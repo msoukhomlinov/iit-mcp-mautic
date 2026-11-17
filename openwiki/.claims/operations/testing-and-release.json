@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:41d8d52e55f9801bf4465fd99c84992661352623bd2d0583523a8dc73f725a9b",
+  "claims": [
+    {
+      "id": "claim_bf8d0061d6674f6eaa3e7c16c8739e8a",
+      "statement": "bin/check.sh lints all PHP files, validates VERSION format, CHANGELOG entry, absence of a composer.json version key, consistency of the version in Config/config.php and every VERSION constant, and runs composer validate --strict.",
+      "evidence": [
+        {
+          "resource": "repo://bin/check.sh#L9-L25",
+          "version": "repo-lines-v1:sha256:1a2ed8f0c0c279b47115ff779a25fdabd95d27e9c1fed76bcf67cfcf23f44e4a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5Y2VhMDU3NGRjNjRkYzhlZDE3ZmQ5NjE2NzkwZjVhMGMzYjBjNzUwZWZjZDM2MjdhN2U1MjcwMjlmZmI2OTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlOGY4YTEzYzNjM2NhYTYyNTZkMDg1YjcyZWU3YzdhZWVjODQwZDJiNDI5MDc0YzZmMWEzMWM1YmQ3YmU2MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2YWVkOTFiYTBlODY1MjQ4OTBhZjM1NDlhZjZhOTI4ZDY1Zjg1NDgzOTc0MDEyNTVhZWU4M2IzZTg5MjM2MDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1YmMyNDA3M2JkYjNjMzJlZmI1NWQ5Nzg4ZDAxM2NkZGQ4NTVkMjUxMzNmMDUxYzE0ZTVjNzEyMGIyMGMxNjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c7f0bfbdd40e4d9dbc7ce50f43b9fa8c",
+      "statement": "tests/functional/run.sh installs a real Mautic 7, enables write and live-campaign-edit parameters, checks protected-resource metadata, 401 handling and a single-page tools/list, then sources the topic test scripts in a fixed order.",
+      "evidence": [
+        {
+          "resource": "repo://tests/functional/run.sh#L12-L67",
+          "version": "repo-lines-v1:sha256:95f940051a018dc4888b0adb974afdd5e4f8bf0fc82dc2b925b1005c82bcfd9a:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiYmNmODEyNjcwMzQ4NmRmYWMwMTczY2Y3NjljNmZmZWQ2OWQxYzRiNzFiMmVkMzBlMzU1MjQwMjczZGJkYWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkZmFjYzU0Nzk5OWQ2ZGRjMTMzMmM2MTFiYTY4ZTJmMzliZGNiOTM1NjJjMDQxYmQ2MGU4YjUxY2QyZjcwOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiMzM4NWQwYjVmZWMxZDJmNDQ5YjRlYmJiM2FlMzlmMzMxYjExZjQ2MGRlMjJkYzI4NGIzNzkwZjY2MzEyMTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzZTViMWU2NDhkNDkwMTZiMmFjYmQ2OGM5NjJkYzg3NThjNDc0ZmZhZjMxNzc5NjRjYWU4MTZlMTcxMzYwYmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6d9d590c340b43d1aea8e16e56d90090",
+      "statement": "CI runs only on v* tags, manual dispatch, workflow_call and pull requests touching .github/**; it runs bin/check.sh and a functional matrix of PHP 8.4 and 8.5 for run.sh and setup.sh against MariaDB 11.4 and mautic/recommended-project ^7.2.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/ci.yml#L10-L21",
+          "version": "repo-lines-v1:sha256:00a24e5c303e39af1c24ed99090868f3f0c0a64bd7051935310f07d6a75e04c6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0MTZhYzY1MmZlMDZmNTczNGI0OWI5MTE2OTYzNjFiYjYxZjBjODI3Nzg5YTQ3NmFhNzA1MmM0YjNlM2FmMDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1ZmMzNjc3ZDVmOTY3MzI3NjZlMGNlM2E3YTdlZmU2Mjc1MWIwZDBhMDlkODc5NzhjOTdmMzQwNmU1OGE0ZDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5NzgzOTdlZmJiNTMzY2VlNzhjMGIxYjA1ZTkyNGVkYzQwMzZhYzYwMGQwZTkxYTBhMzNhM2E0NmMwYjA0MzMifQ"
+        },
+        {
+          "resource": "repo://.github/workflows/ci.yml#L30-L66",
+          "version": "repo-lines-v1:sha256:ef2d9cfa65ea35086bd9c93834f9e75e8910f922b6409054345fc12c85bb9853:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5ZDgwMTU0ZWQ0MmZjNWM3NzliMTMzMTU3OGI1OGI4OWM4MDFlYWNlNzRmMjRjZDQ4ZWI0YTIzNTc5NDBhOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5YmU5MGI1MGJjYWUyZDFiY2JiN2FlMTk1YTUyNGIwODliMzM0NWVjYTg5NTk0NzRiMzYyMTgyYTgyZjQyODQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmMWQ3MGQ3MmJhZDIzMWQ0M2M1NzVhY2VmNjk0NjU4MGU0MzljODc5Nzk0ZWQyZWExZjRhNDAzNDAyNDUxNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzY2MzNjBlYmYzYjg5OTAxMDM0MTRmODdlYWU0NWViMmMzNDg4OGRmZWE2N2Q3ZmEwNWVlNmExOTdkZjZlZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_163de8118134432d9f424c1a6d2c97b0",
+      "statement": "release-please uses the simple release type, tags v<version> without a component, and updates VERSION plus generic version markers in Config/config.php and Service/McpServerFactory.php.",
+      "evidence": [
+        {
+          "resource": "repo://release-please-config.json#L4-L24",
+          "version": "repo-lines-v1:sha256:4a2fc4728825d4c24060777917c41150af7d46ace0160d22d3cc031f5a9171f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZTQ4YmQ1YmM3N2M4Yzc3MDA0NDYzYmU3NzY4ODVlMTE0MDc3MTdkY2EzOTJkNjYyOThiMjY1NGM5NTViMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzYjMxYzY4ZmJmNWM2MWQyZDdiZDNhZDkxY2I0ZTk4MWUxZDFiZjM2MjFmNDUwZTQ2MGE4NDk5MTlhOGQxMWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3NTI4MDQ4ZGUzMTIyZGJiZjdkZGM5YTNkY2MwOTJjY2ExOGVlMTJjZTk2MmU5ZDU1Nzc0NmExMDBlYzgzYjAifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

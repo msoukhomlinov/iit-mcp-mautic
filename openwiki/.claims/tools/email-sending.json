@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5127b5d655c341b6f9e216aee0e23f0cf316fe41b14d4c1044857486ba8f3448",
+  "claims": [
+    {
+      "id": "claim_cb1f799ab3624ef893430b14589ca458",
+      "statement": "Preview and send share one plan() method; it requires exactly one of contactIds/segmentIds, requires the email be published, and excludes contacts with no valid email, Do Not Contact (unless intellectit_mcp_send_ignore_dnc), or already sent.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SendTools.php#L259-L325",
+          "version": "repo-lines-v1:sha256:1b64241a1d3422b00246acb2ce54da046824c17909c7a52c066606eb873a68f9:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMGQzZjlhNDUwNTJlOTA3NDM3NjVhNmZlNGJhNWIyY2RlOTEzYmQ1ZmIyNDViZDg1MTk2NjdjNzVjODk0ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhZGYxODU2NmVkMDIwZDExYmNjOTI2YTVhM2E3YjVkNjMwMGE3MWZiMzgyOGRmZWY3NDM2NGYyNTFkODJmZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxY2IwNzY1ZWYzODgxNzk4YmY5MDcxMDQyNzQ5NDVmNTdiOTkwOTJjMmVhZTg5ODA2YTA2NjZjNTY0ZmYxZGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_31c850c523f94ea9b2cf3772faf08b8d",
+      "statement": "Segment sends require a segment-type email, intellectit_mcp_allow_segment_send, and segments assigned to the email; recipient_count is pending leads capped at the per-call cap.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SendTools.php#L326-L366",
+          "version": "repo-lines-v1:sha256:da44ad1e0a22cb46e2308cf0d709c48629ff772cff1c3bd0f4a93fcb54c61c63:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2OTgyNTE3OTI0ZmU4ZDNlMTU2NjcxMTViMWY1YTIwMThlMGQ1NWNlNWEwMDFiMWUyZDVlMzFiOGIyNDEyMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MTA4OWZkYWUxYzRlMTQ5YWVhODQ0NDZkMTZjNzQ2MTY0MjE2MWZkODM5MGRjMTkyZmUwOWViYzQ4ZjMzMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2N2UwYjNjYWEzNWI0OGFkNmVlOTU4MzNkMjkxNjYxMjhhZTFlNmNkZDM3Y2U0ZWNhMGQ2M2MzY2EwYTVkZmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b5785d3418c14119b6051c626b49cdb0",
+      "statement": "targets_hash is the first 16 hex chars of sha256 over JSON of [emailId, targets]; a confirmed send must match it (hash_equals) and expectedRecipientCount must equal the recomputed count.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SendTools.php#L119-L146",
+          "version": "repo-lines-v1:sha256:f23b620147f11c570c538ed9680e68a8569e1ddea1a3b9a16f304b32206c138f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2M2E3ZmNkMWUxODg4MjE1ZTA4ZjA4NWNlNWM4MGNiNmUwY2RkOTZmNTYwZTQ3ODVlZjRkMmYzOTMxZTc5MzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3YjI5ZDg3MmFlNjQ2YWU2ZWE4NzIzMDZmNzBjMjBhY2E3MzkwYWRjZDIyZmQzM2VjNzc0ODZhMWEyYzc1ZTcifQ"
+        },
+        {
+          "resource": "repo://Tools/SendTools.php#L377-L377",
+          "version": "repo-lines-v1:sha256:8eceb5b493da2230653cb9a38799b3adfce2f08f21457deacf592ef0aed31587:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGVjZWI1YjQ5M2RhMjIzMDY1M2NiOWEzODc5OWIzYWRmY2UyZjA4ZjIxNDU3ZGVhY2Y1OTJlZjBhZWQzMTU4NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGVjZWI1YjQ5M2RhMjIzMDY1M2NiOWEzODc5OWIzYWRmY2UyZjA4ZjIxNDU3ZGVhY2Y1OTJlZjBhZWQzMTU4NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGE5Zjg2ZDI4ZTc4NGY5ZmQzMWZiNzJkMTVmNjBjYmNlYWFmZGQ2NjljYmQ1YjZkYTc4ODhhMDIzMzIxZWJiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWEwMGNkM2U0MDdmZmFhMDAxYTE0MTZjNThjMGUzMjYyMThiYzUxMjcwNjZhYjhjYmYzNmJhYzkwNjllNGUxNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_882f3b00089542dfb8d740645a60c151",
+      "statement": "Confirmed sends are serialised by a database advisory lock GET_LOCK('intellectit_mcp_send', 10) and the hourly limit is computed from send audit rows of the last hour across all users.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SendTools.php#L236-L251",
+          "version": "repo-lines-v1:sha256:1c0b434b3243b38e5a954d1de2c619cbc232fa0c55c3d1c04629e7c7b1a04d49:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliMjdiMjVjMzAxY2RkMjAzNTY4YTkyMTllMzExNjc3ODAxNWU2NmMzYzUwYjQ1MDEwOTJjOTUwMjcwMmZjOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxNzI1NmI3NmJiZWJiNjM1MzlkNmU4ZTZiNjFiYTQ0YzIyMzU0NjUzOTllYWRlODY1MmIzMWRkN2ExYjVkNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1Y2FlMDM2ZTZmMTgyN2Q0Yzg2ZTRlZWY3M2FkMTVhMzM5ODQ3MzE4YzMxOGIwYzEyYTNkYTE1ZDg2Y2Y1NDIifQ"
+        },
+        {
+          "resource": "repo://Tools/SendTools.php#L368-L375",
+          "version": "repo-lines-v1:sha256:9533750aba6a556406563b496bfa830d5a0b3b0315608cea87ac159dbd7eca97:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU5NjI5OWMxZjJkYWJmMWFhNTdmMDcyNjBkZWIyM2Y2N2M3ZGFhMTgwNWI2ZjA3MjgzMmVhOGI4ZGU5ZDk0YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGE5Zjg2ZDI4ZTc4NGY5ZmQzMWZiNzJkMTVmNjBjYmNlYWFmZGQ2NjljYmQ1YjZkYTc4ODhhMDIzMzIxZWJiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNmZmZjODQ3YTZkNDI5NTQxYmZjNjIyOWM0YTQzZDg0ZTJmYjg0NGJhNzUwNzRhNjNiNDkyYzQ2ODQ4MWQ4MiJ9"
+        },
+        {
+          "resource": "repo://Tools/SendTools.php#L97-L111",
+          "version": "repo-lines-v1:sha256:329a5ba5d389bfea880cf114cd62dc8b692af6e4e6df2d8556c5130ec484f69e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyZmNkYjFkMGU5MDU3Y2RjNzQ3YjUxMTMzNDQwNjU5ZTlmNWNjM2VjNzRhOWE5MzhkMDFkNGYxMmQ2YTNmMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1Y2FlMDM2ZTZmMTgyN2Q0Yzg2ZTRlZWY3M2FkMTVhMzM5ODQ3MzE4YzMxOGIwYzEyYTNkYTE1ZDg2Y2Y1NDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7aa309c7c1d3470aac7b10bc5ac10071",
+      "statement": "If delivery throws, a send audit row with the planned count is still written; if the audit write fails after success, the result carries audit: failed and the hourly cap misses the send.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SendTools.php#L148-L182",
+          "version": "repo-lines-v1:sha256:fd8eb44c8fe08545483589996837118d34cffd9b3d167111d12688eaa9328b4a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NjdmNzllMjg0MDE3YWZhNzczNjM1NGE5NzA4YzMwZTg2MjAzNjNlMzE4NDZmNjk5ZDNjZjYwMDQ4MzNjNGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU0MTg5ZWMzMmQ5NTAwN2E3NTEwZmQ1Yzg2NDcyNjExMTI0ZDAwMmFiOGFmNDhlODVkNTI0Y2VmZWZmNTgxOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyNTQ5NmI3ZjQyNjYzNDBjNmMyZjRiYWY4ZWI1ZTc1N2MxZmI4ZTRmN2M4ODJhYTU4NjlmOTZjNDNiODU2Y2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e932d2536bdd42958c943aae85898db8",
+      "statement": "mautic_send_test_email sends only to the signed-in user's own address, using a fake or a viewable real contact for tokens, and audits send_test.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/WriteTools.php#L236-L273",
+          "version": "repo-lines-v1:sha256:8e1a465d62267ca21b5d479e67de68fcd22ddb7d7e5113c72acb000393565534:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkMmYwODBkNDRlZmE0NWE4YmQ0NzU0MGI0ZTBmNjk5NTE5ZGJlM2EyMjEwMDkxZjQ4OWM3OTY5ZTkyN2IzMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmNWU5YjUyYWFjZjhkMmFjOWU4MjVkYmNiNDExZWQ4MzczNzM2ODYyZmVhZGYwN2U5Y2VmOWI2YzE2NzZkODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlMmI5ZTIxZmRjODZmYzJjMmVlNDQ3MjE4NWQ2NzY0NjdiZGQxY2JmMmUyNGI0ZGM2NDRhYjFhYmIzMzI1NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlMmI5ZTIxZmRjODZmYzJjMmVlNDQ3MjE4NWQ2NzY0NjdiZGQxY2JmMmUyNGI0ZGM2NDRhYjFhYmIzMzI1NDcifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

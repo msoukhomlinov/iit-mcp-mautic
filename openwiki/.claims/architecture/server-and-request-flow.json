@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6883b5e4f2a52e2ba34d8e4af8ac8a7891f3786cf0bb1ef5228198286c431512",
+  "claims": [
+    {
+      "id": "claim_cf2872e7d55c4b44bd1325f28b2c1bf5",
+      "statement": "The MCP endpoint /mcp accepts GET, POST, DELETE and OPTIONS, and RFC 9728 resource metadata is served at two well-known paths, all as public Mautic routes.",
+      "evidence": [
+        {
+          "resource": "repo://Config/config.php#L12-L31",
+          "version": "repo-lines-v1:sha256:65becaf32b605a9d7688c549ff63bea0a905548256c986a1502b5a285f7b4479:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2NWYzNmIyZWY2ZTdkMDI3ZWVhMTVhYTIyMWYzMTc1OTRiZWVjMzU2Y2VlNDRjMjY1NWRkMjI4MzlkMjE2N2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2M2Q1MzVjZTM4MDYzZDZiNGM1MWQ4YzM4NmE3ZjliM2U1ODBhMTRhMTBjMDdiMTk4ZGZhZjE5YzkzYTNiZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlMDkwZmM2YThhNTYwNTAxNWY4MWI5YWZmMGE0NGE2ZTQ5ZDMzMzM2MzQyOWVhNmZkZDhkNTE3YTUwNTVmMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlNWMyYjk5ZDI4MjliZDhlMmJkZmY5ZDJmZTg1YjU5OTQ5OTdkZjg2ODFlMDEzOWQwNzA1ZjUzMTQ0ZWU3YzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ebc38488e8ff49a2bbd8634ca272ffda",
+      "statement": "McpController returns 503 when the OAuth server is not configured, builds the server and transport per request, and maps any Throwable to HTTP 500 with JSON-RPC error -32603.",
+      "evidence": [
+        {
+          "resource": "repo://Controller/McpController.php#L26-L50",
+          "version": "repo-lines-v1:sha256:e512477e03efffb36ff2cb0015f9299a8788bd4618fd9ac3378dbb0ef9479e1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MmZmNWVjMmUwMDMyOGYwZTFhYzA1ODU1ODVmZTRhMjQ1Mjg4ZDc2N2RhYjA3YWY4NWU3MTI5ZDljOTc0MDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzMGQ0MGI0OTJiMGNiODUxMWQ3YzBkOGY1YjRmZTQyN2I1MDkwYWU2NmEwZmUzMTA4OTgyZTAyODIyNjI0YTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4NTQ1YzZiMWNjM2ExZTQ3YjgwMzE5NmJmODU5MTI5OWU4NjdhZjQyMjI3ZmNjNThjYjU3YmU3OTFlYmM0MWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f683f2446dc4aaf9ec79bded5476306",
+      "statement": "On a 403 insufficient_scope challenge the controller widens the advertised scope to the regular scopes plus the required ones.",
+      "evidence": [
+        {
+          "resource": "repo://Controller/McpController.php#L52-L72",
+          "version": "repo-lines-v1:sha256:17d57e64fe4613b88cca8b6c8c9c9deea5f1255e08cb4ec846590e642507a8b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Y2JiYzY1NDY5ZGIxY2EyODQyZWZkOTdkZjdlZTJjZTZjYzE1NzE0ODJkMDFhMThiNzkwYTEwYzdjNTEwZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlNjRiMWQxODA5YzM4NDFmODBjMmI3NTY0NjQzNTZmMjVjNWVkNGUwMDEwNDUxYjc2ZTNlOWY3OGJmZGQzNDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwZGJjOGY1NTZlZDMwNDQ5OTBlYmIyZDJjZDM4MTk5MTYyOWM0Y2IzNmMzYTNlNTY0ZTYyYTBkYzIyMWI0YzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9fffeb0c79f845e988e7923949928045",
+      "statement": "Bearer tokens are validated offline: RS256 against the authorization server's public key, issuer and audience checks, token type at+jwt and 30 seconds leeway; the DNS-rebinding check allows only the issuer host but any Origin.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpServerFactory.php#L112-L145",
+          "version": "repo-lines-v1:sha256:0bb9badf85488db2a7b49890da557c973351b0f727657d4952e7be65e0ca4692:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYmYyZWEzM2I1NGFjYWRlOTAxZTFlMmUwYjNjYzdjZjQ5MDNhNDBiMTRhZDZlZTdiN2JmOGM4YTY1YWE2M2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyZDgyOGEwMzdhYzFjODE1MzViMWQ1NTAwODMyMzIzYmZiYjg2NmEzYTNmODdlN2E2OGMxM2EyYmFlNTZmZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwMWU3ZWE1Y2ZjMTFjODNlZjIxNmE4MmExZTkzNGNjZGI4ZmU5ODM2NmJhNTE0MmY0NzczZDFhMjM3NGY1MzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b967d016d9a94a82a2adaf91b33f7228",
+      "statement": "MCP sessions are stored in the Mautic database table intellectit_mcp_sessions (with table prefix) via a PSR-16 cache with a 3600 second session TTL, and expired rows are pruned on about 1% of requests with failures swallowed; pagination limit is 200.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpServerFactory.php#L182-L224",
+          "version": "repo-lines-v1:sha256:be05d35620559574beb34bacd2404dc919bedbabd6752f0ef3652c88c7b96059:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjZjI1MzE3OThkYmFjMDRiYmQzMjdmNzFkOTE0OGVhYTcxMWE1NTY1MzEwODY2NzVhZThiMjcwYTkzYjEzOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjZjdmOGFkMDA5NzA4YTZmZDk2MmU1NGM4MmI3ZmJiNDU1OTE5YTg1NmRjNzYyMTg2ZTM4YjcxM2EyZmE1YzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2MWVlNTYwZDBmZjlmZmI3MmQ5YzU0NGEzNzFkMGZlZTA3MjkzOTY4MjM5ZDg4ZmY0YWJiYzA0MzI4NWY2NWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4NTY4OWFkZmQxZjdhMzNlMTdjY2U1MGIzNTUyZjE5NGE4MzI5MWFkZDAxZmE5NmM3MmRlM2I3OTI1MjQyZTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a616ef294b4c432c82d0f26313702e1d",
+      "statement": "McpUserContext resolves the token's sub claim to a published Mautic user, sets a security token so Mautic permission checks apply, and checks own/other entity permissions.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpUserContext.php#L34-L97",
+          "version": "repo-lines-v1:sha256:ab50045befa4675703c6278ac28d4f3909be8267496b6e08fae2fdf0b64ecfca:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzNWE0NGUxMGQyYzkzOTIxNTRiMzk1OWQ4N2RhMjRlMDFjNGZjOGNmMGMyMjlhMmM4NTgxZTYxMDBjZWI5NGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiZWFiMmJjZDlkZjM3ZGZlNjM0MmI3MDc0YWRkZjcxOTEwYTYzODA2YzVkZjM2Y2EzZWI0ZTAzMzBmMjk2MTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiZmE4YTgwY2UyNzU0MDg4NzE2M2VjZjk3OTBhMTQxYTBmOGU1ODQ0OTRkYTMwOWUwYjIxMTI0YmI4NDcyNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1a9297ab70e41f7b5f37a0b5a6f4df1",
+      "statement": "McpError formats refusals as [CODE] message (ref id) with six codes inferred from message regexes in a fixed order, and audits only PERMISSION_DENIED, BLOCKED_BY_POLICY and CONFIRM_REQUIRED refusals; the ref is one correlation id per request.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpError.php#L16-L75",
+          "version": "repo-lines-v1:sha256:012a6d5c9aa3e2eacba6d13d3281a7eb4f3faa8485ee23ecd9e14db39f6047a6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhYjQ2ZjM0ZjM3YTkzOTMwNzQ3YTgyMjJkMDY2NTY4Njk2MDBhZTQ3NmNlODIxMzc5MDE0MGMyNGEwNDVkMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwYTRjZTdmYTgzNjQwNzQ0OTMwNzZiOWJkMjg3YjBjOTNhYjk1NDg1ZjJiNzZlMDhhM2E0ZDBhNjMzMTE4YTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://Service/McpUserContext.php#L99-L109",
+          "version": "repo-lines-v1:sha256:17cc89d5a822130ca5730640a0b1524557e2e672ed63551b1fee9fd94f84d214:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3ZTFiMTZiODMwNDk2MTllZDk3OTY4Y2Q4NDAyODAyOTgzNzIyM2MyOGNiNGQ5NTMzY2Y2YjM5YzAwZGY1NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyMzcyZGU2MWQ4NjY4YjIyNzI4N2MwZmU5MGM3OTUzYTAyNTVmOGZlOTI3NzEzNjIzNjJjMDM4MDRjMzYzNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_76d183646aa3475a8762e3d859ea75b4",
+      "statement": "Services are autowired, autoconfigured and public, loaded from the bundle root excluding Tests and DependencyInjection, with controllers tagged as service-argument controllers.",
+      "evidence": [
+        {
+          "resource": "repo://Config/services.php#L8-L19",
+          "version": "repo-lines-v1:sha256:b782bd5f80efd78872eb48f90380c2b2552e045b11f4c1569f763da5b9b0c750:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhNzY3MDBjMTQ1NmE3ODliNDg4MjM1NDE4ZjIyMjM1OWI5YjA1ODNlMmM4ZjQxZTMyNjU0NGI3ZmJjNGI1NmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiY2YzMzQ0NDMzMmFlOTM5MDQ5MTIyMzQ5OTdkY2QwNDRjMTM3ZjkxNzVhNGU4YjY5NzVjODYzZjAyMjNmYmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxZjY5N2E1Y2JmMjc0ZGNjYWQ0YTRlMTczZmY3ODg5YWZjZTgxMGY1YzY1MzYyNTRmMjgwMWJmOGExZDJiYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

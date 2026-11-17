@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:46ea60fa5870f6aecf40b93123e9202f9bdb596d778ec877808bc75b428fdac8",
+  "claims": [
+    {
+      "id": "claim_b3fd42183ebc437bbcb88606327d9fa6",
+      "statement": "mautic_delete_record previews without confirm=true; the real delete requires expectedName equal to the previewed name (else CONFIRM_REQUIRED) and is refused when blockers exist (published email/campaign, segment used by campaign/email, email used by a campaign step).",
+      "evidence": [
+        {
+          "resource": "repo://Tools/DestructiveTools.php#L56-L113",
+          "version": "repo-lines-v1:sha256:470487828c42ea3afbe9b2f676d834432271f3c60a5a856b8b190a74a6503265:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2MDIzOTg4YWJmOWRhZWVkMmYyZTI3Yzc4MzRiZmE0ZGI0Yzg2YzQ5NWNhMGJiMWFhZDg0ZmNmZmJmM2NkNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhZjNhNjQwZDk3N2QwYTU3YzI3YzQ2ZTE1MjMzNDM1M2M0ZDA4NjdkM2Y3YzJiYjU1ZDk1MWNmNzM4MzZhMjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f65a4bacca948188366d86e1c72645a",
+      "statement": "mautic_merge_contacts previews both contacts and differing fields, and on confirm requires expectedLoserId to equal loserId before calling ContactMerger::merge, which deletes the loser.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/DestructiveTools.php#L125-L163",
+          "version": "repo-lines-v1:sha256:58e1b718625525d366c474d0a5cae939fb19a9dbe993481d7e1e4100dba7f6ad:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NTQzZWFlMzRiNDE1ODJkYzMwYmQxN2Q0YTRhYjM3OTU5ZWI1Yjk4MTdjNzM4MGEzZTBhZWZkNTY2Y2JlMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlMTY1YTVjYzY3NDJmYzgwYTZlMDY5MTZiMGVhNGE2MTUzNDAxODFjNzEyYTQyODBlYWE0ODdkOTQ4ODM4ZDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6784c6155bd469c84af44ffd10edb14",
+      "statement": "EmailLayouts loads only mcp/blocks.json libraries with version 1 and panels, mjml and html keys, and render() builds MJML and HTML from the same layout, validating slots, restricting URLs to https/mailto/Mautic tokens and sanitising inline HTML to an allow-list of tags.",
+      "evidence": [
+        {
+          "resource": "repo://Service/EmailLayouts.php#L100-L150",
+          "version": "repo-lines-v1:sha256:f8c272e1f51569e7f123fb8f29f98d74032e5e64b7e47303f71bd29c9a7b86ad:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4YmZjZTBlZDcwM2UwMmJhZDZlNGNhNTQzYzE2OWRlZDVmMzc2YzM2NGIxNjk4ZTc3MzFkNmIwYjMzMjNlODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNjgyYzcxZDY0YWE4ODk3YmE2YWI0MGNmMTYzMjg0MDY5ZDNiZGEwMzZiNDk0YTMzODg3YzJlZTZiZjY1NjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2NjFlNjM0NTYzNzU3Nzg5NWMzZTRkNTdjNmExODU0YWYwYzdhYjE3MDRkYjhkYTc5Yjg4NGNmOGFjODkxOTIifQ"
+        },
+        {
+          "resource": "repo://Service/EmailLayouts.php#L164-L244",
+          "version": "repo-lines-v1:sha256:818c6fdeb9d1645f6584b5d90d307175598fa3a2f502f903af36cdd5abf2fffe:eyJzZWxlY3RlZExpbmVDb3VudCI6ODEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmMDljODNlZDE2YjM2MDg4NGNlY2E0NmZmNmJkOTA3ZDVlMDRhZjhkZGFhMzg2NTdiZGI4ODRjY2M1ZGI0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjliMTEwYzNmYjI3MThhYjVkNTIzNTdlNjE0ZGIwY2JlZTA1OWIxOTNkYzI2NDQ0ZTEyYjJkY2I2OTk1NjM2NjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2ZTEwYjFhZDI1NmU0YWY3NTMyYjliMzIzMTBhMjU2ZWJlMzMxYjhmZDdmYzE5NTZiNDRkMzI5ZDQxZDk1Y2UifQ"
+        },
+        {
+          "resource": "repo://Service/EmailLayouts.php#L21-L55",
+          "version": "repo-lines-v1:sha256:28dc44599497f07bcb0866e789e388afc43babb494d481bcf0a5343379739945:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwN2E2MmZkMDRlZTc0YjY0MzkyNWIwNGFmYWY3MWFlNzE3Y2QxZjhkYmM5NDRiOTkxOTcyNmU2MTYwYTUwZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2ZThmZDgxMzlmMGRmMDdmOTIyZTg2NDA1NzdkMzY1NTIxN2Y5ODVhY2ExOTc0MTNmNDQ1NjY2NDFkMmExYjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlMTJkN2E2NmE5NjA0MmFmZDU5YjUzZDZmMGQwNTBlZDAyNzFmYTk0NjAwYWI3ZGEyMzEwMDZhY2Y4MjIwZmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0222dc2750de438f9be95da30e17a2bb",
+      "statement": "createEmailFromLayout creates an unpublished email with rendered HTML and stores the MJML in the GrapesJS builder entity in one transaction; updateEmailLayout refuses published or already-sent emails.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/LayoutTools.php#L132-L168",
+          "version": "repo-lines-v1:sha256:4f0e8f2a4ec37a0ad2a2504e7e33442dd9a2dc03e0e13fceb02cba8133005c01:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMjBhMDA3NzVmMjdiNjU2NzI5NzkwNzI2OWUxY2I2YTE0OThhMDcwM2I5YjM3NTFmNmUxYTI2MDk3M2M2MGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzOTJlYTc2ZjYxZmJlM2Q2NWUxZTUyZmYxNjkxNTNhN2VmNmU0NWVlN2MzOGUwZGY2NGFmMzYyM2VhZTk0YTIifQ"
+        },
+        {
+          "resource": "repo://Tools/LayoutTools.php#L185-L197",
+          "version": "repo-lines-v1:sha256:4a0c25cb9d63feb96e9ced248a07df4cea3a70f5107d08b045e847790d3b450f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YTRjZmU5YmU4MmE0MGU1NWY3OWUwMDY5MWQzMWY2ZDk3M2NhYTk4N2VmZTFkMDQ4MTljMzQ5YzI2Yjc5ZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhNzYxYjE0Yzk1NDY0NGZiNGE2MjE4NTE3MjQ1Mzk5ODg0OGZjMGQ5NmNhNTJlODJiYTY4OGVkOTY4NWRiYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkN2Q1NDlkYmVlNDQyMDRlZjVhNjg2ZDEyOWM0N2FmMzg4ZjcxMGY5NTJhYTM4N2M4ZWZiZjVkNDk2YjBjNTEifQ"
+        },
+        {
+          "resource": "repo://Tools/LayoutTools.php#L80-L118",
+          "version": "repo-lines-v1:sha256:50fb3cce876e1cc9a5e2cb452fd22080e3bdcbfaad1bed591d9227ce250cc3e8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5MjI0NDgyNzQ5OTgxOWJmMTA5NGE3N2MxMzU0Y2U2YzNlODc3ZGM1ZjJmN2ZlYWVjMzhjZGFkYWExYTZlMmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwNTViYTYxZDc2OGZkZmM1OGFmYWVjOWZlYjI0OGZmMDhmNjU1MjVjN2IzZGE5YzkwMjM5ZDE3MWY2MGM5ZmIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

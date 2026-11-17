@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:8881890859e16370325d284c711244138daf2c4acc9ac5a35e2bb9e13a694660",
+  "claims": [
+    {
+      "id": "claim_de7312be65f445419de580bd62f197f2",
+      "statement": "List tools cap the effective limit at min(max(1, limit), intellectit_mcp_page_limit) and force own-items filtering when the user cannot view others' items (contacts: owner, or creator when ownerless).",
+      "evidence": [
+        {
+          "resource": "repo://Tools/ReadTools.php#L330-L350",
+          "version": "repo-lines-v1:sha256:cad634485ef9a17fe4b4d2c983c65744b48f90461a69307c436dde28e4c7eeed:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNzNiMmI4ZDYwNDVmNmJhZDEwNjg4NDFhZTU1YzQwYWMwMDA4ODYyZjI5ZDYyZmFhNTE0ZWY1ZDM2NzU2MmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiOGRlZWY3YmZmNmUwYjg1NzM1Y2Y0MjkzMGJiY2QxMzYwNWIwODMzOTRhYjk5N2M2NjdmMzYxZGIyMDg0NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzOTFkODM1N2NhM2UyNjcyMTc4N2U3ZDQ4MWE5ZjUzNmM4NGQ4YmY3ZTY5NjkyODJlZjg1MzRlOTQxNGE4ZjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_097b58f4c987454b86716749aae77011",
+      "statement": "Contact upsert handles up to 100 contacts per call; unsubscribe=true is add-only Do Not Contact handling, and points/stage fields are blocked when their tool group is hidden.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/ContactTools.php#L170-L211",
+          "version": "repo-lines-v1:sha256:ca033ebd2f39eb6fd5559a9ea13bc008cc56897686e4758dc0fcfde99ee402b5:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3Y2ViMDQ0OWRmNjNjNDhjZDQ0NzkwZDcyYzM1ZGZmYzUxYTNiN2YyNWEwNWVlYTMzMzg3NGRhOTIyMWIwOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjNjQ3OWNjMjMwNDQwZmQ0MWU4MjI0MjE4Njc5Njk4NTU5ZDI4OTNiZDY3YjQzODBhZmFiODExYjM4YTU1YWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzNTJmZGU2MDU3YTIzYTgxNTU3NzFiNjY5M2JmYjkyMWQyYzczODhhMzUwNjhmOTNmNjhmZDJhYzU1M2IzNDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFmMjJiMmFmYTdlNmMxNjhlYTk0MzZjOWM2YTBmYmExNmNhNjI5OTBhZGI4Yjc2OTJmN2I4N2RkNDU3ODY4NWUifQ"
+        },
+        {
+          "resource": "repo://Tools/ContactTools.php#L63-L63",
+          "version": "repo-lines-v1:sha256:880aa7790adc05e81f16627ef39cb9ad580bc5be431703be5f6ef70b5b11870a:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODgwYWE3NzkwYWRjMDVlODFmMTY2MjdlZjM5Y2I5YWQ1ODBiYzViZTQzMTcwM2JlNWY2ZWY3MGI1YjExODcwYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODgwYWE3NzkwYWRjMDVlODFmMTY2MjdlZjM5Y2I5YWQ1ODBiYzViZTQzMTcwM2JlNWY2ZWY3MGI1YjExODcwYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzBjYzUwNDgxODc1YTA3ZWI0ZjZiOGVhN2U3M2Y2ZjJiNTAyNzk1ZmMyZjZmNWU3MmNiMmU3NWUwYWE3YjEyZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjdiOTE4MmMwZTFlNmY0YTQ3OTU5MjgyMzcyYjRlNjZkNGZmMWE1ZDdjYjYxMzg2NzliOTk0NWFiNjI3ODc1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f2c600d0e364052ae1a69f68ae3f14b",
+      "statement": "SegmentEffects reports published non-deleted campaigns using the segments and published segment emails not past their publish-down date, noting that new members enter on the next cron runs.",
+      "evidence": [
+        {
+          "resource": "repo://Service/SegmentEffects.php#L22-L64",
+          "version": "repo-lines-v1:sha256:a052116646bd0a7b28bde5ed09511352aeec6e2fae010c06010337bf3da81bbe:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Y2JiYzY1NDY5ZGIxY2EyODQyZWZkOTdkZjdlZTJjZTZjYzE1NzE0ODJkMDFhMThiNzkwYTEwYzdjNTEwZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2MjkxODMyZTY1YjM3YjQ2YjNlNzFjNjA5MDVlZmNkZTdkY2E2NzIxNjFmNDQ5NDg1OTE0MTM2OGJmM2NjMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1b6e43f5b3334f8c87d0dad3bea5cbac",
+      "statement": "Segment dry runs validate filters and report matching_contacts; updates also return live_effects.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SegmentTools.php#L108-L200",
+          "version": "repo-lines-v1:sha256:15ae533be321d95cf6f4f2a0f396933702925d7d56292a6549506e1a2dfee188:eyJzZWxlY3RlZExpbmVDb3VudCI6OTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliYTBkZWU5ODA1YTQ0MTcxMjA0MmZiMmVlMWUyZmJkMzhiYTYxYjU0MjBkZDQyMzkxY2M0YzhmN2NkYzVjZTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmM2YxZTBjZGU1MTUzYzRkZmI3ZDg1YWZkYWU0NmRmZDFmY2RlMjg5ZDZlM2E5NDRhYmI4MjQ2NDQzY2RhZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlMmI5ZTIxZmRjODZmYzJjMmVlNDQ3MjE4NWQ2NzY0NjdiZGQxY2JmMmUyNGI0ZGM2NDRhYjFhYmIzMzI1NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjNDZkYjFmODk3YTY1NDdhMTJkM2Y5NDJlMjk1ZWM4ZTVhMDNmOTFjMzgyNjNkNTEwY2YwMGQzZTFjMGM5MGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5bb7ade7a77b4b15bc80faf44343a1cd",
+      "statement": "mautic_find_duplicate_contacts requires permission to view other users' contacts, accepts only email, phone or mobile, and scans at most 500,000 newest contacts with a 10 second statement cap.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/InsightTools.php#L24-L31",
+          "version": "repo-lines-v1:sha256:592cb2f836346c05578bed380f87903940b116932142a403108f3e7b894e0aa5:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFmMmJhOGE3ZjI1ODIzZGZhNzNiOWJmMDI4OWFlZmRjNDAwOWYxOGMyNzc2YTIwZjg5M2ZkMjY1NTAyYmYwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjY2ZmZlM2NmMGFhYmIyODk0NWQxNGZhMjk5ZDM0YzhmODc0ZjUwZGI0NzY4NThhYjcxYjkzODczNDhhYmFhZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTNkNTI1MDdiZWEwZDBmMTg5ZTBmYjEwMTU1NTJhYTUzYzEwYjRhZDA1YWNiZTNhNmMwYzRmOGI0ZGJhMzFhZCJ9"
+        },
+        {
+          "resource": "repo://Tools/InsightTools.php#L98-L112",
+          "version": "repo-lines-v1:sha256:a4774c317317569b19bbede5aa5904ffa6f0b7b1494403c4fd9e02fc3f5b6bbe:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmODkzMjA3MmVlMjU5ZDNiY2RhYmJhNzE5MjAwZTFmNDVlNDMxZjRhOTdjZTEzYzQzOWVkNmZjMzZiZjliMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NzhhMDdmNWU3MGFhMjU1NTZlYTAwYWVkZmVhNGRmOWVmOTllZTg2ZDI3NDI3NWUwM2I3ZTk3YjRmY2FkNDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxYjZhZTFlMGI2ZDU1YTQ3ZjZhNTdkYjlhYmI2MWU3MDQ4ZDBiM2MyYjBjZTBlYWZlYzFlNzE3ZmNiMjRjYjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4658e63db52c4e358fb5a57e7aedad80",
+      "statement": "Email topics resolve by case-insensitive name or ID against published global/email categories, and emails without a topic get a warning.",
+      "evidence": [
+        {
+          "resource": "repo://Service/EmailTopics.php#L17-L80",
+          "version": "repo-lines-v1:sha256:37305624ea4fc45b8ab5829a4b16ef59f56e9048da835080d9e6c30c7e128ffa:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjNDdiYjNhYjIxNjUwNThmOWNmNmMyM2NmZmNlYjUxNGMwZTE2YmFlZmQ1ZTU1M2RmMzE5YWRjMzNkODA5YjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE2Y2U0MDk4OGZhZjM5MTIwZDIzODIwMWZjZDJlNjRiNGQ1ZDI5MmRkZWZjZGNiYjhmMjg5NTI2YTZiZWQ1NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_353099f43a7e4dcd87349adeacc51b31",
+      "statement": "Company tools handle up to 100 items per call.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/CompanyTools.php#L121-L130",
+          "version": "repo-lines-v1:sha256:8af18d7941ff11084f5b33c3b5ea956da62c8dc5e87f251de855af0eb946e2c3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlNWYwODAyNTAxZjYxNDg1YjQ2NzdmZTY5ZDdmNzg5YjE4OTgwZGI3MDA2MjM5ZWI0OTM4NmU2Y2JiMmYxZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwZTNhYWE0MTUxMTU4N2YwOTZlZjllZmY5YjNmZGQ3Y2YzNmEwZGExNDk0Yjg0ZmYwZWFmYjRiNTIwNWM5YjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlMmI5ZTIxZmRjODZmYzJjMmVlNDQ3MjE4NWQ2NzY0NjdiZGQxY2JmMmUyNGI0ZGM2NDRhYjFhYmIzMzI1NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY3ODFkNmRiZjA1ODEwOTQ3ZTIwYmMxZmRkMjFmNzUxMDA2NmIzN2EyMGQ4ODc5NDI1NmJlMDQ3NWI0NjA1YjIifQ"
+        },
+        {
+          "resource": "repo://Tools/CompanyTools.php#L42-L42",
+          "version": "repo-lines-v1:sha256:58298320aa8b919d67f2ec50f0d9f879f5bc694522dc7ce6776f67fde178972e:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTgyOTgzMjBhYThiOTE5ZDY3ZjJlYzUwZjBkOWY4NzlmNWJjNjk0NTIyZGM3Y2U2Nzc2ZjY3ZmRlMTc4OTcyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTgyOTgzMjBhYThiOTE5ZDY3ZjJlYzUwZjBkOWY4NzlmNWJjNjk0NTIyZGM3Y2U2Nzc2ZjY3ZmRlMTc4OTcyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTM0YzIyODI1ZGY3OGViMTRkN2VjNjVkMjk5ZmIzNTE1ZmNlODJhNmY1YTkzNzUzYmQ5YjYxNjA0MzZiYzQ5NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGVjZDc4N2I1NWZkMjZmZDQ0YTRhMzRlOWY0Njc4NWM0MzM3MWE4ODIzZGYwMDk0OGI3MjAxYmFjYjhlOWIwNCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

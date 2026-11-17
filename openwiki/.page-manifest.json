@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "pages": {
+    "/openwiki/architecture/capability-gating.md": {
+      "pageVersion": "sha256:277d8f48c944abc71c5b6624afebf999e3121eb2f1c2167731a5beba4a0e4bbc",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/architecture/server-and-request-flow.md": {
+      "pageVersion": "sha256:6883b5e4f2a52e2ba34d8e4af8ac8a7891f3786cf0bb1ef5228198286c431512",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/operations/setup.md": {
+      "pageVersion": "sha256:ae599b8ab40f56c0fe4a687cb1f94796d4d170d479614b51647a17dfc1b12b9f",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/operations/testing-and-release.md": {
+      "pageVersion": "sha256:41d8d52e55f9801bf4465fd99c84992661352623bd2d0583523a8dc73f725a9b",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/quickstart.md": {
+      "pageVersion": "sha256:a8a8e950736483210beade2e9e070756a0eaf54f62e80f56f354515c102aa79d",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/tools/campaign-flows.md": {
+      "pageVersion": "sha256:b1fd38e5b50f59ef018b2c6605c5f1c123b48fb8789a446b96ba165c3403a56e",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/tools/contacts-segments-companies.md": {
+      "pageVersion": "sha256:8881890859e16370325d284c711244138daf2c4acc9ac5a35e2bb9e13a694660",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/tools/destructive-operations.md": {
+      "pageVersion": "sha256:46ea60fa5870f6aecf40b93123e9202f9bdb596d778ec877808bc75b428fdac8",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/tools/email-sending.md": {
+      "pageVersion": "sha256:5127b5d655c341b6f9e216aee0e23f0cf316fe41b14d4c1044857486ba8f3448",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    },
+    "/openwiki/tools/scoring-stages-projects.md": {
+      "pageVersion": "sha256:4cc6e3a81275eeb96ee9239af2214bb3daca3f3811861b536516a270370e79ee",
+      "completedBy": "openwiki",
+      "completedRunId": "adbbc343-b923-4e32-b21d-c5e1c6ff9249",
+      "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+      "sourceFingerprint": "sha256:aea38631ec303ed7f2e97e8150d775aa8b6f38172626b9e8caadb0eee4e35e78"
+    }
+  }
+}
