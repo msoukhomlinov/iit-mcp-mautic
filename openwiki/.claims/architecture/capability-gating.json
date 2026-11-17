@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:277d8f48c944abc71c5b6624afebf999e3121eb2f1c2167731a5beba4a0e4bbc",
+  "claims": [
+    {
+      "id": "claim_bcd279ad10a44386a5bd689b0484a60e",
+      "statement": "Operator parameters default to off/restrictive: allow_write, allow_send, allow_segment_send, allow_destructive, live_campaign_edits and send_ignore_dnc are false; caller_mode is attended; send_max_recipients 100; send_max_per_hour 500; page_limit 50; hidden_groups empty.",
+      "evidence": [
+        {
+          "resource": "repo://Config/config.php#L32-L64",
+          "version": "repo-lines-v1:sha256:592e02b0a35c4420923cb5bbb66aefebacb7ed2d687525b900e52e114bfeac07:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlNjBjNjQyMDM4ZjFhN2RiNmE0MWUyN2IzZDI3MjgzMGJkYWY2M2E0ZTllZjU2MWExNDQ4NDBjNzI5NGQxNTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2M2Q1MzVjZTM4MDYzZDZiNGM1MWQ4YzM4NmE3ZjliM2U1ODBhMTRhMTBjMDdiMTk4ZGZhZjE5YzkzYTNiZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1YmQ1MzRkM2YzNzJlNTU4MWU1NmI2NDRlMDM5NGRmMzU3YzBkOTM4NjU3N2Y4ODY4ZjRhMDI5YzZkZmU0MTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwMmQyYzBkNmRjNWU3NGQ5MmZhMTRiOTFkYmVhMjY0MDkwYmViMzVmZGI5MTg4ZDliMzQxMTgxZGNlOWY0Y2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d1ff23511cfd435d8de6481eedb0ddf9",
+      "statement": "McpServerFactory registers destructive tools only with allow_destructive, send tools only with allow_send, other write/contact tools only with allow_write; layout tools additionally need a theme with mcp/blocks.json, and hidden-group tools are dropped.",
+      "evidence": [
+        {
+          "resource": "repo://Service/EmailLayouts.php#L34-L37",
+          "version": "repo-lines-v1:sha256:410933a27c71da6e4dd703e6aac210308670f89f82cad2d7dd4feceae5d983f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjhjZDhhMDk4OWU1ZTI1NGZlMDYxZjU4NGM4NTkyMTkxNDRmYjc4NWZhNjg5NjZjZTgzYjk5OGUwMjQ2NzU1MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2ZjNzgxOTc4ZTE4OWRmMDc2ZjY1ZDk3YmJjMjE1ZDUwOGM1MDNkN2UwMGM1ZDdjMWNlMDJhZTc2ZGE4ZGY0MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWYzMTVjOGNlMzNiNjQwYzAwZTE4MWZlYjUyMjA2NDQxOGY0NzEzOGJlNzZmOWU0ODRjMmFmYzUwNjVkZmZiNyJ9"
+        },
+        {
+          "resource": "repo://Service/McpServerFactory.php#L226-L310",
+          "version": "repo-lines-v1:sha256:b39975063470115c9019737dcd82422c4258c1d4931a66fdd0e056a3d153dc67:eyJzZWxlY3RlZExpbmVDb3VudCI6ODUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MWY1NGI0Y2Y1M2JhMDJlYjhjNDgyNzNmMTllZTczOTEwZjRmZmM4YzEwYjRiOWE1ZDAxMGU1ZTQ4YjE4YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwYjFmMTY0ZjM1NDkxMTI2YmEyOTRjM2E2YWMzYzNiNzY4NGNiZTBkZGVhYTJhZWNjYjQxNzY1ODQwMzExOGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyNmZjMTBkMGI0NTM3NDhiODkyZmU0ZjgzMTI1MDU2MGE0ZTExZTMzMzQ2NGMzZDZiYWZhOTE4NDkyZmFhYmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_07f5c01bd16445e3b3122d6cd9f9042e",
+      "statement": "The transport ScopePolicy defaults to mcp:read and maps write, contact, send and destructive tool lists to mcp:write, mcp:contacts:write, mcp:send and mcp:destructive respectively.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpServerFactory.php#L126-L129",
+          "version": "repo-lines-v1:sha256:4074842a8b94303699b47903c75117eb893ce4610f6287ed2526dced3f043668:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjM1MGJiMDgyZjU3ZmY0YTU5NzNjMzlhOGNhMzY1ZTI4Nzk0OTc3YTIwMDU5YjcyNjQ1MTVkODk0YjA1NzI0MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWU3NWM3MGQ5NDYzNjI1ZTEwNzlmZDhmYzhlZTYyYWQyZTkyYzQyYmVhYWJmZDg1Yjc4ZDhlMGE0OTc5Yjk0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjRkODRlMjAzMmU2Njc2OGJjNTc4YmU5ZGY2OGYxNjJmNmQ0YTVlNDdmNTA4YTZiOTljZGYxMzdkYzc3ZWVmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDE4MTQ4Y2YyZTY4Y2Y1Y2ZjMWZiZGM0ZTc2OTc3NjNhMDkzNDVjMzEzODg1NGFiNGRiZDFiOTE2YmExYjQ5ZCJ9"
+        },
+        {
+          "resource": "repo://Service/McpServerFactory.php#L51-L64",
+          "version": "repo-lines-v1:sha256:09b5f3c553f97ab0a762af1cd93e2082c3c6751f80e27ad258d6d6d0585ac640:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5MWM2MTNmZTRmODI5NjlhMjgwYjdhYWQzZmM5MjgxMmY2MGM4NWIyZmQ0Njk1N2ZhYWUxMjc5ZGZiMDVmMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyN2QyYTY3N2U2OWM2YzIzNzNmY2UxMTIzN2Y3YjM1Zjc2M2IxMzQ0NWQwNGJjMWVlMzkxYmYyYjJmMDEzNmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyNGI4NWU0OTRkODViOGVmY2RiZmVlZjVjNWQzYmNjOTBhNDUzNjFjZDg4YWZmN2JlYWViYWM5ZTk1YjM2NGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwMTlmODE3ZjQ0MGExMTBiNTIyYmUwMTNkNDNjOWI5ZTkxMTNmNDdmMTA4OGZjZGQxYWYxNjc3OWRhYzQ5YTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a33a66a925c144a9ae4ea57a784059f0",
+      "statement": "mcp:campaigns:live is checked inside the tools (WriteTools and PointTools) via McpUserContext::hasScope, together with the live_campaign_edits switch, not by the transport scope policy.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/PointTools.php#L436-L444",
+          "version": "repo-lines-v1:sha256:d25627e3aa0a6758636fe61a80b882cbc80e678117f852e46a2e7b2f9e877d52:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDY4ZTgzMTFjNGI3YWU1Y2JmZDJmNDlmN2MyZTZlOGZlODUzYzY2N2U1Zjg5MGQxOTg2MGI5ZjQ3ZTIxOTY4OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTI4NWZlOTE4YzNlOThkMmVlZjhkNGVhOWJmYmMyMjViN2U0NmI3NDdjZDU3YWEyZTcyZjRkM2I0YzAyYWVmNiJ9"
+        },
+        {
+          "resource": "repo://Tools/WriteTools.php#L524-L535",
+          "version": "repo-lines-v1:sha256:b463f08a769b91e34e3caea9ccf5df74a92107034efbe1f6da92e0c0db7d15e4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxZDlhZDQ3YzZlMGUwNzhkMGQyZTY0ZjcxN2QyZWRiMjliZWRkNjMzYWE1Mjk5MGE4NWY2ZjAxMWU4MjlkMDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxMDE1MzgyOGM4N2FhZTNhZGQxY2I2M2FjODdlMDcwZTVjZTBjMWEzODgwODhmMGY1MTE1OTc0MjhlMDY1MjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkZjM3ZTZmMTNmM2VjNGRkN2E4YTgzYjBlY2YzNWFjMjYxOGQ1MDczMTQxOWE1MjYwMDg3MGQwYjU3MjFjNmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0adde9fee8774336afef5bf91f04a950",
+      "statement": "Unattended caller mode rewrites the server instructions and omits the requiresUserInteraction tool meta; it does not relax switches or scopes.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpServerFactory.php#L150-L162",
+          "version": "repo-lines-v1:sha256:d398f66123a8f12faa2d6b0d1d6573ceaacbc87fce51cd72beb3b3bca07972d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0YmZiYTE4ODkyMTQ2NjZhYTgwYWRiOTZlM2VmYzQ4YjQyNzQ5MWMxODIwOTg4OGY1NTVmNDQwMzRjOTRhMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1NTIxMDI2YTQyM2E5NjY0ZjZkOTRjZGMxNGYzYmM4MzM0YjBmNWVhZmNlMTkzOWJkM2ZhZTIxYzNiYjNjMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlZjQ4ODFkNTgxMWUwYzk5OGM1ZTI2NDIxMTU2YTVlOTQ1MDBiZDM5ZDM5NjhjZTI5NmEzOTYxNmNjZWVkMTcifQ"
+        },
+        {
+          "resource": "repo://Service/McpServerFactory.php#L306-L309",
+          "version": "repo-lines-v1:sha256:61cb68ede3857a52066eec56262d120d612b067b4873ec56de3db1c55c728844:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTUwZTJjMzgyZGU0MjdkMzFiZjY1NWEwM2RhN2QwYWFhYzljM2VkMjUxYWQzMTJhNzJkNWU1MTY5N2Q1MmYyMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTUyMmM0MmNkMTljNmQwM2Q4MDhjNDUyNzIwNTUyODI1YjdlYTFjNWI0OTFiMjE4NTExY2FjNzQxNWNmOWQ5YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTBkMWRlMjdiMTJlZjlkZTI1MDQyYzkwM2UzNjU0MjNiOTBiN2NlMmZjY2FmYjBjOGY5NTllZmNmOWJhZTM5YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGY3ZjQ5MGY2MzQxOTI3ODE0NDc0MzQ5YzYzOGU3M2IxYTRiZTY0YmQ4NGI5M2Q5NzY1M2JjNjFkNWM3NGUwZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5032acbd66a04179b01dfc8945a3eca3",
+      "statement": "Hidden groups are parsed from an array or comma/space separated string, lower-cased, keeping only points, stages, projects and companies.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpServerFactory.php#L170-L180",
+          "version": "repo-lines-v1:sha256:a0d288d79feb779bce02455d811a3ae6113ac716ab9fe64d8db8e16ac984639e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Y2JiYzY1NDY5ZGIxY2EyODQyZWZkOTdkZjdlZTJjZTZjYzE1NzE0ODJkMDFhMThiNzkwYTEwYzdjNTEwZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZTk3MWU2MzQxNDYzNjM3NGQ0ZTQ1NzQ5MGI0ZGU3ZTgwNWMzZDEzODg1OTMyNWViMjFjNjZjOWUxMzZjZWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhYjNlZjcxNjQ0YjdhOTMwMGNiZTEyYTMxOGM4OGM0NTJjNTYxZDQ0ODMzZjJhNjdlNTQwOGM4ZTQwNWE0MDgifQ"
+        },
+        {
+          "resource": "repo://Service/McpServerFactory.php#L66-L72",
+          "version": "repo-lines-v1:sha256:278f6f9c8f25a2cef0447ffe645ddba05b9fe5802cb06ddfc2d62e84557e8684:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTg2YmFlYzU5OTA3ZGY2ZDIxZDZiN2NlNjc3MjM2ZDA2MWJhN2VmMTU2ZTZiZDhkN2E2MTMzMTY3MTRlODc4OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjk1OTI4MGY2MTU2YzFmNjUxYjUyMmIxYjE4NjE2M2I2NmRiNDVhZGJmYTliYzY3MWJlZDA3MzUyOWVlYzFkMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGE4NjdjYzhiZGZmODY3NDQyY2Q0MGIwZWE2MzRmY2UxZTBlNjE1YTI1ZDU2NzE1ZDFlNDI0MTM1NmJjMDgzYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWVmNGM2MDIzYWFlMTI0NmU0NDYwNGUxYTMxNGYwMTYzMDllOWY2NzRjZjkzZmZlZjA5ODExYzYwZDU0NzFmOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e4d0a3ee85c54417b8a437f97d7de65d",
+      "statement": "McpScopes declares six scopes; read is default and send, destructive and campaigns:live are opt-in; REGULAR excludes the opt-in ones.",
+      "evidence": [
+        {
+          "resource": "repo://Service/McpScopes.php#L16-L34",
+          "version": "repo-lines-v1:sha256:1dde7a43eeb82ffe4ec5868a2c5a347d71ca1e1caeb04831f7faf9a235ae624d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0NWM3NThmNjI5YjBjNDFlOGY4NTM0NDc2YmNjMWE0ZDAyOWMzNWE1YThmNzE0MGJiOGViMTNiMDI1ZmQ2ZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkNDRkMTNjMjI2MzQxZGJjNTQ5ODY2ZTEyMTRlMWE4NzkxNjQxNDAyOTI1NGE0ZWVkMDkyZWFlYTc5ODM1ZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

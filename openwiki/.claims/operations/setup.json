@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ae599b8ab40f56c0fe4a687cb1f94796d4d170d479614b51647a17dfc1b12b9f",
+  "claims": [
+    {
+      "id": "claim_5a6a201ae3a147f1ac6b96d32301868a",
+      "statement": "mautic:mcp:setup generates a 3072-bit RSA key and a 32-byte hex encryption key when missing (or with --force), merges --redirect-host values into kopexa_oauth_redirect_hosts, writes them to config/local.php and returns without a status report when anything changed.",
+      "evidence": [
+        {
+          "resource": "repo://Command/SetupCommand.php#L32-L77",
+          "version": "repo-lines-v1:sha256:2bbb4d14e0d246b0f7a70a2f6cc3427f0b53971fb511513ba5fd237ff32ed72d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjZGViZmUyZGQxODc1ZTU4NzcxOTVhODBhMjRhMDcyNDA1ZjNlZDdhZDAyZDc3MzVhMTg0ZTc5NWYyMTk4YzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNjM5MmNlZmE0MzUyOWEzZWIwNmIwNDZmYTE0ZTY2Mjg1MzVkYmRmNDg5MzE2NWExMDkxNjBiYzM5YTQzMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxZWNmMjI5YzgzZGQzODc2YzdmNWU4ZGIzYzNjYjQxNzdmZjgzYTJiZmZkNjBiYjQ1YTU0MmE4MTY0YzAxMDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a24ea7c828e447a8d908abf23ccbebe",
+      "statement": "local.php is written atomically via a temp file with mode 0640 and the original owner, falling back to an in-place locked write when the config directory is not writable.",
+      "evidence": [
+        {
+          "resource": "repo://Command/SetupCommand.php#L90-L124",
+          "version": "repo-lines-v1:sha256:79c50d171d005101885bbc28b19e0863986f5c608fec84e9a30034875a5b17b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3ZWM3MDQ2YzA0ZjRlMzU0N2UzYmE2YTY2ZjkzMGQwYmM5ZmQ0YTg4MGRiMDM3ZTg3OTNlZTcxYmEzZDg1MDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUyNzY1NWMxZGQ2MGY2ZmUxZGJlZDYxNjhiOGRiZDJhYTA4ZmVmMjJhMzU5NDUwZjAzOTQwYjdmNThkMDg0MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8e0f81c8b714e749e9dd93eaa81360c",
+      "statement": "SetupStatus reports checks for site_url, signing key, encryption key, redirect hosts, operator tiers and cron; the overall ok flag is false only if a check has status fail.",
+      "evidence": [
+        {
+          "resource": "repo://Service/SetupStatus.php#L26-L93",
+          "version": "repo-lines-v1:sha256:182bb57166875a4c12cd6766e3a1e1b11f94c724796e238802d1215ffa52978e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1NjM3MjI3MTUyZjVmN2FiZDRkMWZhNGNhMTEwNmQ1OWNiZWMwYThmZDFiNDRhM2Q3ZTU3ZGRhMzk2MGNlYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzYmRkZjEyMjljZmM0MjA1N2NhNWZiODFhNmUwOGM5ODc3MDA0OTkzYWMyMzBiYzhmODgwNzM0MDEwNGQ5NGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dddd4708cc534ce5b17bac0d772c958c",
+      "statement": "mautic_setup_status returns the shared report only for Mautic administrators and throws a permission error otherwise.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/SetupTools.php#L1-L34",
+          "version": "repo-lines-v1:sha256:721fcd8bbc86ef66dbceb2ed615e255445eea68182153ba8d5139106d572735f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwYWJhMzkyOGNkNjIyYWQ2N2MwZjgxZWNkNWFhODY5OWUwN2Y4ZjQ5MDhjMDQ1ZmUzNGY2YTJkYzAwNjdiMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

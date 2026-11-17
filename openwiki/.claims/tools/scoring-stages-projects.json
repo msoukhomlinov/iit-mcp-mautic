@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4cc6e3a81275eeb96ee9239af2214bb3daca3f3811861b536516a270370e79ee",
+  "claims": [
+    {
+      "id": "claim_cbd28059409c4a669647d2664cc45bf1",
+      "statement": "Point actions, point triggers and stages are created unpublished; the tools never publish them.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/PointTools.php#L228-L256",
+          "version": "repo-lines-v1:sha256:ac416e0433f73302bbb6826b3ae3460bfe3a685ef188dc580a572aab40ae4346:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmU3NTU0ZjE3YTIzY2M0M2FiMWUxMDM2NmExYWI0YTJjNDc1ZDEzNmQ5M2YzMTk5NGZiZGFmOTEwNGMwMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwZDhjNDUxYjAwNTIxNmM1NGZmZDBiZDI1MWI2NGI4MTMxOWZhNjZjMTNmYTMzMjk4OTlhNTAxZTJhYTQyZTUifQ"
+        },
+        {
+          "resource": "repo://Tools/PointTools.php#L373-L400",
+          "version": "repo-lines-v1:sha256:a1d4f9f2ec33712373c37917d759c032a3a1c3e910b67b46c3ffcc02d0fe42c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxM2NiNTQzMzAxY2I1NzgxN2ZhOTEwOWEwYjU1NjI0NjIyNGVlN2FjYzZlNzY5NTBiNmYwMGQ5YWUwMWM0ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmODQ2MDgxNWQwOTgwMjlmZTRmOWQ2MTI0OGFmNDBhOThkMjZmZTdjZTk5YmIxMjU1MzBlYzcwNGE3MTMyZWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhMjIyNDJlYzZlNjA2Y2MwMGQ4NmQyZDM3ZDYzYmY2MDM1YTBkNjhlODg2YzBhOTc2MTNiZDIwM2ZmM2MyMjQifQ"
+        },
+        {
+          "resource": "repo://Tools/StageTools.php#L65-L85",
+          "version": "repo-lines-v1:sha256:27a3fe36c1d91af6f2b6cb04c7bbb315460eaa91bba6676fac1a63be34a609f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwZWEwZTQ0ZGEzOWUxZWUyNzY5NmFhYTRmOWJhMjQ4NjM3NTg2YjgwMjg3ZmJiNjJhMmZhZTliOGM1MTExZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjYzg5ZDcxMDA3OTljMGI5OWZjMjA4ZTk2YmFjMWI0YWQ5NDUxMDMwNDM3ZDM4MGI5ZTVjOGUxMWE1MWVkZGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_99ff2335c97b40caa591b608e18b653f",
+      "statement": "Editing a published point trigger is blocked unless intellectit_mcp_live_campaign_edits is on and the token holds mcp:campaigns:live; when blocked or dryRun the entity is detached so nothing saves, and live_effects reports outbound events and contacts at the score.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/PointTools.php#L420-L490",
+          "version": "repo-lines-v1:sha256:0aec52c4e57fd416058633e50b138bfbeba075700bfd3c16ed04a322262beb0b:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyOGM2ZTAwMDhjZDYyNjg5Yjg0YzQ3NDA3NDU2NzcwNmM2NDY3ZTRiNGQ0NjVmY2QwMzM3MjEzYTdkMTNhNWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjMDg4M2I0OGUwYzllZWFkYjEyOGFjZWFiNzExMThlYzUwZmE2NGJkMzJlZTA2NDg5ZGEyNzA2YzU0Y2VjNmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f343b429fbfe4826bda81d295e4e19ab",
+      "statement": "adjustContactPoints supports add/subtract/set, computes published triggers crossed (only on score increase), supports dryRun, and applies changes as a delta with a PointsChangeLog entry.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/PointTools.php#L506-L574",
+          "version": "repo-lines-v1:sha256:e182323f640ac546749131992789a11683f9228c61d4da39b3600f5f0ecf8773:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyNDgxOGZhYzFiMTY1NWIyZmNlMGY4ZDA4ZDhhNDM1YzI3OTE3NjUyZGNjNmZhMjVkNzlkNjMwYmJmYjNhYzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2Y2FlMTc4MjMzZmJmNzhkNmMwOGYxNDM5OGJlMzI1M2UyZTU3MmM2NmU4YzQzMWJmNzJhZGNkZmNhMTI2MjIifQ"
+        },
+        {
+          "resource": "repo://Tools/PointTools.php#L770-L790",
+          "version": "repo-lines-v1:sha256:da4df6166f6d59a6535339c805bc5b91cec7b81a49f0b6d1c48ade64c664c79a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiNjE0ODYyNTliODM4MTNkMTdiZDBkZDUzMzhjZDJhNTExN2FmNzU3ODQ1YzExMTBkZGNhNjE4ODNlYTU3NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MDg3ZDljY2Y0ZmQzNTI3NjFjZDJjZmZkNWI5NWFjZWY3YTcxZjk2MjYxNTM3NGIwMDc5OGNkNTkyOGU2NTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1NWEwZDYyNzM2MDhhZjhmOTZmY2U4Mzc4MDIyYjQ0YTkwM2U4NzNlNmNkOWRmZTcyN2I0MmQ4YjFkYTg5NDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ce0c5e7956349b9b3148ca0d73df169",
+      "statement": "Point action settings are validated by submitting Mautic's Symfony form twice, validate-only first and then for real, so invalid input leaves no tag rows.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/PointTools.php#L582-L598",
+          "version": "repo-lines-v1:sha256:935b8686646067a700f2fc5b07de9e97a379d95d3e2f6ea3ea37cb03810c4d59:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5Y2E4OTFiZmY3YWMxZjdjZWFhZTQwZWYwNTEwNjZiZTllZmU0N2I0ZTQyODFlODZjMzE5YmUyYzU1ZWJjZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3YzZlZjM0ZDZhMDMzOTU2ZDU4NzlkNjQ1YzA3MjJmNzU0ZDNjMWE3NjgwMzU5YTJlNjQ3YjllNzkwMzM1MTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2MmY2OTJkY2E4YTIwZDRiZjJiZjIzYmYyYzcwYWIwYTgzNjZjYmVmNTVlMGU0Yzg2ZjRmN2YyNTBlYjU4YmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f0ae989339c4bca86523b0dcb2dc981",
+      "statement": "Stage tools enforce unique names and unique weights themselves (Mautic checks weights only in its form validator), setContactStage requires a published stage and reports live_effects from published dynamic segments filtering on stage.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/StageTools.php#L143-L225",
+          "version": "repo-lines-v1:sha256:7f4685576268d5c7cf7cb9316269db1132578ae045b25a55a66197f4c980690f:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiOTgyYmY3NGY0N2M2YjIyMDk0NTVhOWMwYWQ4MmUzYWNjZGY1YjY3OWRjMTliOTFlZDczOTNhM2Y0MWNiNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjMGVkYzljMTgwZWY4YTY4MzJiMzQ4OGNhNjY4NzI5ZjFkZDdmODg0MDJkODVkN2U1YTM0ODY0MTQxYmRjNzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_107b99c057084987b9d72f11772733f9",
+      "statement": "Project add/remove accepts at most MAX_ITEMS ids, restricts types to those the user's role may edit, and reports per-item skips (not found, no edit access, already/not in project) instead of failing the call.",
+      "evidence": [
+        {
+          "resource": "repo://Tools/ProjectTools.php#L159-L230",
+          "version": "repo-lines-v1:sha256:6b13abf6e369828c363d5bc32c45763f0e7c390b39c78b1defb2b798ed50fc7e:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1OTZmYjdhOTEwMGFlYjg1YmFhNzhmOGEzYWU0ZGY3NWI0ZDUwNzYwNzA5NTRiNDIwODhlNTIyMDZiMDNhZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NDY5YjdjZjNjMTMxMTNiOGQwMGQyODlhMTJhZGVjNmU2NzIzZTMyZWMyOTQ0MzcxNzFiNTlmODE5YzEzMWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzN2EwM2E2Zjg3NTA0NmNmYTI4NTdhNTc5ZDg1NzRmMzM0MWYzOGU4NjVkOGEzMTBjNTEyNWJhNjM0NTRlMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxM2IyMjkyZjNlNjFiNzU3YTdlNWNlMjEyM2UwZWU1Yjg0Mjg3ZjUxNzg0MzNlYjMxZDA0MDE4OTA4NWI4YmMifQ"
+        },
+        {
+          "resource": "repo://Tools/ProjectTools.php#L28-L28",
+          "version": "repo-lines-v1:sha256:14372c365095b4258198a64d59f2e128beb94bee180c47abe3e7ba7cf761b0e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQzNzJjMzY1MDk1YjQyNTgxOThhNjRkNTlmMmUxMjhiZWI5NGJlZTE4MGM0N2FiZTNlN2JhN2NmNzYxYjBlOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQzNzJjMzY1MDk1YjQyNTgxOThhNjRkNTlmMmUxMjhiZWI5NGJlZTE4MGM0N2FiZTNlN2JhN2NmNzYxYjBlOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjY3NzYxMGEwNTlkOGJlMWVjNTliNWVhOGE1ZTU3YjE2NjQ4ODE4NDU4NDIyZGUwNzJlM2Q5ZWRlMzU0NDg0NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGVjZDc4N2I1NWZkMjZmZDQ0YTRhMzRlOWY0Njc4NWM0MzM3MWE4ODIzZGYwMDk0OGI3MjAxYmFjYjhlOWIwNCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}

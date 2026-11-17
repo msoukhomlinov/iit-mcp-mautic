@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:a8a8e950736483210beade2e9e070756a0eaf54f62e80f56f354515c102aa79d",
+  "claims": [
+    {
+      "id": "claim_f2d6683536d3473b89c97d0f5ede6de9",
+      "statement": "The plugin's bundle class IntellectItMcpBundle extends Mautic's PluginBundleBase and is empty; behaviour lives in Tools, Service and Controller code.",
+      "evidence": [
+        {
+          "resource": "repo://IntellectItMcpBundle.php#L9-L11",
+          "version": "repo-lines-v1:sha256:0d021b87cda419cefede734e509ac6685b52834fc6b8bc0027673cc95b18c28d:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODZmZjE0N2I2NmE4YmUxNDljNTU5ZmY4ZDQ0OGUyNDk0MGRhYTQ5Y2I1YTA2NTVhMjkzY2I2M2Q5NzhkMDQ1YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzdhNTZiZGI0Nzg2YzQxMTViYTM0MDZiMmRkYjM4OGNkNzU1MGJhYzdjMDRiM2JkNzk5ZTA2OGY0ZmIwZjIyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.9.0",
+    "at": "2026-11-17T00:16:34.909Z"
+  }
+}
