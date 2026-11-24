@@ -44,11 +44,11 @@ Defaults are declared in `Config/config.php`; operators override them in `config
 | `intellectit_mcp_send_max_recipients` | `100` | Per-call recipient cap |
 | `intellectit_mcp_send_max_per_hour` | `500` | Rolling hourly recipient cap, `0` = no limit |
 | `intellectit_mcp_send_ignore_dnc` | `false` | Also email Do Not Contact contacts on direct contact sends |
-| `intellectit_mcp_page_limit` | `50` | Maximum items a list tool returns |
+| `intellectit_mcp_page_limit` | `50` | Maximum items returned by the contact, segment, email and campaign list and search tools |
 | `intellectit_mcp_live_campaign_edits` | `false` | Allow edits of running campaigns and published point triggers |
 | `intellectit_mcp_hidden_groups` | `[]` | Tool groups to hide |
 
-Enforcement of the send parameters is described in [tools/email-sending.md](../tools/email-sending.md). The page limit is read in `Tools/ReadTools.php`. The live-edit switch is checked in `Tools/WriteTools.php` (campaign flows, see [tools/campaign-flows.md](../tools/campaign-flows.md)) and `Tools/PointTools.php` (published triggers, see [tools/scoring-stages-projects.md](../tools/scoring-stages-projects.md)).
+Enforcement of the send parameters is described in [tools/email-sending.md](../tools/email-sending.md). The page limit is read only in `Tools/ReadTools.php` (see [tools/contacts-segments-companies.md](../tools/contacts-segments-companies.md#reading) for the tools it caps). The live-edit switch is checked in `Tools/WriteTools.php` (campaign flows, see [tools/campaign-flows.md](../tools/campaign-flows.md)) and `Tools/PointTools.php` (published triggers, see [tools/scoring-stages-projects.md](../tools/scoring-stages-projects.md)).
 
 Boolean parameters are parsed with `FILTER_VALIDATE_BOOLEAN`, so environment-style strings such as `"true"` work.
 

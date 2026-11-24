@@ -33,7 +33,7 @@ Read tools need only `mcp:read`; contact, company and segment writes need `mcp:c
 `Tools/ReadTools.php` provides search and get tools for contacts, segments, emails and campaigns, plus email topics, email statistics, contact activity and campaign step types.
 
 - **Search syntax:** `mautic_search_contacts` takes free text or Mautic search syntax (for example `tag:customer`, `segment:newsletter`). The additional terms `email_sent:<emailId>` and `email_read:<emailId>` list contacts who were sent or opened an email. `includeFields` returns every filled profile field per contact. List tools take `limit` (schema range 1 to 100) and `offset`.
-- **Page limit:** every list is additionally capped by the `intellectit_mcp_page_limit` parameter (default in [capability-gating.md](../architecture/capability-gating.md)): the effective limit is `min(max(1, limit), page_limit)`.
+- **Page limit:** the contact, segment, email and campaign list and search tools are additionally capped by the `intellectit_mcp_page_limit` parameter (default in [capability-gating.md](../architecture/capability-gating.md#operator-parameters)): the effective limit is `min(max(1, limit), page_limit)`. Company search (capped at 100) and contact activity (`limit` 1 to 100) do not read it.
 - **Ownership filtering:** when the user lacks the "view others" permission, lists are forced to own items. Contacts count as own when the user is the owner, or when there is no owner and the user created them; other objects use the creator.
 - **Email statistics** (`mautic_get_email_stats`) are lifetime totals across all uses of the email, without a date range.
 - **Contact activity** takes optional `types`, a search string, `page` and `limit` (1 to 100).

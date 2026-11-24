@@ -43,7 +43,7 @@ The preview contains `type`, `id`, `name`, `impact`, `blockers` and `can_delete`
 
 `mergeContacts(winnerId, loserId, confirm, expectedLoserId)` rejects identical ids, loads both contacts, and requires `edit` on the winner and `delete` on the loser. The preview lists a summary of both contacts, `points_after` (the sum of both), and `fields_differ`: fields where both sides are non-empty and differ (`id` and `points` are skipped). The note states that Mautic keeps the value of the more recently modified contact. With `confirm=true`, `expectedLoserId` must equal `loserId`, otherwise `CONFIRM_REQUIRED` is raised. A `merge` audit entry is written and `ContactMerger::merge($winner, $loser)` runs; the loser is deleted.
 
-The preview text tells the caller that an attending person must see it, which is why these tools are meant for attended use (see [capability-gating.md](../architecture/capability-gating.md#attended-and-unattended-mode) for the caller mode).
+The preview text tells the caller that an attending person must see it. Unattended caller mode only omits the `requiresUserInteraction` tool meta; the confirmation protocol is unchanged (see [capability-gating.md](../architecture/capability-gating.md#attended-and-unattended-mode)).
 
 ## Brand email layouts
 

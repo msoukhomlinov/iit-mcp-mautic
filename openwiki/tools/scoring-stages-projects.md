@@ -23,7 +23,7 @@ Implemented in `Tools/PointTools.php`, `Tools/StageTools.php` and `Tools/Project
 ## Common pattern
 
 - **Created unpublished.** Point actions, point triggers and stages are always created with `isPublished` false, and the result message tells a person to publish them in Mautic. The tools never publish.
-- **Mautic permissions** are checked per tool (for example `point:points:create`, `point:triggers:edit`, `stage:stages:create`) and per entity via `McpUserContext::requireEntityAccess`.
+- **Mautic permissions** are checked per tool (for example `point:points:create`, `point:triggers:edit`, `stage:stages:create`). Stage updates, contacts and project items are additionally checked per entity via `McpUserContext::requireEntityAccess`.
 - **Audit entries** are written for every change (`point_group`, `point_action`, `point_trigger`, `stage`, `project` and contact `points`/`stage` actions).
 - **Dry run before live effects.** Operations that can immediately cause outbound effects take `dryRun` and describe the effects without saving.
 
