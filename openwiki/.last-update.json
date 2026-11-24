@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-17T00:22:15.809Z",
-  "command": "init",
-  "gitHead": "7569ed1b6795e79d236e47887667da3fdba930cc",
+  "updatedAt": "2026-11-24T15:46:09.270Z",
+  "command": "update",
+  "gitHead": "da9b7b3ddfcac57037bd3d28b294de70db25aa85",
   "model": "openwiki",
   "status": "complete",
   "language": "en"

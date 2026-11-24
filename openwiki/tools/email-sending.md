@@ -49,7 +49,7 @@ When `intellectit_mcp_send_max_per_hour` is above zero, `sentInLastHour()` sums 
 
 ## Preview output and `targets_hash`
 
-The preview contains the email summary, `max_recipients_per_call`, `mode` (`contacts` or `segments`), `targets`, `recipient_count`, details (first ten recipients or per-segment pending counts), `warnings`, `blockers` and `can_send`. `targets_hash` is the first 16 hex characters of the SHA-256 of the JSON of `[emailId, targets]`, so it binds a confirmation to the email and exact id selection.
+The preview contains the email summary, `max_recipients_per_call`, `mode` (`contacts` or `segments`), `targets`, `recipient_count`, mode-specific details (contacts: the first ten `recipients` and the `excluded` lists; segments: per-segment pending counts, `pending_total` and a note), `sent_last_hour` and `max_recipients_per_hour` when the hourly limit is on, `warnings`, `blockers` and `can_send`. `targets_hash` is the first 16 hex characters of the SHA-256 of the JSON of `[emailId, targets]`, so it binds a confirmation to the email and exact id selection.
 
 `mautic_preview_email_send` writes a `send_preview` audit entry (ids capped at 100 per list; audit failure is swallowed) and does not count against the hourly limit.
 
